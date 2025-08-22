@@ -45,15 +45,48 @@
       <li>Rely less on community content as the patch just release and then rely more as it goes on</li>
     </ul>
     -->
-    <h1><a href="https://www.nexpost.ai/" target="_blank">NexPost</a></h1>
-    Coming Soon!
+    <h1><a href="https://www.nexpost.ai/" target="_blank">NexPost</a>'s Inspired Post Generation</h1>
+    NexPost.ai is an AI-powered social media content assistant that helps you create content posts across platforms like LinkedIn, Facebook, Instagram, Reddit, and blogs.  It leverages LLMs to generate social media posts content such as text and images.  My friend Nia made it and it is great -- check it out!
     <h2 class="preserve-lines">Overview</h2>
-    Coming Soon!
+    Content creators wishes to post content on their social media accounts in order to generate reach and attract a bigger audience.  However, they may not always have the time or the creativity to come up with new content.  NexPost.ai's Inspired Post Generation feature allows users to generate new posts based on existing content, making it easier for them to share relevant and engaging content with their audience.
     <h2>Goal</h2>
-    Coming Soon!
+    We are building a feature to make it easier for users to generate posts so the main goal here is to drive higher engagement and customer retention of NexPost.ai.
     <h2>Constraints</h2>
-    Coming Soon!
+    <ul>
+      <li>
+        <i>Text in images</i><br/>
+        In order for the tool to be compliant with WCAG, if there is any text in the images, it has to make sense as an alt attribute (ex. no multi-panel comics).  Also, any text inside these panels must follow the same contrast requirements as regular text:  4.5:1 for normal-sized text and 3:1 for large text (18 point or 14 point bold)
+      </li>
+      <li>
+        <i>Inappropriate content</i><br/>
+        Unlike other features of content generation in NexPost.ai where the content ideas stems from the user, this one is sourced from another author.  This means it is difficult to assign responsibility for inappropriate content.  NexPost.ai must flag a warning if the generated content may be deemed inappropriate or offensive.
+      </li>
+    </ul>
     <h2>Use Cases and Pain Points</h2>
+    The user comes across a post they really like and wishes to repost it.  However, they want to either:
+    <ul>
+      <li>
+        <i>Copy/Paste but Different</i><br/>
+        The user wishes to, as quickly and as easily as possible, repost this to their audience but they do not want to be seen as somebody who copies other people's content without giving credit.
+        <ul>
+          <li>
+            <i>Pain Point</i><br/>
+            The user has to invest non-insignificant mental effort to think about how to change the content.  This is especially true if the user is not a native speaker of the language of the post.
+          </li>
+        </ul>
+      </li>
+      <li>
+        <i>Content Modification</i><br/>
+        In this case, the user wishes to either change the content slightly to make it more relevant to their audience and/or they may wish to change the style of the message to fit their writing style.
+        <ul>
+          <li>
+            <i>Pain Point</i><br/>
+            The user has to invest non-insignificant mental effort to think about how to change the content.  This is especially true if the user is not a native speaker of the language of the post.
+          </li>
+        </ul>
+      </li>
+    </ul>
+    <h2>Customer segmentations</h2>
     Coming Soon!
     <h2>Priorities</h2>
     Coming Soon!
@@ -62,7 +95,16 @@
     <h2>Metrics for Success</h2>
     Coming Soon!
     <h2>Future Roadmap</h2>
-    Coming Soon!
+    <ul>
+      <li>
+        <i>Content parsing from link</i><br/>
+        Instead of having the user copy and paste the content, they can share a link to the post and for a selected subset of the source (or perhaps regardless of source), NexPost.ai can extract the content and generate an inspired post based on that.
+      </li>
+      <li>
+        <i>Content generation from image</i><br/>
+        Instead of just being able to generate content from text, NexPost.ai can also generate content from images.  This is especially useful for platforms like Instagram where the image is the main content.
+      </li>
+    </ul>>
     <section class="contact">
       <h2>Contact</h2>
       <ul class="contact__list">
