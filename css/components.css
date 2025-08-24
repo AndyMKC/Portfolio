@@ -1,0 +1,21 @@
+.project-card {
+  background-color: var(--gray-100);
+  border-radius: 8px;
+  padding: 1rem;
+  transition: transform 0.2s ease;
+  color: #000
+}
+.project-card:hover {
+  transform: translateY(-4px);
+}
+
+.contact__list li {
+  margin-bottom: 0.5em;
+}
+
+.footer {
+  text-align: center;
+  padding: 1rem 0;
+  background-color: var(--gray-100);
+  font-size: 0.875rem;
+}
