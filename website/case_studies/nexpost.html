@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Andy Cheng – Product Management Portfolio</title>
+
+  <!-- CSS Reset -->
+  <link rel="stylesheet" href="../css/reset.css"/>
+
+  <!-- Design Tokens -->
+  <link rel="stylesheet" href="../css/colors.css"/>
+
+  <!-- Typography -->
+  <link rel="stylesheet" href="../css/typography.css"/>
+
+  <!-- Layout Helpers -->
+  <link rel="stylesheet" href="../css/layout.css"/>
+
+  <!-- Components & Utilities -->
+  <link rel="stylesheet" href="../css/components.css"/>
+</head>
+<body>
+  <header class="hero">
+    <img
+      src="../img/linkedin.jpg"
+      alt="Andy Cheng Portrait"
+      class="hero__avatar"
+    />
+    <h1 class="hero__title">Andy Cheng</h1>
+    <p class="hero__subtitle">Product Leader:  Driven by Data and Forged in Code</p>
+  </header>
+  <main>
+    <!--
+    <h1>TODO</h1>
+    <ul>
+      <li>FRD</li>
+      <li>User Story</li>
+      <li>User flow</li>
+      <li>Wireframes?</li>
+      <li>Mockups (with explanations on why this hero was chosen to be picked or banned)</li>
+      <li>MVP</li>
+      <li>Next Features after MVP</li>
+      <li>How to monetize?</li>
+      <li>Rely less on community content as the patch just release and then rely more as it goes on</li>
+    </ul>
+    -->
+    <h1><a href="https://www.nexpost.ai/" target="_blank">NexPost's</a> Inspired Post Generation</h1>
+    NexPost.ai is an AI-powered social media content assistant that helps you create content posts across platforms like LinkedIn, Facebook, Instagram, Reddit, and blogs.  It leverages LLMs to generate social media posts content such as text and images.  My friend Nia made it and it is great so check it out!
+    <h2 class="preserve-lines">Overview</h2>
+    Content creators wishes to post content on their social media accounts in order to generate reach and attract a bigger audience.  However, they may not always have the time or the creativity to come up with new content.  NexPost.ai's Inspired Post Generation feature allows users to generate new posts based on existing content, making it easier for them to share relevant and engaging content with their audience.
+    <h2>Goal</h2>
+    We are building a feature to make it easier for users to generate posts so the main goal here is to drive higher engagement and customer retention of NexPost.ai.
+    <h2>Constraints</h2>
+      Unlike other features of content generation in NexPost.ai where the content ideas stems from the user, this one is sourced from another author.  This means it is difficult to assign responsibility for inappropriate content.  NexPost.ai must flag a warning if the generated content may be deemed inappropriate or offensive.
+    <h2>Customer segmentations</h2>
+    There are several types of content creators that we could possibly target:
+    <ul>
+      <li>
+        <i>Personal Brand Builders</i><br/>
+        These are the users that want to build up their following in order to become influencers in their respective fields.  They may be looking to build up their personal brand in order to attract job offers, consulting gigs, or speaking engagements.
+      </li>
+      <li>
+        <i>Business Promoters</i><br/>
+        These are the users that want to promote their business or products.  They may be looking to drive traffic to their website or online store in order to generate sales or other platforms such as YouTube to generate ad revenue.
+      </li>
+      <li>
+        <i>Thought Leaders</i><br/>
+        These are the users that want to share their expertise and insights with their audience.  They may be looking to establish themselves as thought leaders in their respective fields in order to attract consulting gigs, speaking engagements, or book deals.
+      </li>
+      
+    </ul>
+    Based on our goal of driving higher engagement amongst existing users and customer retention, we would target the Personal Brand Builders.  The reason for this is because they are frequently (low stakes, high volume) with types of content such as quick top of the mind thoughts or personal anecdotes.  Comparatively, both the Business Promoters and Thought Leaders have more indepth content with higher stakes.
+    <h2>Use Cases and Pain Points</h2>
+    The user comes across a post they really like and wishes to repost it.  However, they want to either:
+    <ul>
+      <li>
+        <i>Copy/Paste but Different</i><br/>
+        The user wishes to, as quickly and as easily as possible, repost this to their audience but they do not want to be seen as somebody who copies other people's content without giving credit.
+        <ul>
+          <li>
+            <i>Pain Point</i><br/>
+            The user has to invest non-insignificant mental effort to think about how to change the content.  This is especially true if the user is not a native speaker of the language of the post.
+          </li>
+        </ul>
+      </li>
+      <li>
+        <i>Content Modification</i><br/>
+        In this case, the user wishes to either change the content slightly to make it more relevant to their audience and/or they may wish to change the style of the message to fit their writing style.
+        <ul>
+          <li>
+            <i>Pain Point</i><br/>
+            The user has to invest non-insignificant mental effort to think about how to change the content.  This is especially true if the user is not a native speaker of the language of the post.
+          </li>
+        </ul>
+      </li>
+    </ul>
+    <h2>Prioritized Solutions</h2>
+     Given the use cases and pain points, the solutions in a priority order are:
+     <ul>
+      <li>
+        <i>Copy/Paste but Different</i>
+        <br/>
+        NexPost.ai will generate a new post that conveys the same meaning but using slightly different words, different ordering, or presentation style (perhaps where the content is in an ordered list to the content being prefixed by an emoji).  If there is a critical point that is saved for last to keep the reader engaged (such as "read until the end for the best tip"), then that ordering will be preserved.  Any emojis are subjected to be switched out and/or reordered as long as the meaning is preserved.
+        <br/>
+        <br/>
+        The reason this is first is because this is the lowest effort scenario for the user.  All they need to do is copy and paste the content.
+        <br/>
+        <br/>
+      </li>
+      <li>
+        <i>Content Modification</i>
+        <br/>
+        In addition to the various customization (Writing Tone, Creativity Slider, Post Size slider, etc), NexPost.ai will allow the user to enter two pieces of information:  The original post and ther desired modification.  NexPost.ai will detect whether the two are in conflict with each other and will prompt the user to resolve the conflict.  An example of this would be if the original content talks about french fries best dipped with tartar sauce while the added modification talks about the best dip for french fries being ketchup.  In this case, the user will be prompted to either choose one or the other or to rephrase the modification to be more in line with the original content.  After conflict resolution is complete, NexPost.ai will generate a new post that conveys the same meaning as the original post but with the desired modification.
+        <br/>
+        <br/>
+        The reason this is second is because this step requires a bit more effort from the user and we want to offer the lowest barrier of entry solution first.  This can be viewed as a feature-add later.
+      </li>
+    </ul>
+    All solutions will subject the input data for inappropriate content detection and will flag a warning if the generated content may be deemed inappropriate or offensive either globally or to a specific region or audience.
+    <h2>Dependencies</h2>
+    Coming Soon!
+    <h2>Risks and Mitigation</h2>
+    Coming Soon!
+    <h2>Metrics for Success</h2>
+    Coming Soon!
+    <h2>Future Roadmap</h2>
+    <ul>
+      <li>
+        <i>Content parsing from link</i>
+        <br/>
+        Instead of having the user copy and paste the content, they can share a link to the post and for a selected subset of the source (or perhaps regardless of source), NexPost.ai can extract the content and generate an inspired post based on that.
+      </li>
+      <li>
+        <i>Content generation from image and video</i>
+        <br/>
+        Instead of just being able to generate content from text, NexPost.ai can also generate content from images and videos.  This is especially useful for platforms like Instagram where the image is the main content and YouTube where the videos is the main content.
+      </li>
+      <li>
+        <i>Content based on a topic</i>
+        <br/>
+        Instead of generating a post based on another post but also not the current method of topic + thoughts from the author, NexPost allows creation of a content based on topic alone.  This is especially useful for users that may not have a specific post in mind but have a general idea of what they want to post about.
+      </li>
+      <li>
+        <i>Unprompted Topic Generation</i>
+        <br/>
+        Instead of the user discovering a topic to speak about, NexPost.ai goes and searches online the most talked about topics in either the user's area of expertise, what resonates with their existing audience, or what is trending with an audience group they wish to capture.
+      </li>
+      <li>
+        <i>Top post gatherer</i>
+        <br/>
+        Upon given a topic, Nexpost.ai will scour the internet and gather the highest trending posts about that topic.  The user can then select one of these posts to be the source of inspiration for their new post.
+      </li>
+    </ul>>
+    <section class="contact">
+      <h2>Contact</h2>
+      <ul class="contact__list">
+        <li>Email: <a href="mailto:amcheng@umich.edu">amcheng@umich.edu</a></li>
+        <li>LinkedIn: <a href="https://www.linkedin.com/in/andy-mkc/" target="_blank">https://www.linkedin.com/in/andy-mkc/</a></li>
+      </ul>
+    </section>
+  </main>
+  <footer class="footer">
+    <p>&copy; 2025 Andy Cheng</p>
+  </footer>
+
+</body>
+</html>
