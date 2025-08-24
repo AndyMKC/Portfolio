@@ -96,32 +96,63 @@
       </li>
     </ul>
     <h2>Prioritized Solutions</h2>
-     Given the use cases and pain points, the solutions in a priority order are:
-     <ul>
+    Given the use cases and pain points, the solutions in a priority order are:
+    <ul>
       <li>
         <i>Copy/Paste but Different</i>
         <br/>
         NexPost.ai will generate a new post that conveys the same meaning but using slightly different words, different ordering, or presentation style (perhaps where the content is in an ordered list to the content being prefixed by an emoji).  If there is a critical point that is saved for last to keep the reader engaged (such as "read until the end for the best tip"), then that ordering will be preserved.  Any emojis are subjected to be switched out and/or reordered as long as the meaning is preserved.
-        <br/>
-        <br/>
-        The reason this is first is because this is the lowest effort scenario for the user.  All they need to do is copy and paste the content.
-        <br/>
-        <br/>
+        <ul>
+          <li>
+            <i>Priority 1</i>
+            <br/>
+            The reason this is first is because this is the lowest effort scenario for the user.  All they need to do is copy and paste the content.
+          </li>
+        </ul>
       </li>
       <li>
         <i>Content Modification</i>
         <br/>
         In addition to the various customization (Writing Tone, Creativity Slider, Post Size slider, etc), NexPost.ai will allow the user to enter two pieces of information:  The original post and ther desired modification.  NexPost.ai will detect whether the two are in conflict with each other and will prompt the user to resolve the conflict.  An example of this would be if the original content talks about french fries best dipped with tartar sauce while the added modification talks about the best dip for french fries being ketchup.  In this case, the user will be prompted to either choose one or the other or to rephrase the modification to be more in line with the original content.  After conflict resolution is complete, NexPost.ai will generate a new post that conveys the same meaning as the original post but with the desired modification.
-        <br/>
-        <br/>
-        The reason this is second is because this step requires a bit more effort from the user and we want to offer the lowest barrier of entry solution first.  This can be viewed as a feature-add later.
+        <ul>
+          <li>
+            <i>Priority 2</i>
+            <br/>
+            The reason this is second is because this step requires a bit more effort from the user and we want to offer the lowest barrier of entry solution first.  This can be viewed as a feature-add later.
+          </li>
+        </ul>
       </li>
     </ul>
     All solutions will subject the input data for inappropriate content detection and will flag a warning if the generated content may be deemed inappropriate or offensive either globally or to a specific region or audience.
     <h2>Dependencies</h2>
     Coming Soon!
     <h2>Risks and Mitigation</h2>
-    Coming Soon!
+     <ul>
+      <li>
+        <i>Inconsistent settings and message</i>
+        <br/>
+        Given there are custom settings such as Writing Tone where it can range from Professional or Helpful to Humorous or Persuasive, the user may accidentally set the wrong tone for the generated content, especially if the user did not read it enough or it is written in a language they are not proficient in.
+        <ul>
+          <li>
+            <i>Mitigation</i>
+            <br/>
+            While the user is ultimately responsible for the generated content, one thing that we can do is ask in the prompt to detect the writing tone of the original content and defaulty select that tone for the newly generated content.  Before generation, we can still offer a way for the user to change the tone if they wish so we do not rip control from them.
+          </li>
+        </ul>
+      </li>
+      <li>
+        <i>Detection of sarcasm</i>
+        <br/>
+        Considering the expected low bar of effort from the user or possibly the language the original content was written in may not be one of the user's proficient languages, the user may not be able to detect sarcasm in the original content.  Currently, LLMs are not consistent in detecting sarcasm.  This may lead to generated content that puts the user in a poor light.
+        <ul>
+          <li>
+            <i>Mitigation</i>
+            <br/>
+            We can try to have the prompt edited so that it tries to detect sarcasm but this may not work given the current performance of the LLM.  In addition to the attempt at sarcasm detection, we can ask the LLM given the user's historical post and social media content, is what was generated consistent with the user's message or beneficial to their cause.
+          </li>
+        </ul>
+      </li>
+    </ul>
     <h2>Metrics for Success</h2>
     Coming Soon!
     <h2>Future Roadmap</h2>

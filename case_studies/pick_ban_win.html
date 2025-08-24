@@ -70,7 +70,8 @@
     <h2>Use Cases and Pain Points</h2>
     <ul>
       <li>
-        <i>The Hero Suggester</i><br/>
+        <i>The Hero Suggester</i>
+        <br/>
         Given the current state of the draft, they need to understand what the next hero to pick or ban should be that would maximize their chances of winning.
         <ul>
           <li>
@@ -85,7 +86,8 @@
         </ul>
       </li>
       <li>
-        <i>The Player Scouter</i><br/>
+        <i>The Player Scouter</i>
+        <br/>
         Scout out the their teammates and opponents and understand what heroes they usually play and how well they do with each hero.
         <ul>
           <li>
@@ -95,7 +97,8 @@
         </ul>
       </li>
       <li>
-        <i>The Hero Pairing Suggester</i><br/>
+        <i>The Hero Pairing Suggester</i>
+        <br/>
         Understand what their gameplan is and how their hero pairings (which heroes to play together) work.
         <ul>
           <li>
@@ -112,25 +115,37 @@
         <i>The Hero Suggester</i>
         <br/>
         At both the beginning of the draft (if the user drafts first) and after every hero pick/ban choice is made, PickWinBan will suggest three heroes for the user to select from based on a variety of factors such as already picked and banned heros, statistics, patch notes, and list of players and opponents.  With each hero suggestion, PickWinBan will provide a reason as to why this hero was suggested and what kind of role or playstyle this hero needs to play in order to maximize the chances of winning.  Lastly, if it is a hero pick suggestion, it will suggest a player on the team that is most suitable to play.
-        <br/>
-        <br/>
-        The reason this is first is because this is what we are betting on as the core functionality of the tool that will attract users.  Other features, while they can be standalone, are expected to fold into this decision making process here.<br/><br/>
+        <ul>
+          <li>
+            <i>Priority 1</i>
+            <br/>
+            The reason this is first is because this is what we are betting on as the core functionality of the tool that will attract users.  Other features, while they can be standalone, are expected to fold into this decision making process here.
+          </li>
+        </ul>
       </li>
       <li>
         <i>The Player Scouter</i>
         <br/>
         Provide a way to quickly see what the top three heroes their teammate and opponents like to play and how well they do with each hero.
-        <br/>
-        <br/>
-        The reason this is second is because it allows people to feel like they are being heard and respected.  Even if a hero is good for the team overall, it may not be good or fun for a specific player which would lead to lower morale.<br/><br/>
+        <ul>
+          <li>
+            <i>Priority 2</i>
+            <br/>
+            The reason this is second is because it allows people to feel like they are being heard and respected.  Even if a hero is good for the team overall, it may not be good or fun for a specific player which would lead to lower morale.
+          </li>
+        </ul>
       </li>
       <li>
         <i>The Hero Pairing Suggester</i>
         <br/>
         After the user has confirmed all their and their opponent's hero picks, PickWinBan will predict how the opponent will play their hero pairings (or groupings if more than two heroes together or it could be solo).  PickWinBan will then suggest to the player how to play out their hero picks to both counter the opponent's predicted move and also to make sure the two heros are as synergistic as possible.
-        <br/>
-        <br/>
-        The reason this is third is because this is functionality is pretty easily gathered from already existing websites.  It is provided here to "complete" the suite of tools and make this a one-stop-shop but it is not the core functionality of the tool.
+        <ul>
+          <li>
+            <i>Priority 3</i>
+            <br/>
+            The reason this is third is because this is functionality is pretty easily gathered from already existing websites.  It is provided here to "complete" the suite of tools and make this a one-stop-shop but it is not the core functionality of the tool.
+          </li>
+        </ul>
       </li>
     </ul>
     <h2>Dependencies</h2>
@@ -147,12 +162,28 @@
     <h2>Risks and Mitigation</h2>
     <ul>
       <li>
-        <i>Risk of game not reaching popularity</i><br/>
-        If the game does not launch well and the player count is small or the game does not develop competitively, then this feature will not be used.  One way to mitigate this is to bet not just on this game but rather this genre of games.  This allows us to hedge our bets and as long as we create this tool generically enough, it should be easy enough to port over.  Best scenario is that if multiple games in this genre are popular, then we can have a tool that owrks for all of them and we can have a larger user base.
+        <i>Risk of game not reaching popularity</i>
+        <br/>
+        If the game does not launch well and the player count is small or the game does not develop competitively, then this feature will not be used.
+        <ul>
+          <li>
+            <i>Mitigation</i>
+            <br/>
+            The way to mitigate this is to bet not just on this game but rather this genre of games.  This allows us to hedge our bets and as long as we create this tool generically enough, it should be easy enough to port over.  Best scenario is that if multiple games in this genre are popular, then we can have a tool that works for all of them and we can have a larger user base.
+          </li>
+        </ul>
       </li>
       <li>
-        <i>Risk of not getting enough data to provide accurate and useful suggestions</i><br/>
-        This will definitely occur anytime there is a patch with either new content or game balance changes.  This is where GenAI can shine.  We can provide weighting for suggestions based on statistics or reasoning of the patch notes.  We can ask the LLM to provide us for these weights.  At the beginning of the patch cycle, the LLM can decide whether this patch is similar or different to the previous patch.  If it is similar, we can give more weights using the previous patch's data.  If it is different, we can increase the weight that the LLM suggests based on the patch notes.  In both cases, as we progress more and more into the patch cycle, we can increase the weights of the suggestions based on the data.
+        <i>Risk of not getting enough data to provide accurate and useful suggestions</i>
+        <br/>
+        There are times where we simply do not have enough data to make an accurate suggestion.  This will definitely occur anytime there is a patch with either new content or game balance changes but it may also occur if a new strategy is discovered and starts trending.
+        <ul>
+          <li>
+            <i>Mitigation</i>
+            <br/>
+            This is where GenAI can shine.  We can provide weighting for suggestions based on statistics or reasoning of the patch notes and commentary on social media.  We can ask the LLM to provide us for these weights.  At the beginning of the patch cycle, the LLM can decide whether this patch is similar or different to the previous patch.  If it is similar, we can give more weights using the previous patch's data.  If it is different, we can increase the weight that the LLM suggests based on the patch notes.  In both cases, as we progress more and more into the patch cycle, we can increase the weights of the suggestions based on the data.
+          </li>
+        </ul>
       </li>
     </ul>
     <h2>Metrics for Success</h2>
