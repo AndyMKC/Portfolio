@@ -57,7 +57,8 @@
     There are several types of players that we could possibly target:
     <ul>
       <li>
-        Ultra competitive players that have this tool running as they are playing the game.  These people have a high degree of understanding in the game and keep up with the current discussion as the game updates.  However, they may not know the exact precise win/loss statistics as they shift.</li>
+        Ultra competitive players that have this tool running as they are playing the game.  These people have a high degree of understanding in the game and keep up with the current discussion as the game updates.  However, they may not know the exact precise win/loss statistics as they shift.
+      </li>
       <li>
         Players that want to theorize possible combinations.  These are people that visit the tool but are not under a time crunch of an actual game.  They can play around with the draft by themselves or with anothe person simulating the other team.
       </li>
@@ -69,7 +70,7 @@
     <h2>Use Cases and Pain Points</h2>
     <ul>
       <li>
-        <i>"The Hero Suggester"</i><br/>
+        <i>The Hero Suggester</i><br/>
         Given the current state of the draft, they need to understand what the next hero to pick or ban should be that would maximize their chances of winning.
         <ul>
           <li>
@@ -84,7 +85,7 @@
         </ul>
       </li>
       <li>
-        <i>"The Player Scouter"</i><br/>
+        <i>The Player Scouter</i><br/>
         Scout out the their teammates and opponents and understand what heroes they usually play and how well they do with each hero.
         <ul>
           <li>
@@ -94,7 +95,7 @@
         </ul>
       </li>
       <li>
-        <i>"The Hero Pairing Suggester"</i><br/>
+        <i>The Hero Pairing Suggester</i><br/>
         Understand what their gameplan is and how their hero pairings (which heroes to play together) work.
         <ul>
           <li>
@@ -104,39 +105,32 @@
         </ul>
       </li>
     </ul>
-    <h2>Priorities</h2>
-    Given the use cases and pain points, the priorities are:
-
+    <h2>Prioritized Solutions</h2>
+    Given the use cases and pain points, the solutions in a priority order are:
     <ul>
       <li>
-        <i>"The Hero Suggester"</i><br/>Provide a simple and intuitive interface that presents to the user several hero suggestions and the reasons why.  At the beginning, it may only be based on what heroes have already been picked and banned but as time goes on, it may factor in the other suggestions such as a certain teammate or opponent likes to play this hero or it goes well with another hero that has already been picked.<br/><br/>
-
-        The reason this </div>is first is because this is what we are betting on as the core functionality of the tool that will attract users.  Other features, while they can be standalone, are expected to fold into this decision making process here.<br/><br/>
+        <i>The Hero Suggester</i>
+        <br/>
+        At both the beginning of the draft (if the user drafts first) and after every hero pick/ban choice is made, PickWinBan will suggest three heroes for the user to select from based on a variety of factors such as already picked and banned heros, statistics, patch notes, and list of players and opponents.  With each hero suggestion, PickWinBan will provide a reason as to why this hero was suggested and what kind of role or playstyle this hero needs to play in order to maximize the chances of winning.  Lastly, if it is a hero pick suggestion, it will suggest a player on the team that is most suitable to play.
+        <br/>
+        <br/>
+        The reason this is first is because this is what we are betting on as the core functionality of the tool that will attract users.  Other features, while they can be standalone, are expected to fold into this decision making process here.<br/><br/>
       </li>
       <li>
-        <i>"The Player Scouter"</i><br/>Provide a way to quickly see what the top three heroes their teammate and opponents like to play and how well they do with each hero.<br/><br/>
-
+        <i>The Player Scouter</i>
+        <br/>
+        Provide a way to quickly see what the top three heroes their teammate and opponents like to play and how well they do with each hero.
+        <br/>
+        <br/>
         The reason this is second is because it allows people to feel like they are being heard and respected.  Even if a hero is good for the team overall, it may not be good or fun for a specific player which would lead to lower morale.<br/><br/>
       </li>
       <li>
-        <i>"The Hero Pairing Suggester"</i><br/>Provide a statistic on how well a hero synergy does in each stage of the game when the hero is being hovered over.<br/><br/>
-
-        The reason this is third is because this is functionality is pretty easily gathered from already existing websites.  It is provided here to "complete" the suite of tools and make this a one-stop-shop but it is not the core functionality of the tool.
-      </li>
-    </ul>
-    <h2>Solutions</h2>
-    <ul>
-      <li>
-        <i>"The Hero Suggester"</i><br/>
-        At both the beginning of the draft (if the user drafts first) and after every hero pick/ban choice is made, PickWinBan will suggest three heroes for the user to select from based on a variety of factors such as statistics, patch notes, and list of players and opponents.  With each hero suggestion, PickWinBan will provide a reason as to why this hero was suggested and what kind of role or playstyle this hero needs to play in order to maximize the chances of winning.  Lastly, if it is a hero pick suggestion, it will suggest a player on the team that is most suitable to play.
-      </li>
-      <li>
-        <i>"The Player Scouter"</i><br/>
-        After the user has entered the name of their teammate or opponent, PickWinBan will download and process that person's match history to gather the most played heroes and the most successful heroes (with a minimum amount of matches played).
-      </li>
-      <li>
-        <i>"The Hero Pairing Suggester"</i><br/>
+        <i>The Hero Pairing Suggester</i>
+        <br/>
         After the user has confirmed all their and their opponent's hero picks, PickWinBan will predict how the opponent will play their hero pairings (or groupings if more than two heroes together or it could be solo).  PickWinBan will then suggest to the player how to play out their hero picks to both counter the opponent's predicted move and also to make sure the two heros are as synergistic as possible.
+        <br/>
+        <br/>
+        The reason this is third is because this is functionality is pretty easily gathered from already existing websites.  It is provided here to "complete" the suite of tools and make this a one-stop-shop but it is not the core functionality of the tool.
       </li>
     </ul>
     <h2>Dependencies</h2>
