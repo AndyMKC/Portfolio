@@ -52,7 +52,7 @@
     <h2 class="preserve-lines">Overview</h2>
     Content creators wishes to post content on their social media accounts in order to generate reach and attract a bigger audience.  However, they may not always have the time or the creativity to come up with new content.  NexPost.ai's Inspired Post Generation feature allows users to generate new posts based on existing content, making it easier for them to share relevant and engaging content with their audience.
     <h2>Goal</h2>
-    We are building a feature to make it easier for users to generate posts so the main goal here is to drive higher engagement and customer retention of NexPost.ai.
+    We are building a feature to make it easier for users to generate posts so the main goal here is to drive higher activation and retention of NexPost.ai.
     <h2>Constraints</h2>
       Unlike other features of content generation in NexPost.ai where the content ideas stems from the user, this one is sourced from another author.  This means it is difficult to assign responsibility for inappropriate content.  NexPost.ai must flag a warning if the generated content may be deemed inappropriate or offensive.
     <h2>Customer segmentations</h2>
@@ -72,7 +72,7 @@
       </li>
       
     </ul>
-    Based on our goal of driving higher engagement amongst existing users and customer retention, we would target the Personal Brand Builders.  The reason for this is because they are frequently (low stakes, high volume) with types of content such as quick top of the mind thoughts or personal anecdotes.  Comparatively, both the Business Promoters and Thought Leaders have more indepth content with higher stakes.
+    Based on our goal of driving higher adoption and engagement amongst existing users, we would target the Personal Brand Builders.  The reason for this is because they are frequently (low stakes, high volume) with types of content such as quick top of the mind thoughts or personal anecdotes.  Comparatively, both the Business Promoters and Thought Leaders have more indepth content with higher stakes.
     <h2>Use Cases and Pain Points</h2>
     The user comes across a post they really like and wishes to repost it.  However, they want to either:
     <ul>
@@ -127,7 +127,7 @@
     </ul>
     All solutions will subject the input data for inappropriate content detection and will flag a warning if the generated content may be deemed inappropriate or offensive either globally or to a specific region or audience.
     <h2>Dependencies</h2>
-    Coming Soon!
+    In a rarity, there really is not much that the MVP of this product is dependent on besides the LLM it needs to do the generation.  It relies on the user to copy/paste the material so there are no APIs it needs to rely on being supported.  Besides the usual infrastructure staying alive, it is self-contained.
     <h2>Risks and Mitigation</h2>
      <ul>
       <li>
@@ -156,7 +156,63 @@
       </li>
     </ul>
     <h2>Metrics for Success</h2>
-    Coming Soon!
+    <ul>
+      <li>
+        Primary Metrics for Activation and Retention
+        <ul>
+          <li>
+            <i>Daily Active Users</i><br/>
+            We are expecting more users to use this as it is lowest cost of entry.
+            <ul>
+              <li>
+                For the purposes of this study, we can set this to be 5% growth rate per month.
+              </li>
+            </ul>
+          </li>
+          <li>
+            <i>Day over Day Retention rate</i><br/>
+            We want to measure this day over day as we expect users to be posting on social media 7 days of the week.
+            <ul>
+              <li>
+                For the purposes of this case study, we can set this target to be > 30%.  We can adjust this as we start seeing more data.
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+      <li>
+        Secondary Metrics
+        <ul>
+          <li>
+            <i>Usage Frequency</i><br/>
+            This will help us know if we even have an audience or not.  We should also put, as a background, the daily active users of the game in general.
+            <ul>
+              <li>
+                For the purposes of this case study, we can set this target to be > 1 per day.  1 per day seems to fit a nice quota to stay on people's radar but this is something we should certainly look at in the future, especially when compared to usage of the other generation types.
+              </li>
+            </ul>
+          </li>
+          <li>
+            <i>Frequency of use for the same source material</i><br/>
+            We would want this to be as low as possible as that would indicate the user is satisfied with the first generation and does not need to keep going back to the same source material.
+            <ul>
+              <li>
+                For the purposes of this case study, we can set this to be < 3 times at the 50th percentile mark.
+              </li>
+            </ul>
+          </li>
+          <li>
+            <i>Week over Week Retention rate</i><br/>
+            This will let us know if users, after they have had time to digest their results and how useful the tool is, comes back for more.
+            <ul>
+              <li>
+                For the purposes of this case study, we can set this to be > 75%.
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+    </ul>
     <h2>Future Roadmap</h2>
     <ul>
       <li>
