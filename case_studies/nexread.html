@@ -48,32 +48,56 @@
     </ul>
     -->
     <h1>NexRead</h1>
-    TODO:
+    As parents, we often collect a massive collection of books either from buying them or receiving them as hand-me-downs.  We want to encourage our children's love of reading but they will keep choosing the same several books over and over (or perhaps even the same book) and that can end up being quite boring for the parent.  At the same time, the child may have different interests based on what they are exposed to (today it may be trains, tomorrow it may be insects).  
     <h2 class="preserve-lines">Overview</h2>
-    TODO:
+    NexRead is an AI-driven assistant that helps you keep the reading fresh for the reading parent and relevant to the interests of the listening child.
     <h2>Goal</h2>
-    TODO:
+     We are building a 0-1 here so the main goal is to find product-market fit.
     <h2>Constraints</h2>
-      TODO:
+      Since we are suggesting books for children to listen to, the product must only suggest books that are appropriate for the audience.  If there are multiple listeners, it has to cater to the lowest aged child.  However, if the lowest age child is a baby and does not understand the content of the books, then it should use the lowest aged toddler.
+
+      Also, the library must not be static.  Books are bought/received and donated away regularly.
     <h2>Customer segmentations</h2>
-    TODO:
+    There are several customer segments we want to target
     <ul>
       <li>
-        <i>TODO:</i><br/>
-        TODO:
-      </li>      
+        <i>Family with children that want to be read to close in age.</i><br/>
+        This is a family where the children are at most 3 years apart between the oldest and youngest.
+      </li>
+      <li>
+        <i>Family with children that want to be read to further in age.</i><br/>
+        This is a family where the children are at least 3 years apart between the oldest and youngest.
+      </li>
+      <li>
+        <i>Setting where there are lots of children of the same age</i><br/>
+        This could be a classroom or reading session at the park.
+      </li>
     </ul>
-    TODO:  Provide justification on why we are choosing a specific target
+    The simplest case is setting where there is a family with children that are close in age.  The issue with age difference may require different focus as the older child may want to read along, slowing down the pace and requiring a simpler book whereas the younger children want to be read to and need to keep their attention span engaged.  With a large number of children in a similar age, the chances their interest varies widely and a much lower chance of a book being found that matches.
     <h2>Use Cases and Pain Points</h2>
-    TODO:
+    The child or children wants to be read a book by the adult.
     <ul>
       <li>
-        <i>TODO:</i><br/>
-        TODO:
+        <i>Book Reading</i><br/>
+        The adult and children are trying to find a book to read together.
+        <ul>
+          <li>
+            <i>Pain Point -- Book freshness</i><br/>
+             The adult wants to read to the children but it is hard to maintain interest or show enthusiasm as the adult is getting bored of the book since they have read it many times before recently.
+          </li>
+          <li>
+            <i>Pain Point -- Irrelevant interests</i><br/>
+             The children wants to be read a book but they have their specific interests they want to listen to and the book is not relevant to them.
+          </li>
+        </ul>
+      </li>
+      <li>
+        <i>Book Inventory</i><br/>
+        The adult is trying to figure out what books to buy or what books to give away.
         <ul>
           <li>
             <i>Pain Point</i><br/>
-            TODO:
+             The adult has a hard time keeping track of which books contains which materials or whether they have duplicates of the same book since there is just so many.  They may want to stock up on some books that cater more to the current interests of the children or get rid of books for subjects that already have a lot of coverage.
           </li>
         </ul>
       </li>
@@ -82,24 +106,62 @@
     Given the use cases and pain points, the solutions in a priority order are:
     <ul>
       <li>
-        <i>TODO:</i>
+        <i>Book Reading</i>
         <br/>
-        TODO:
+        The product will suggest 1-3 books based on the last read dates and the subject it covers.
+        <ul>
+          <li>
+            <i>Priority 1</i>
+            <br/>
+            The reason this is first is because this is the main problem of the customer and is in need more frequently.
+          </li>
+        </ul>
+      </li>
+      <li>
+        <i>Book Inventory</i>
+        <br/>
+        The product will identify:
+        <ul>
+            <li>
+                Books that are very similar to others.  It will try to reduce the number of books so that it either covers a wide variety of subjects.  An example of this would be a transportation book that may cover cars, trains, plans, bridge, etc).
+            </li>
+            <li>
+                Book that covers a specific subject with great depth and is not covered by other books.  An example would be a book that stars a specific character from a different media franchise.
+            </li>
+        </ul>
+        <ul>
+          <li>
+            <i>Priority 2</i>
+            <br/>
+            The reason this is second is because this scenario is once in a while and is never an immediate problem.
+          </li>
+        </ul>
       </li>
     </ul>
     <h2>Dependencies</h2>
-    TODO:
+    <ul>
+        <li>
+            <i>OpenLibrary API</i>
+            <br/>
+            This is the API that allows us to get the list of subjects a book covers.
+        </li>
+        <li>
+            <i>Internet Archive API</i>
+            <br/>
+            This is the API that allows us to get the synopsis of a book.  From there, we can extract subjects it covers.
+        </li>
+    </ul>
     <h2>Risks and Mitigation</h2>
      <ul>
       <li>
-        <i>TODO:</i>
+        <i>Rate throttling</i>
         <br/>
-        TODO:
+        Especially during the initial inventory load, we may get rate throttled while trying to retrieve our information.
         <ul>
           <li>
             <i>Mitigation</i>
             <br/>
-            TODO:
+            The process has to have a backoff mechanism.  Better still if we can understand the rate throttling limits and code that in.
           </li>
         </ul>
       </li>
@@ -107,14 +169,25 @@
     <h2>Metrics for Success</h2>
     <ul>
       <li>
-        Primary Metrics for TODO:
+        Primary Metrics to measure product-fit
         <ul>
           <li>
-            <i>TODO:</i><br/>
-            TODO:
+            <i>Week over Week retention</i>
+            <br/>
+            Reading to a child is someting that happens all the time (hopefully).  We should understand whether this tool is something that was useful enough that the adult keeps using it consistently.
             <ul>
               <li>
-                TODO:
+                For the purposes of this case study, we can set this target to be > 70%.  If the user has already done the work to inventory their book library and they don't consistently use it, then we are not creating the correct solution.
+              </li>
+            </ul>
+          </li>
+          <li>
+            <i>Net Promoter Score</i>
+            <br/>
+            We are theorizing that parents love to share their techniques and tricks for easier parenting with their social circle.  Therefore, we will use NPS to understand how much people love our product.
+            <ul>
+              <li>
+                As a MVP product, we are looking for a target NPS of 30.
               </li>
             </ul>
           </li>
@@ -124,11 +197,12 @@
         Secondary Metrics
         <ul>
           <li>
-            <i>TODO:</i><br/>
-            TODO:
+            <i>Time to First Value</i>
+            <br/>
+            This would mean the user has inventoried several books and is now trying a suggestion for the first time.
             <ul>
               <li>
-                TODO:
+                Considering our MVP has manual book entry, for the first version, we should aim for TTFV to be less than 10 minutes.
               </li>
             </ul>
           </li>
@@ -138,9 +212,19 @@
     <h2>Future Roadmap</h2>
     <ul>
       <li>
-        <i>TODO:</i>
+        <i>Read along for reading comprehension</i>
         <br/>
-        TODO:
+        The product should have a mode where instead of the adult reading to the children, it is the adult reading along with the child.  Then it should be able to learn the reading level of the child.  The product can detect the voice signature of the adult and the child and understand where the child has difficulties.  The suggestion of books it makes will also take into account the reading level of the child.
+      </li>
+      <li>
+        <i>Easier library import</i>
+        <br/>
+        Currently, the user has to type in the title and author of the book which is a cumbersome and time-intensive task.  A solution to this is to have the adult take a picture of the book and have OCR or AI's image recognition to recognize what book it is and match it.
+      </li>
+      <li>
+        <i>Reader app</i>
+        <br/>
+        As an alternative to having the person fetch the book, it can download a pre-purchased digital book or provide an option to purchase a book.  Then it can highlight words as the book is read along.
       </li>
     </ul>
     <section class="contact">
@@ -154,6 +238,5 @@
   <footer class="footer">
     <p>&copy; 2025 Andy Cheng</p>
   </footer>
-
 </body>
 </html>
