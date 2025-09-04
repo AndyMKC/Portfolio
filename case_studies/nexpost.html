@@ -54,7 +54,22 @@
     <h2>Overview</h2>
     NexPost.ai's Inspired Post Generation feature allows users to generate new posts based on existing content, making it easier for them to share relevant and engaging content with their audience.
     <h2>Context and Background</h2>
+    In today’s digital age, social media platforms are essential channels for both personal expression and professional outreach. With billions of daily users on LinkedIn, Facebook, Instagram, Reddit, and blogs, creators face relentless pressure to publish fresh, engaging content that resonates with diverse audiences.
+    <br/>
+    Yet many content creators spend hours each week manually brainstorming, rewriting, and formatting posts to fit each platform’s unique conventions. This repetitive work leads to creative fatigue, inconsistent brand voice, and missed opportunities to leverage proven content.
+    <br/>
+    We are all surrounded by powerful voices that we learn from and admire and the best content should survive.  It is important to spread this content to more audiences so more people benefit.
     <h2>Problem Statement</h2>
+    
+    <h3>Current State</h3>
+    Content creators admire powerful voices and want to share the best ideas with their own audiences, but they spend hours manually copying, paraphrasing, and reformatting others’ posts to fit LinkedIn, Facebook, Instagram, Reddit, and blogs. This tedious process drains creativity, introduces inconsistency, and risks unintentional plagiarism.
+    <h3></h3>Desired Outcome</h3>
+    Creators need an AI assistant that can ingest high-quality public content, rewrite it in their unique voice, and output platform-ready posts—so they can quickly amplify valuable ideas while maintaining authenticity and compliance.
+    <h3></h3>Gap & Impact</h3>
+    Existing AI writing tools either generate generic copy from scratch or leave creators to handle all the manual paraphrasing themselves. As a result, valuable content remains siloed, creators face workflow bottlenecks, and audiences miss out on proven ideas presented in fresh, personalized ways.
+    <h3></h3>Full Statement</h3>
+    Despite the abundance of inspiring social media content, there is no seamless, ethical system that automatically transforms admired posts into new, on-brand, platform-optimized content. Without such a solution, creators endure creative fatigue, inconsistent messaging, and missed opportunities to spread high-impact ideas to broader audiences.
+
     <h2>Goal</h2>
     We are building a feature to make it easier for users to generate posts so the main goal here is to drive higher activation and retention of NexPost.ai.
     <h2>Constraints</h2>
@@ -75,7 +90,99 @@
         These are the users that want to share their expertise and insights with their audience.  They may be looking to establish themselves as thought leaders in their respective fields in order to attract consulting gigs, speaking engagements, or book deals.
       </li>
     </ul>
-    Based on our goal of driving higher adoption and engagement amongst existing users, we would target the Personal Brand Builders.  The reason for this is because they are frequently (low stakes, high volume) with types of content such as quick top of the mind thoughts or personal anecdotes.  Comparatively, both the Business Promoters and Thought Leaders have more indepth content with higher stakes.
+    Based on our goal of driving higher adoption and engagement amongst existing users, we would target the Personal Brand Builders.  The reason for this is because they are frequently (low stakes, high volume) with types of content such as quick top of the mind thoughts or personal anecdotes.  Comparatively, both the Business Promoters and Thought Leaders have more in depth content with higher stakes.
+
+    <h2>Personas</h2>
+
+    <h3>Personal Brand Builder</h3>
+    <ul>
+      <li>
+        Goals
+        <ul>
+          <li>
+            Post short, top-of-mind observations 3–5 times per week.
+          </li>
+          <li>
+            Increase LinkedIn followers from 3k to 10k in six months.
+          </li>
+          <li>
+            Land speaking gigs at industry meetups.
+          </li>
+        </ul>
+      </li>
+      <li>
+        Frustrations
+        <ul>
+          <li>
+            Creative blocks when trying to spin personal anecdotes into posts.
+          </li>
+          <li>
+            Wasted hours manually rewriting and resizing content for each platform.
+          </li>
+          <li>
+            Inconsistent tone and lost momentum after missed posting days.
+          </li>
+        </ul>
+      </li>
+      <li>
+        Quote:  "I have so many thoughts on UX, but turning them into quick, engaging posts eats up my time and creativity."
+      </li>
+    </ul>
+
+    <h3>Thought Leader</h3>
+    <ul>
+      <li>
+        Goals
+        <ul>
+          <li>
+            Publish in-depth LinkedIn articles and blog posts twice a month.
+          </li>
+          <li>
+            Secure three speaking engagements at major conferences this year.
+          </li>
+          <li>
+            Establish credibility for a forthcoming book deal.
+          </li>
+        </ul>
+      </li>
+      <li>
+        Frustrations
+        <ul>
+          <li>
+            Researching, drafting, and citing insights takes days per post.
+          </li>
+          <li>
+            Adapting long-form content to bite-sized social snippets feels forced.
+          </li>
+          <li>
+            Rarely has bandwidth to engage in comment threads and foster community.
+          </li>
+        </ul>
+      </li>
+      <li>
+        Quote:  "My audience expects deep analysis, but slicing those long takes into engaging social posts is a constant headache."
+      </li>
+    </ul>
+
+    <h2>User Stories</h2>
+    <ul>
+      <li>
+        As a Personal Brand Builder, I want to paste an existing influencer post URL so that NexPost.ai can extract the core ideas and rewrite them in my unique voice.
+      </li>
+      <li>
+        As a Personal Brand Builder, I want to create platform-specific variants (LinkedIn, Instagram, Twitter) from one input so that I don’t spend extra time reformatting.
+      </li>
+      <li>
+        As a Personal Brand Builder, I want NexPost.ai to suggest relevant, trending hashtags based on my domain so that I can boost post discoverability without manual research.
+      </li>
+      <li>
+        As a Thought Leader, I want to upload a link to a long-form whitepaper or article so that NexPost.ai can generate a series of bite-sized social snippets for different platforms.
+      </li>
+      <li>
+        As a Thought Leader, I want to enrich my posts with branded call-to-action elements (links to my podcast, speaking page, or upcoming book) so that each post drives measurable engagement and opportunities.
+      </li>
+    </ul>
+
     <h2>Use Cases and Pain Points</h2>
     The user comes across a post they really like and wishes to repost it.  However, they want to either:
     <ul>
@@ -242,6 +349,13 @@
         <i>Top post gatherer</i>
         <br/>
         Upon given a topic, Nexpost.ai will scour the internet and gather the highest trending posts about that topic.  The user can then select one of these posts to be the source of inspiration for their new post.
+      </li>
+      <li>
+        <i>Auto-consume</i>
+        <br/>
+        Upon given a list of social media channels, NexPost.ai will automatically grab the ones that it feels are relevant and onbrand for the user and automatically repost it in the style of the user's voice.
+
+        Similarly, NexPost.ai can be configured to watch for white papers or news articles in the user's field and generate posts based on that.
       </li>
     </ul>
     <section class="contact">

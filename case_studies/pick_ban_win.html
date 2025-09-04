@@ -50,9 +50,25 @@
     <h1>PickBanWin</h1>
     In the world of Multiplayer Online Battle Arena (MOBA) video games such as <a href="https://en.wikipedia.org/wiki/Dota_2" target="_blank">Dota2</a> and <a href="https://en.wikipedia.org/wiki/League_of_Legends" target="_blank">League of Legends</a> where each player controls one singular character known as the "hero" or "champion" (will be referred to as hero for the rest of this case study), the draft phase is crucial for team success in competitive play.  Each team takes turns picking a hero for their team to play and banning a hero to be removed from the hero pool entirely, preventing either side of picking that hero.  There is a limited amount of time to choose which hero to pick and ban and with the game constantly changing either from game patches or swings in the meta game, a successful hero picking and banning stage may be the key to priming the team to a win or leading them to certain defeat.
     <h2>Overview</h2>
-    PickBanWin is an AI-driven tool designed to analyze enemy drafts and recommend winning team compositions. It leverages historical data and recent discussions to deliver actionable insights during the drafting phase.  It helps the the user understand, given the hero pool and their team's playstyle and capabilities, what are the best heroes to pick and ban in order to maximize the chances of winning the game.
+    PickBanWin is an AI-driven tool designed to analyze enemy drafts and recommend winning team compositions. It leverages historical data and recent discussions to deliver actionable insights during the drafting phase.  It helps the user understand, given the hero pool and their team's playstyle and capabilities, what are the best heroes to pick and ban in order to maximize the chances of winning the game.
     <h2>Context and Background</h2>
+    Multiplayer Online Battle Arena (MOBA) games like Dota 2 and League of Legends attract tens of millions of players worldwide, with professional leagues filling stadiums and drawing massive streaming audiences. Each match begins with a draft phase, where strategic hero selection and bans lay the foundation for victory or defeat.
+    <br/>
+    During the draft, two teams alternate picking a “hero” to field and banning one from play, all within tight time constraints. Patch updates, balance changes, and evolving meta strategies continually reshape which heroes excel.  This makes real-time insights critical for informed decisions.
+    <br/>
+    Today’s players rely on tier lists, community forums, and personal experience to guide their picks and bans. However, these sources can be outdated, inconclusive, or too generic to account for a team’s unique playstyle. There’s a clear need for a data-driven, context-aware tool that synthesizes historical match outcomes and current meta trends to recommend optimal drafting choices.
+
     <h2>Problem Statement</h2>
+
+    <h3>Current State</h3>
+    Competitive MOBA teams enter the draft phase under intense time pressure, flipping through static tier lists, community forums, and personal notes to inform their picks and bans. These fragmented, often outdated sources fail to capture the latest patch shifts, evolving hero synergies, or opponents’ tendencies which results in rushed decisions and exploitable drafts.
+    <h3></h3>Desired Outcome</h3>
+    Teams need an intelligent assistant that instantly analyzes meta trends, historical match data, enemy draft patterns, and their own playstyle to recommend optimal hero picks and bans.  This ensures every decision in the draft phase maximizes win probability.
+    <h3></h3>Gap & Impact</h3>
+    Today’s drafting aids are social media posts or rigid websites that overlook real-time context: they can’t simulate specific team compositions, adapt to recent balance changes, or read an opponent’s drafting habits. As a result, teams endure inconsistent drafts, early-game disadvantages, and lower overall win rates causing both player confidence and competitive success to decrease.
+    <h3></h3>Full Statement</h3>
+    Despite the draft phase determining match momentum, no solution provides live, context-aware pick/ban guidance tailored to a team’s strengths, the current meta, and opponents’ patterns. Without such a tool, players rely on stale data and gut instinct—compromising draft quality, reducing win chances, and increasing frustration before the first hero appears on screen.
+
     <h2>Goal</h2>
     We are building a 0-1 here so the main goal is to find product-market fit.
     <h2>Constraints</h2>
@@ -71,6 +87,97 @@
       </li>
     </ul>
     Based on our goal of finding a product-market fit, the greatest value we can get is from the group of ultra competitive players that want to use this as they play.  They will be very inclined to use this tool if it thinks it can help them and since they want to win, they will have higher chance of providing feedback to improve the tool than the other two groups which are more casual.
+    <h2>Personas</h2>
+    
+    <h3>Online Friend Group Team Captain</h3>
+    <ul>
+      <li>
+        Goals
+        <ul>
+          <li>
+            Secure Divine tier ranking for team.
+          </li>
+          <li>
+            Develop a go-to pool of reliable heroes for each teammate’s playstyle.
+          </li>
+          <li>
+            Scout opponents’ draft habits to gain a strategic edge.
+          </li>
+        </ul>
+      </li>
+      <li>
+        Frustrations
+        <ul>
+          <li>
+            Limited prep time—patch notes and meta analysis take hours.
+          </li>
+          <li>
+            Inconsistent draft plans when teammates suggest conflicting picks.
+          </li>
+          <li>
+            Relies on manual notes and community tier lists that often disagree.
+          </li>
+        </ul>
+      </li>
+      <li>
+        Quote:  "If I could see which heroes our rivals favor and get instant counter-picks, it would give us a mental advantage."
+      </li>
+    </ul>
+    
+    <h3>High-Rank Solo Queue Player</h3>
+    <ul>
+      <li>
+        Goals
+        <ul>
+          <li>
+            Reach Ancient rank by mastering meta picks and counter-picks.
+          </li>
+          <li>
+            Learn opponent drafting patterns to avoid being outdrafted in solo queue.
+          </li>
+        </ul>
+      </li>
+      <li>
+        Frustrations
+        <ul>
+          <li>
+            No coach or team to guide picks—decisions feel like guesswork.
+          </li>
+          <li>
+            Fragmented information across apps, sites, and patch notes.
+          </li>
+          <li>
+            Time constraints often give a feeling of anxiety causing inability to think clearly.
+          </li>
+        </ul>
+      </li>
+      <li>
+        Quote:  "I wish I had a draft coach in my pocket—something that tells me ‘ban this hero’ or ‘pick that one’ based on who I’m facing."
+      </li>
+    </ul>
+
+    <h2>User Stories</h2>
+    <ul>
+      <li>
+        As an Online Friend Group Team Captain, I want to have recommended target picks and bans based on opponent's historical draft tendencies and specific match data.
+      </li>
+      <li>
+        As an Online Friend Group Team Captain, I want to customize draft recommendations by selecting our team’s strategic preference (e.g., early-game aggression vs. late-game scaling) so that suggested picks align with our strengths.
+      </li>
+      <li>
+        As an Online Friend Group Team Captain, I want to run draft simulations for multiple scenario variations so that I can prepare fallback plans for real-time adjustments during live drafts.
+      </li>
+      <li>
+        As an Online Friend Group Team Captain, I want to generate a comprehensive draft plan—including pick order and ban targets for our weekly scrims so that my team can practice and internalize the recommended strategies.
+      </li>
+      <li>
+        As a High-Rank Solo Queue Player, I want to receive instantaneous pick/ban recommendations within the 30-second draft timer so that I can avoid being outdrafted and improve my solo queue win rate.
+      </li>
+      <li>
+        As a High-Rank Solo Queue Player, I want to view a meta summary of patch-specific win rates for my rank bracket so that I can optimize my hero pool with the most effective picks.
+      </li>
+    </ul>
+
     <h2>Use Cases and Pain Points</h2>
     <ul>
       <li>
