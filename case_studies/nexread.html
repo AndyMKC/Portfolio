@@ -1,35 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Andy Cheng – Product Management Portfolio</title>
 
   <!-- CSS Reset -->
-  <link rel="stylesheet" href="../css/reset.css"/>
+  <link rel="stylesheet" href="../css/reset.css" />
 
   <!-- Design Tokens -->
-  <link rel="stylesheet" href="../css/colors.css"/>
+  <link rel="stylesheet" href="../css/colors.css" />
 
   <!-- Typography -->
-  <link rel="stylesheet" href="../css/typography.css"/>
+  <link rel="stylesheet" href="../css/typography.css" />
 
   <!-- Layout Helpers -->
-  <link rel="stylesheet" href="../css/layout.css"/>
+  <link rel="stylesheet" href="../css/layout.css" />
 
   <!-- Components & Utilities -->
-  <link rel="stylesheet" href="../css/components.css"/>
+  <link rel="stylesheet" href="../css/components.css" />
 </head>
+
 <body>
   <header class="hero">
     <a href="../index.html" class="hero__home-link">
-      <img
-        src="../img/linkedin.jpg"
-        alt="Andy Cheng Portrait"
-        class="hero__avatar"
-      />
+      <img src="../img/linkedin.jpg" alt="Andy Cheng Portrait" class="hero__avatar" />
       <h1 class="hero__title">Andy Cheng</h1>
-      <p class="hero__subtitle">Product Leader:  Driven by Data and Forged in Code</p>
+      <p class="hero__subtitle">Product Leader: Driven by Data and Forged in Code</p>
     </a>
   </header>
   <main>
@@ -47,273 +45,323 @@
       <li>Rely less on community content as the patch just release and then rely more as it goes on</li>
     </ul>
     -->
-    <h1>NexRead</h1>
-    Time is precious and parents want to spend as much quality time with their children as possible.  Reading to one's children is an age-old tradition that serves as a primary mean of helping the parent bond with their children and teaching the children the language skills they need to succeed later in life. 
-    <h2>Overview</h2>
-    NexRead is an AI-driven assistant that helps you keep the reading fresh for the reading parent and relevant to the interests of the listening child.  From the family's massive collection of books, it suggests ones that will be fun to read for all.  No more reading the same books over and over.  No more tracking whose turn it is to select a book to read or show signs of favoritism.  NexRead takesc care of it all.
-    <h2>Context and Background</h2>
-    In this day and age, children are often being taught visually by what's on a screen, leading them to be addicted to screens, deficient in literacy, and lacking imagination.  Parents want to read to their children and often collect a mountain of books intending to do so but the quantity of books does not translate to the quality of time had by both the parent and the child.  This is causing parents to offer a child screen time to entertain and keep them busy and "learn" but what happens is they become addicted to screens, deficient in literacy, and lacking in imagination.<br/>
-    <br/>
-    In terms of competition, the only competitor is an app call MoBoo.  It is an app that is still being updated (last update is 2025-05-08 as of 2025-09-03).  It tracks children and gives suggestions based on a pre-selected set of tags (for example, there is "transportation" but no "cars" nor "trains" and there is no "brand-name" characters from media like Moana).  It hooks into Project Gutenberg for free eBooks straight from the shelf.  Also, suggestions seem to work on only one child at a time as opposed to multiple.  Lastly, their interface is a bunch of checkboxes as opposed to natural language, making it less ideal to interact with.
-    <h2>Problem Statement</h2>
-    
-    <h3>Current State</h3>
-    Parents treasure their sprawling home libraries but spend excessive time choosing what to read next. This often leads to repeating the same favorite books, disputes over whose turn it is to pick, and frustrated kids who lose interest—and ultimately ask for a tablet for screen time.
-    <h3>Desired Outcome</h3>
-    Families need an effortless way to surface under-read titles from their own collections—tailored to each child’s evolving interests and fair to every sibling—so reading time stays fresh, fun, and focused on bonding rather than logistics.
-    <h3>Gap & Impact</h3>
-    Existing apps like MoBoo rely on rigid tag checkboxes and serve only one child at a time, and lacks the freedom offered via an agentic AI interface. As a result, parents default back to screens, fueling literacy gaps and stifling imagination
-    <h3>Full Statement</h3>
-    Despite owning hundreds of children’s books, families lack an intuitive, AI-driven system that recommends fresh, interest-aligned reads from their own shelves, supports multiple children fairly, and uses natural-language interaction. Without such a solution, parents revert to screen-based distractions, undermining storytime’s bonding and literacy benefits—and leaving children less prepared for future success.
-    
-    <h2>Goal</h2>
-     We are building a 0-1 here so the main goal is to find product-market fit.
-    <h2>Constraints</h2>
-      Since we are suggesting books for children to listen to, the product must only suggest books that are appropriate for the audience.  If there are multiple listeners, it has to cater to the lowest aged child.  However, if the lowest age child is a baby and does not understand the content of the books, then it should use the lowest aged toddler.
+    <details open>
+      <summary class="collapsible-title">NexRead</summary>
+      Time is precious and parents want to spend as much quality time with their children as possible. Reading to one's
+      children is an age-old tradition that serves as a primary mean of helping the parent bond with their children and
+      teaching the children the language skills they need to succeed later in life.
+    </details>
+    <details>
+      <summary class="collapsible-title">Overview</summary>
+      NexRead is an AI-driven assistant that helps you keep the reading fresh for the reading parent and relevant to the
+      interests of the listening child. From the family's massive collection of books, it suggests ones that will be fun
+      to read for all. No more reading the same books over and over. No more tracking whose turn it is to select a book
+      to read or show signs of favoritism. NexRead takesc care of it all.
+    </details>
+    <details>
+      <summary class="collapsible-title">Context and Background</summary>
+      In this day and age, children are often being taught visually by what's on a screen, leading them to be addicted
+      to screens, deficient in literacy, and lacking imagination. Parents want to read to their children and often
+      collect a mountain of books intending to do so but the quantity of books does not translate to the quality of time
+      had by both the parent and the child. This is causing parents to offer a child screen time to entertain and keep
+      them busy and "learn" but what happens is they become addicted to screens, deficient in literacy, and lacking in
+      imagination.<br />
+      <br />
+      In terms of competition, the only competitor is an app call MoBoo. It is an app that is still being updated (last
+      update is 2025-05-08 as of 2025-09-03). It tracks children and gives suggestions based on a pre-selected set of
+      tags (for example, there is "transportation" but no "cars" nor "trains" and there is no "brand-name" characters
+      from media like Moana). It hooks into Project Gutenberg for free eBooks straight from the shelf. Also, suggestions
+      seem to work on only one child at a time as opposed to multiple. Lastly, their interface is a bunch of checkboxes
+      as opposed to natural language, making it less ideal to interact with.
+    </details>
+    <details>
+      <summary class="collapsible-title">Problem Statement</summary>
+      <h3>Current State</h3>
+      Parents treasure their sprawling home libraries but spend excessive time choosing what to read next. This often
+      leads to repeating the same favorite books, disputes over whose turn it is to pick, and frustrated kids who lose
+      interest—and ultimately ask for a tablet for screen time.
+      <h3>Desired Outcome</h3>
+      Families need an effortless way to surface under-read titles from their own collections—tailored to each child’s
+      evolving interests and fair to every sibling—so reading time stays fresh, fun, and focused on bonding rather than
+      logistics.
+      <h3>Gap & Impact</h3>
+      Existing apps like MoBoo rely on rigid tag checkboxes and serve only one child at a time, and lacks the freedom
+      offered via an agentic AI interface. As a result, parents default back to screens, fueling literacy gaps and
+      stifling imagination
+      <h3>Full Statement</h3>
+      Despite owning hundreds of children’s books, families lack an intuitive, AI-driven system that recommends fresh,
+      interest-aligned reads from their own shelves, supports multiple children fairly, and uses natural-language
+      interaction. Without such a solution, parents revert to screen-based distractions, undermining storytime’s bonding
+      and literacy benefits—and leaving children less prepared for future success.
+    </details>
 
-      Also, the library must not be static.  Books are bought/received and donated away regularly.
-    <h2>Customer segmentations</h2>
-    There are several customer segments we want to target
-    <ul>
-      <li>
-        <i>Family with children that want to be read to close in age.</i><br/>
-        This is a family where the children are at most 3 years apart between the oldest and youngest.
-      </li>
-      <li>
-        <i>Family with children that want to be read to further in age.</i><br/>
-        This is a family where the children are at least 3 years apart between the oldest and youngest.
-      </li>
-      <li>
-        <i>Setting where there are lots of children of the same age.</i><br/>
-        This could be a classroom or reading session at the park.
-      </li>
-    </ul>
-    The simplest case is where there is a family with children that are close in age.  The issue with age difference may require different focus as the older child may want to read along, slowing down the pace and requiring a simpler book whereas the younger children want to be read to and need to keep their attention span engaged.  With a large number of children in a similar age, the chances their interest varies widely and a much lower chance of a book being found that matches.
-    <h2>Personas</h2>
-    
-    <h3>Adult</h3>
-    <ul>
-      <li>
-        Goals
-        <ul>
-          <li>
-            Bond with their children through reading.
-          </li>
-          <li>
-            Be entertained by the contents of the book.
-          </li>
-        </ul>
-      </li>
-      <li>
-        Frustrations
-        <ul>
-          <li>
-            Their two children are choosing two different books to read and argue about it.  They can either keep track of whose turn it is which is cumbersome, choose a book between the two but get called of unfair treatment, or exercise authoritative rule and decide on a third book but feel badly afterwards.
-          </li>
-          <li>
-            They always end up reading the same book over and over and it is getting boring.
-          </li>
-        </ul>
-      </li>
-      <li>
-        Quote: "I want the evening to be relaxing and I want to be slightly entertained.  Is that too much to ask?"
-      </li>
-    </ul>
-    <h3>Child</h3>
-    <ul>
-      <li>
-        Goals
-        <ul>
-          <li>
-            Read a book that talks about things they like.
-          </li>
-          <li>
-            Either get to choose the book to read or at least not the other sibling get to choose the book.
-          </li>
-        </ul>
-      </li>
-      <Li>
-        Frustrations
-        <ul>
-          <li>
-            Their book (seemingly) never gets chosen.
-          </li>
-          <li>
-            Unless their book is chosen, whatever gets read is so boring. 
-          </li>
-        </ul>
-      </Li>
-      <li>
-        Quote (if they could speak properly) -- "It is so unfair that my book never gets chosen.  Whatever my sibling chooses is so boring because they are so boring."
-      </li>
-    </ul>
+    <details>
+      <summary class="collapsible-title">Goal</summary>
+      We are building a 0-1 here so the main goal is to find product-market fit.
+    </details>
 
-    <h2>User Stories</h2>
-    <ul>
-      <li>
-        As an adult, I want to spend more time relaxing and bonding with my children by reading to them and not spend cognitive load figuring out what to read and dreading the boredom that comes with an oft-read book.
-      </li>
-      <li>
-        As a child, I want to read something that I like and not let my other siblings get to choose what book gets read.
-      </li>
-    </ul>
-    <h2>Use Cases and Pain Points</h2>
-    The child or children wants to be read a book by the adult.
-    <ul>
-      <li>
-        <i>Book Reading</i><br/>
-        The adult and children are trying to find a book to read together.
-        <ul>
-          <li>
-            <i>Pain Point -- Book freshness</i><br/>
-             The adult wants to read to the children but it is hard to maintain interest or show enthusiasm as the adult is getting bored of the book since they have read it many times before recently.
-          </li>
-          <li>
-            <i>Pain Point -- Irrelevant interests</i><br/>
-             The children wants to be read a book but they have their specific interests they want to listen to and the book is not relevant to them.
-          </li>
-        </ul>
-      </li>
-      <li>
-        <i>Book Inventory</i><br/>
-        The adult is trying to figure out what books to buy or what books to give away.
-        <ul>
-          <li>
-            <i>Pain Point</i><br/>
-             The adult has a hard time keeping track of which books contains which materials or whether they have duplicates of the same book since there is just so many.  They may want to stock up on some books that cater more to the current interests of the children or get rid of books for subjects that already have a lot of coverage.
-          </li>
-        </ul>
-      </li>
-    </ul>
-    <h2>Prioritized Solutions</h2>
-    Given the use cases and pain points, the solutions in a priority order are:
-    <ul>
-      <li>
-        <i>Book Reading</i>
-        <br/>
-        The product will suggest 1-3 books based on the last read dates and the subject it covers.
-        <ul>
-          <li>
-            <i>Priority 1</i>
-            <br/>
-            The reason this is first is because this is the main problem of the customer and is in need more frequently.
-          </li>
-        </ul>
-      </li>
-      <li>
-        <i>Book Inventory</i>
-        <br/>
-        The product will identify:
-        <ul>
-            <li>
-                Books that are very similar to others.  It will try to reduce the number of books so that it either covers a wide variety of subjects.  An example of this would be a transportation book that may cover cars, trains, plans, bridge, etc).
-            </li>
-            <li>
-                Book that covers a specific subject with great depth and is not covered by other books.  An example would be a book that stars a specific character from a different media franchise.
-            </li>
-        </ul>
-        <ul>
-          <li>
-            <i>Priority 2</i>
-            <br/>
-            The reason this is second is because this scenario is once in a while and is never an immediate problem.
-          </li>
-        </ul>
-      </li>
-    </ul>
-    <h2>Dependencies</h2>
-    <ul>
+    <details>
+      <summary class="collapsible-title">Constraints</summary>
+      Since we are suggesting books for children to listen to, the product must only suggest books that are appropriate
+      for the audience. If there are multiple listeners, it has to cater to the lowest aged child. However, if the
+      lowest age child is a baby and does not understand the content of the books, then it should use the lowest aged
+      toddler.
+
+      Also, the library must not be static. Books are bought/received and donated away regularly.
+    </details>
+    <details>
+      <summary class="collapsible-title">Customer segmentations</summary>
+      There are several customer segments we want to target
+      <ul>
         <li>
-            <i>OpenLibrary API</i>
-            <br/>
-            This is the API that allows us to get the list of subjects a book covers.
+          <i>Family with children that want to be read to close in age.</i><br />
+          This is a family where the children are at most 3 years apart between the oldest and youngest.
         </li>
         <li>
-            <i>Internet Archive API</i>
-            <br/>
-            This is the API that allows us to get the synopsis of a book.  From there, we can extract subjects it covers.
+          <i>Family with children that want to be read to further in age.</i><br />
+          This is a family where the children are at least 3 years apart between the oldest and youngest.
         </li>
-    </ul>
-    <h2>Risks and Mitigation</h2>
-     <ul>
-      <li>
-        <i>Rate throttling</i>
-        <br/>
-        Especially during the initial inventory load, we may get rate throttled while trying to retrieve our information.
-        <ul>
-          <li>
-            <i>Mitigation</i>
-            <br/>
-            The process has to have a backoff mechanism.  Better still if we can understand the rate throttling limits and code that in.
-          </li>
-        </ul>
-      </li>
-    </ul>
-    <h2>Metrics for Success</h2>
-    <ul>
-      <li>
-        Primary Metrics to measure product-fit
-        <ul>
-          <li>
-            <i>Week over Week retention</i>
-            <br/>
-            Reading to a child is someting that happens all the time (hopefully).  We should understand whether this tool is something that was useful enough that the adult keeps using it consistently.
-            <ul>
-              <li>
-                For the purposes of this case study, we can set this target to be > 70%.  If the user has already done the work to inventory their book library and they don't consistently use it, then we are not creating the correct solution.
-              </li>
-            </ul>
-          </li>
-          <li>
-            <i>Net Promoter Score</i>
-            <br/>
-            We are theorizing that parents love to share their techniques and tricks for easier parenting with their social circle.  Therefore, we will use NPS to understand how much people love our product.
-            <ul>
-              <li>
-                As a MVP product, we are looking for a target NPS of 30.
-              </li>
-            </ul>
-          </li>
-        </ul>
-      </li>
-      <li>
-        Secondary Metrics
-        <ul>
-          <li>
-            <i>Time to First Value</i>
-            <br/>
-            This would mean the user has inventoried several books and is now trying a suggestion for the first time.
-            <ul>
-              <li>
-                Considering our MVP has manual book entry, for the first version, we should aim for TTFV to be less than 10 minutes.
-              </li>
-            </ul>
-          </li>
-        </ul>
-      </li>
-    </ul>
-    <h2>Future Roadmap</h2>
-    
-    <h3>Easier library import</h3>
-    Currently, the user has to type in the title and author of the book which is a cumbersome and time-intensive task.  A solution to this is to have the adult take a picture of the book and have OCR or AI's image recognition to recognize what book it is and match it.  Another solution would be to keep an inventory of books and allow auto-complete and visual aid to assist in the input.
-    
-    <h3>Book covers</h3>
-    Show a picture of the book to make it more visually appealing and easier to identify and find.
-    
-    <h3>Read along for reading comprehension</h3>
-    The product should have a mode where instead of the adult reading to the children, it is the adult reading along with the child.  Then it should be able to learn the reading level of the child.  The product can detect the voice signature of the adult and the child and understand where the child has difficulties.  The suggestion of books it makes will also take into account the reading level of the child.
-    
-    <h3>Reader app</h3>
-    As an alternative to having the person fetch the book, it can download a pre-purchased digital book or provide an option to purchase a book.  Then it can highlight words as the book is read along.
-    
-    <h3>Integration with a library account</h3>
-    If there is no good suggested book in the family's inventory, this can search the local library for a book/eBook that is available for borrowing.
-    
+        <li>
+          <i>Setting where there are lots of children of the same age.</i><br />
+          This could be a classroom or reading session at the park.
+        </li>
+      </ul>
+      The simplest case is where there is a family with children that are close in age. The issue with age difference
+      may require different focus as the older child may want to read along, slowing down the pace and requiring a
+      simpler book whereas the younger children want to be read to and need to keep their attention span engaged. With a
+      large number of children in a similar age, the chances their interest varies widely and a much lower chance of a
+      book being found that matches.
+    </details>
+    <details>
+      <summary class="collapsible-title">Personas</summary>
+
+      <h3>Adult</h3>
+      <ul>
+        <li>
+          Goals
+          <ul>
+            <li>
+              Bond with their children through reading.
+            </li>
+            <li>
+              Be entertained by the contents of the book.
+            </li>
+          </ul>
+        </li>
+        <li>
+          Frustrations
+          <ul>
+            <li>
+              Their two children are choosing two different books to read and argue about it. They can either keep track
+              of whose turn it is which is cumbersome, choose a book between the two but get called of unfair treatment,
+              or exercise authoritative rule and decide on a third book but feel badly afterwards.
+            </li>
+            <li>
+              They always end up reading the same book over and over and it is getting boring.
+            </li>
+          </ul>
+        </li>
+        <li>
+          Quote: "I want the evening to be relaxing and I want to be slightly entertained. Is that too much to ask?"
+        </li>
+      </ul>
+      <h3>Child</h3>
+      <ul>
+        <li>
+          Goals
+          <ul>
+            <li>
+              Read a book that talks about things they like.
+            </li>
+            <li>
+              Either get to choose the book to read or at least not the other sibling get to choose the book.
+            </li>
+          </ul>
+        </li>
+        <Li>
+          Frustrations
+          <ul>
+            <li>
+              Their book (seemingly) never gets chosen.
+            </li>
+            <li>
+              Unless their book is chosen, whatever gets read is so boring.
+            </li>
+          </ul>
+        </Li>
+        <li>
+          Quote (if they could speak properly) -- "It is so unfair that my book never gets chosen. Whatever my sibling
+          chooses is so boring because they are so boring."
+        </li>
+      </ul>
+    </details>
+
+    <details>
+      <summary class="collapsible-title">User Stories</summary>
+      <ul>
+        <li>
+          As an adult, I want to spend more time relaxing and bonding with my children by reading to them and not spend
+          cognitive load figuring out what to read and dreading the boredom that comes with an oft-read book.
+        </li>
+        <li>
+          As a child, I want to read something that I like and not let my other siblings get to choose what book gets
+          read.
+        </li>
+      </ul>
+    </details>
+    <details>
+      <summary class="collapsible-title">Use Cases and Pain Points</summary>
+      <h3>Book Reading</h3>
+      The adult and children are trying to find a book to read together.
+      <ul>
+        <li>
+          <i>Pain Point -- Book freshness</i><br />
+          The adult wants to read to the children but it is hard to maintain interest or show enthusiasm as the
+          adult is getting bored of the book since they have read it many times before recently.
+        </li>
+        <li>
+          <i>Pain Point -- Irrelevant interests</i><br />
+          The children wants to be read a book but they have their specific interests they want to listen to and the
+          book is not relevant to them.
+        </li>
+      </ul>
+      <h3>Book Inventory</h3>
+      The adult is trying to figure out what books to buy or what books to give away.
+      <ul>
+        <li>
+          <i>Pain Point</i><br />
+          The adult has a hard time keeping track of which books contains which materials or whether they have
+          duplicates of the same book since there is just so many. They may want to stock up on some books that
+          cater more to the current interests of the children or get rid of books for subjects that already have a
+          lot of coverage.
+        </li>
+      </ul>
+    </details>
+    <details>
+      <summary class="collapsible-title">Prioritized Solutions</summary>
+      Given the use cases and pain points, the solutions in a priority order are:
+      <h3>Book Reading</h3>
+      The product will suggest 1-3 books based on the last read dates and the subject it covers.
+      <h4>Priority 1</h4>
+      The reason this is first is because this is the main problem of the customer and is in need more
+      frequently.
+      <h3>Book Inventory</h3>
+      The product will identify:
+      <ul>
+        <li>
+          Books that are very similar to others. It will try to reduce the number of books so that it either covers
+          a wide variety of subjects. An example of this would be a transportation book that may cover cars, trains,
+          plans, bridge, etc).
+        </li>
+        <li>
+          Book that covers a specific subject with great depth and is not covered by other books. An example would
+          be a book that stars a specific character from a different media franchise.
+        </li>
+      </ul>
+      <h4>Priority 2</h2>
+      The reason this is second is because this scenario is once in a while and is never an immediate problem.
+    </details>
+    <details>
+      <summary class="collapsible-title">Dependencies</summary>
+
+      <h3>OpenLibrary API</h3>
+      This is the API that allows us to get the list of subjects a book covers.  If this goes down, we lose one critical source of information.
+      <h3>Internet Archive API</h3>
+      This is the API that allows us to get the synopsis of a book. From there, we can extract subjects it covers.  If this goes down, we lose one critical source of information.
+    </details>
+    <details>
+      <summary class="collapsible-title">Risks and Mitigation</summary>
+          <h3>Rate throttling</h3>
+          Especially during the initial inventory load, we may get rate throttled while trying to retrieve our
+          information.
+          <ul>
+            <li>
+              <i>Mitigation</i>
+              <br />
+              The process has to have a backoff mechanism. Better still if we can understand the rate throttling limits
+              and code that in.
+            </li>
+          </ul>
+    </details>
+    <details>
+      <summary class="collapsible-title">Metrics for Success</summary>
+      <h3>Primary Metrics to measure product-fit</h3>
+      <ul>
+        <li>
+          <i>Week over Week retention</i>
+          <br />
+          Reading to a child is someting that happens all the time (hopefully). We should understand whether this
+          tool is something that was useful enough that the adult keeps using it consistently.
+          <ul>
+            <li>
+              For the purposes of this case study, we can set this target to be > 70%. If the user has already done
+              the work to inventory their book library and they don't consistently use it, then we are not creating
+              the correct solution.
+            </li>
+          </ul>
+        </li>
+        <li>
+          <i>Net Promoter Score</i>
+          <br />
+          We are theorizing that parents love to share their techniques and tricks for easier parenting with their
+          social circle. Therefore, we will use NPS to understand how much people love our product.
+          <ul>
+            <li>
+              As a MVP product, we are looking for a target NPS of 30.
+            </li>
+          </ul>
+        </li>
+      </ul>
+      <h3>Secondary Metrics</h3>
+      <ul>
+        <li>
+          <i>Time to First Value</i>
+          <br />
+          This would mean the user has inventoried several books and is now trying a suggestion for the first time.
+          <ul>
+            <li>
+              Considering our MVP has manual book entry, for the first version, we should aim for TTFV to be less
+              than 10 minutes.
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </details>
+    <details>
+      <summary class="collapsible-title">Future Roadmap</summary>
+
+      <h3>Easier library import</h3>
+      Currently, the user has to type in the title and author of the book which is a cumbersome and time-intensive task.
+      A solution to this is to have the adult take a picture of the book and have OCR or AI's image recognition to
+      recognize what book it is and match it. Another solution would be to keep an inventory of books and allow
+      auto-complete and visual aid to assist in the input.
+
+      <h3>Book covers</h3>
+      Show a picture of the book to make it more visually appealing and easier to identify and find.
+
+      <h3>Read along for reading comprehension</h3>
+      The product should have a mode where instead of the adult reading to the children, it is the adult reading along
+      with the child. Then it should be able to learn the reading level of the child. The product can detect the voice
+      signature of the adult and the child and understand where the child has difficulties. The suggestion of books it
+      makes will also take into account the reading level of the child.
+
+      <h3>Reader app</h3>
+      As an alternative to having the person fetch the book, it can download a pre-purchased digital book or provide an
+      option to purchase a book. Then it can highlight words as the book is read along.
+
+      <h3>Integration with a library account</h3>
+      If there is no good suggested book in the family's inventory, this can search the local library for a book/eBook
+      that is available for borrowing.
+      <!--
+      <iframe style="border: 1px solid rgba(0, 0, 0, 0.1);" width="800" height="450" src="https://embed.figma.com/board/s7Sg1XjSu1eo5wxWGtlSYq/Untitled?node-id=0-1&embed-host=share" allowfullscreen></iframe>
+      -->
+    </details>
     <section class="contact">
       <h2>Contact</h2>
       <ul class="contact__list">
         <li>Email: <a href="mailto:amcheng@umich.edu">amcheng@umich.edu</a></li>
-        <li>LinkedIn: <a href="https://www.linkedin.com/in/andy-mkc/" target="_blank">https://www.linkedin.com/in/andy-mkc/</a></li>
+        <li>LinkedIn: <a href="https://www.linkedin.com/in/andy-mkc/"
+            target="_blank">https://www.linkedin.com/in/andy-mkc/</a></li>
       </ul>
     </section>
   </main>
@@ -321,4 +369,5 @@
     <p>&copy; 2025 Andy Cheng</p>
   </footer>
 </body>
+
 </html>

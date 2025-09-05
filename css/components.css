@@ -19,3 +19,35 @@
   background-color: var(--gray-100);
   font-size: 0.875rem;
 }
+
+.collapsible-title {
+  /* Make the font larger. You can use pixels (px) or em/rem. */
+  font-size: 2.0rem; 
+  
+  /* Make the text bold. 700 is a common value for bold. */
+  font-weight: 700; 
+
+  /* Add spacing around the title */
+  padding: 10px;
+  
+  /* Set a cursor to make it clear the title is clickable */
+  cursor: pointer;
+}
+
+.collapsible-container {
+  /* Add a border to make the section look more distinct */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.collapsible-content {
+  /* Add padding to the content area */
+  padding: 10px;
+  border-top: 1px solid #ccc;
+}
+
+/* Optional: change the marker/arrow style */
+summary::marker {
+  font-size: 1.25rem;
+}

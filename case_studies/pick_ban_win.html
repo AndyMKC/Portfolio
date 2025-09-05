@@ -1,35 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Andy Cheng – Product Management Portfolio</title>
 
   <!-- CSS Reset -->
-  <link rel="stylesheet" href="../css/reset.css"/>
+  <link rel="stylesheet" href="../css/reset.css" />
 
   <!-- Design Tokens -->
-  <link rel="stylesheet" href="../css/colors.css"/>
+  <link rel="stylesheet" href="../css/colors.css" />
 
   <!-- Typography -->
-  <link rel="stylesheet" href="../css/typography.css"/>
+  <link rel="stylesheet" href="../css/typography.css" />
 
   <!-- Layout Helpers -->
-  <link rel="stylesheet" href="../css/layout.css"/>
+  <link rel="stylesheet" href="../css/layout.css" />
 
   <!-- Components & Utilities -->
-  <link rel="stylesheet" href="../css/components.css"/>
+  <link rel="stylesheet" href="../css/components.css" />
 </head>
+
 <body>
   <header class="hero">
     <a href="../index.html" class="hero__home-link">
-      <img
-        src="../img/linkedin.jpg"
-        alt="Andy Cheng Portrait"
-        class="hero__avatar"
-      />
+      <img src="../img/linkedin.jpg" alt="Andy Cheng Portrait" class="hero__avatar" />
       <h1 class="hero__title">Andy Cheng</h1>
-      <p class="hero__subtitle">Product Leader:  Driven by Data and Forged in Code</p>
+      <p class="hero__subtitle">Product Leader: Driven by Data and Forged in Code</p>
     </a>
   </header>
   <main>
@@ -47,338 +45,428 @@
       <li>Rely less on community content as the patch just release and then rely more as it goes on</li>
     </ul>
     -->
-    <h1>PickBanWin</h1>
-    In the world of Multiplayer Online Battle Arena (MOBA) video games such as <a href="https://en.wikipedia.org/wiki/Dota_2" target="_blank">Dota2</a> and <a href="https://en.wikipedia.org/wiki/League_of_Legends" target="_blank">League of Legends</a> where each player controls one singular character known as the "hero" or "champion" (will be referred to as hero for the rest of this case study), the draft phase is crucial for team success in competitive play.  Each team takes turns picking a hero for their team to play and banning a hero to be removed from the hero pool entirely, preventing either side of picking that hero.  There is a limited amount of time to choose which hero to pick and ban and with the game constantly changing either from game patches or swings in the meta game, a successful hero picking and banning stage may be the key to priming the team to a win or leading them to certain defeat.
-    <h2>Overview</h2>
-    PickBanWin is an AI-driven tool designed to analyze enemy drafts and recommend winning team compositions. It leverages historical data and recent discussions to deliver actionable insights during the drafting phase.  It helps the user understand, given the hero pool and their team's playstyle and capabilities, what are the best heroes to pick and ban in order to maximize the chances of winning the game.
-    <h2>Context and Background</h2>
-    Multiplayer Online Battle Arena (MOBA) games like Dota 2 and League of Legends attract tens of millions of players worldwide, with professional leagues filling stadiums and drawing massive streaming audiences. Each match begins with a draft phase, where strategic hero selection and bans lay the foundation for victory or defeat.<br/>
-    <br/>
-    During the draft, two teams alternate picking a “hero” to field and banning one from play, all within tight time constraints. Patch updates, balance changes, and evolving meta strategies continually reshape which heroes excel.  This makes real-time insights critical for informed decisions.<br/>
-    <br/>
-    Today’s players rely on tier lists, community forums, and personal experience to guide their picks and bans. However, these sources can be outdated, inconclusive, or too generic to account for a team’s unique playstyle. There’s a clear need for a data-driven, context-aware tool that synthesizes historical match outcomes and current meta trends to recommend optimal drafting choices.
+    <details open>
+      <summary class="collapsible-title">PickBanWin</summary>
+      In the world of Multiplayer Online Battle Arena (MOBA) video games such as <a
+        href="https://en.wikipedia.org/wiki/Dota_2" target="_blank">Dota2</a> and <a
+        href="https://en.wikipedia.org/wiki/League_of_Legends" target="_blank">League of Legends</a> where each player
+      controls one singular character known as the "hero" or "champion" (will be referred to as hero for the rest of
+      this case study), the draft phase is crucial for team success in competitive play. Each team takes turns picking a
+      hero for their team to play and banning a hero to be removed from the hero pool entirely, preventing either side
+      of picking that hero. There is a limited amount of time to choose which hero to pick and ban and with the game
+      constantly changing either from game patches or swings in the meta game, a successful hero picking and banning
+      stage may be the key to priming the team to a win or leading them to certain defeat.
+    </details>
+    <details>
+      <summary class="collapsible-title">Overview</summary>
+      PickBanWin is an AI-driven tool designed to analyze enemy drafts and recommend winning team compositions. It
+      leverages historical data and recent discussions to deliver actionable insights during the drafting phase. It
+      helps the user understand, given the hero pool and their team's playstyle and capabilities, what are the best
+      heroes to pick and ban in order to maximize the chances of winning the game.
+    </details>
+    <details>
+      <summary class="collapsible-title">Context and Background</summary>
+      Multiplayer Online Battle Arena (MOBA) games like Dota 2 and League of Legends attract tens of millions of players
+      worldwide, with professional leagues filling stadiums and drawing massive streaming audiences. Each match begins
+      with a draft phase, where strategic hero selection and bans lay the foundation for victory or defeat.<br />
+      <br />
+      During the draft, two teams alternate picking a “hero” to field and banning one from play, all within tight time
+      constraints. Patch updates, balance changes, and evolving meta strategies continually reshape which heroes excel.
+      This makes real-time insights critical for informed decisions.<br />
+      <br />
+      Today’s players rely on tier lists, community forums, and personal experience to guide their picks and bans.
+      However, these sources can be outdated, inconclusive, or too generic to account for a team’s unique playstyle.
+      There’s a clear need for a data-driven, context-aware tool that synthesizes historical match outcomes and current
+      meta trends to recommend optimal drafting choices.
 
-    <h2>Problem Statement</h2>
+    </details>
+    <details>
+      <summary class="collapsible-title">Problem Statement</summary>
 
-    <h3>Current State</h3>
-    Competitive MOBA teams enter the draft phase under intense time pressure, flipping through static tier lists, community forums, and personal notes to inform their picks and bans. These fragmented, often outdated sources fail to capture the latest patch shifts, evolving hero synergies, or opponents’ tendencies which results in rushed decisions and exploitable drafts.
-    <h3></h3>Desired Outcome</h3>
-    Teams need an intelligent assistant that instantly analyzes meta trends, historical match data, enemy draft patterns, and their own playstyle to recommend optimal hero picks and bans.  This ensures every decision in the draft phase maximizes win probability.
-    <h3></h3>Gap & Impact</h3>
-    Today’s drafting aids are social media posts or rigid websites that overlook real-time context: they can’t simulate specific team compositions, adapt to recent balance changes, or read an opponent’s drafting habits. As a result, teams endure inconsistent drafts, early-game disadvantages, and lower overall win rates causing both player confidence and competitive success to decrease.
-    <h3></h3>Full Statement</h3>
-    Despite the draft phase determining match momentum, no solution provides live, context-aware pick/ban guidance tailored to a team’s strengths, the current meta, and opponents’ patterns. Without such a tool, players rely on stale data and gut instinct—compromising draft quality, reducing win chances, and increasing frustration before the first hero appears on screen.
+      <h3>Current State</h3>
+      Competitive MOBA teams enter the draft phase under intense time pressure, flipping through static tier lists,
+      community forums, and personal notes to inform their picks and bans. These fragmented, often outdated sources fail
+      to capture the latest patch shifts, evolving hero synergies, or opponents’ tendencies which results in rushed
+      decisions and exploitable drafts.
+      <h3>Desired Outcome</h3>
+      Teams need an intelligent assistant that instantly analyzes meta trends, historical match data, enemy draft
+      patterns, and their own playstyle to recommend optimal hero picks and bans. This ensures every decision in the
+      draft phase maximizes win probability.
+      <h3>Gap & Impact</h3>
+      Today’s drafting aids are social media posts or rigid websites that overlook real-time context: they can’t
+      simulate specific team compositions, adapt to recent balance changes, or read an opponent’s drafting habits. As a
+      result, teams endure inconsistent drafts, early-game disadvantages, and lower overall win rates causing both
+      player confidence and competitive success to decrease.
+      <h3>Full Statement</h3>
+      Despite the draft phase determining match momentum, no solution provides live, context-aware pick/ban guidance
+      tailored to a team’s strengths, the current meta, and opponents’ patterns. Without such a tool, players rely on
+      stale data and gut instinct—compromising draft quality, reducing win chances, and increasing frustration before
+      the first hero appears on screen.
 
-    <h2>Goal</h2>
-    We are building a 0-1 here so the main goal is to find product-market fit.
-    <h2>Constraints</h2>
-    Due to technical reasons, we cannot hook into a currently running game and gather live information.
-    <h2>Customer segmentations</h2>
-    There are several types of players that we could possibly target:
-    <ul>
-      <li>
-        Ultra competitive players that have this tool running as they are playing the game.  These people have a high degree of understanding in the game and keep up with the current discussion as the game updates.  However, they may not know the exact precise win/loss statistics as they shift.
-      </li>
-      <li>
-        Players that want to theorize possible combinations.  These are people that visit the tool but are not under a time crunch of an actual game.  They can play around with the draft by themselves or with anothe person simulating the other team.
-      </li>
-      <li>
-        Players that do not know the game well and want suggestions to be more like decision makers.  These are people that are trying to not be overwhelmed and will trust this suggestion from the tool without reservation.
-      </li>
-    </ul>
-    Based on our goal of finding a product-market fit, the greatest value we can get is from the group of ultra competitive players that want to use this as they play.  They will be very inclined to use this tool if it thinks it can help them and since they want to win, they will have higher chance of providing feedback to improve the tool than the other two groups which are more casual.
-    <h2>Personas</h2>
-    
-    <h3>Online Friend Group Team Captain</h3>
-    <ul>
-      <li>
-        Goals
-        <ul>
-          <li>
-            Secure Divine tier ranking for team.
-          </li>
-          <li>
-            Develop a go-to pool of reliable heroes for each teammate’s playstyle.
-          </li>
-          <li>
-            Scout opponents’ draft habits to gain a strategic edge.
-          </li>
-        </ul>
-      </li>
-      <li>
-        Frustrations
-        <ul>
-          <li>
-            Limited prep time—patch notes and meta analysis take hours.
-          </li>
-          <li>
-            Inconsistent draft plans when teammates suggest conflicting picks.
-          </li>
-          <li>
-            Relies on manual notes and community tier lists that often disagree.
-          </li>
-        </ul>
-      </li>
-      <li>
-        Quote:  "If I could see which heroes our rivals favor and get instant counter-picks, it would give us a mental advantage."
-      </li>
-    </ul>
-    
-    <h3>High-Rank Solo Queue Player</h3>
-    <ul>
-      <li>
-        Goals
-        <ul>
-          <li>
-            Reach Ancient rank by mastering meta picks and counter-picks.
-          </li>
-          <li>
-            Learn opponent drafting patterns to avoid being outdrafted in solo queue.
-          </li>
-        </ul>
-      </li>
-      <li>
-        Frustrations
-        <ul>
-          <li>
-            No coach or team to guide picks—decisions feel like guesswork.
-          </li>
-          <li>
-            Fragmented information across apps, sites, and patch notes.
-          </li>
-          <li>
-            Time constraints often give a feeling of anxiety causing inability to think clearly.
-          </li>
-        </ul>
-      </li>
-      <li>
-        Quote:  "I wish I had a draft coach in my pocket—something that tells me ‘ban this hero’ or ‘pick that one’ based on who I’m facing."
-      </li>
-    </ul>
-
-    <h2>User Stories</h2>
-    <ul>
-      <li>
-        As an Online Friend Group Team Captain, I want to have recommended target picks and bans based on opponent's historical draft tendencies and specific match data.
-      </li>
-      <li>
-        As an Online Friend Group Team Captain, I want to customize draft recommendations by selecting our team’s strategic preference (e.g., early-game aggression vs. late-game scaling) so that suggested picks align with our strengths.
-      </li>
-      <li>
-        As an Online Friend Group Team Captain, I want to run draft simulations for multiple scenario variations so that I can prepare fallback plans for real-time adjustments during live drafts.
-      </li>
-      <li>
-        As an Online Friend Group Team Captain, I want to generate a comprehensive draft plan—including pick order and ban targets for our weekly scrims so that my team can practice and internalize the recommended strategies.
-      </li>
-      <li>
-        As a High-Rank Solo Queue Player, I want to receive instantaneous pick/ban recommendations within the 30-second draft timer so that I can avoid being outdrafted and improve my solo queue win rate.
-      </li>
-      <li>
-        As a High-Rank Solo Queue Player, I want to view a meta summary of patch-specific win rates for my rank bracket so that I can optimize my hero pool with the most effective picks.
-      </li>
-    </ul>
-
-    <h2>Use Cases and Pain Points</h2>
-    <ul>
-      <li>
-        <i>The Hero Suggester</i>
-        <br/>
-        Given the current state of the draft, they need to understand what the next hero to pick or ban should be that would maximize their chances of winning.
-        <ul>
-          <li>
-            <i>Pain Point</i><br/>
-            With a typical MOBA game having over 100 heroes to choose from and therefore seemingly endless combinations along with other factors such as your both teams' strengths and weaknesses, it may be overwhelming to decide which heroes to pick and ban.  There are simply too many factors that comes into play and factors such as the opinion of the other team members and the clocking counting down only adds to the stress.  This leads to:
-            <ul>
-              <li>Paralysis Analysis</li>
-              <li>Influenced by several teammates leading to a non-cohesive strategy</li>
-              <li>Missing obvious picks or bans or making mistakes</li>
-            </ul>
-          </li>
-        </ul>
-      </li>
-      <li>
-        <i>The Player Scouter</i>
-        <br/>
-        Scout out the their teammates and opponents and understand what heroes they usually play and how well they do with each hero.
-        <ul>
-          <li>
-            <i>Pain Point</i><br/>
-            Besides knowing good hero synergy compositions to pick and ban, it is important to understand what heroes your teammates and opponents like to play when formulating your plan.  Currently. this requires loading up each player's profile and looking at their hero statistics individually which is a time consuming process and difficult to organize with many browser windows open.
-          </li>
-        </ul>
-      </li>
-      <li>
-        <i>The Hero Pairing Suggester</i>
-        <br/>
-        Understand what their gameplan is and how their hero pairings (which heroes to play together) work.
-        <ul>
-          <li>
-            <i>Pain Point</i><br/>
-            Certain heroes work better together than others and this differs at different stages of the game. It is crucial to have this data on hand when selecting not just hero picks and bans, but also how they will be played on in the game.  Currently, this is done by instinct and experience which may be biased or outdated -- both of which will not be aligning with the data.
-          </li>
-        </ul>
-      </li>
-    </ul>
-    <h2>Prioritized Solutions</h2>
-    Given the use cases and pain points, the solutions in a priority order are:
-    <ul>
-      <li>
-        <i>The Hero Suggester</i>
-        <br/>
-        At both the beginning of the draft (if the user drafts first) and after every hero pick/ban choice is made, PickWinBan will suggest three heroes for the user to select from based on a variety of factors such as already picked and banned heros, statistics, patch notes, and list of players and opponents.  With each hero suggestion, PickWinBan will provide a reason as to why this hero was suggested and what kind of role or playstyle this hero needs to play in order to maximize the chances of winning.  Lastly, if it is a hero pick suggestion, it will suggest a player on the team that is most suitable to play.
-        <ul>
-          <li>
-            <i>Priority 1</i>
-            <br/>
-            The reason this is first is because this is what we are betting on as the core functionality of the tool that will attract users.  Other features, while they can be standalone, are expected to fold into this decision making process here.
-          </li>
-        </ul>
-      </li>
-      <li>
-        <i>The Player Scouter</i>
-        <br/>
-        Provide a way to quickly see what the top three heroes their teammate and opponents like to play and how well they do with each hero.
-        <ul>
-          <li>
-            <i>Priority 2</i>
-            <br/>
-            The reason this is second is because it allows people to feel like they are being heard and respected.  Even if a hero is good for the team overall, it may not be good or fun for a specific player which would lead to lower morale.
-          </li>
-        </ul>
-      </li>
-      <li>
-        <i>The Hero Pairing Suggester</i>
-        <br/>
-        After the user has confirmed all their and their opponent's hero picks, PickWinBan will predict how the opponent will play their hero pairings (or groupings if more than two heroes together or it could be solo).  PickWinBan will then suggest to the player how to play out their hero picks to both counter the opponent's predicted move and also to make sure the two heros are as synergistic as possible.
-        <ul>
-          <li>
-            <i>Priority 3</i>
-            <br/>
-            The reason this is third is because this is functionality is pretty easily gathered from already existing websites.  It is provided here to "complete" the suite of tools and make this a one-stop-shop but it is not the core functionality of the tool.
-          </li>
-        </ul>
-      </li>
-    </ul>
-    <h2>Dependencies</h2>
-    <ul>
-      <li>
-        <i>Data Retrieval</i><br/>
-        The biggest dependency is on the game developer's APIs to be able to retrieve match information but also to provide the data necessary to make the suggestions.  This includes hero statistics and player statistics.  Using Dota2 and League of Legends as an example, this is reliant on APIs such as <a href="https://wiki.teamfortress.com/wiki/WebAPI/GetMatchDetails" target="_blank">Valve's Web API</a> and <a href="hhttps://developer.riotgames.com/apis" target="_blank">Riot Games API</a> to provide the data we need to make the suggestions.
-      </li>
-      <li>
-        <i>Patch Notes</i><br/>
-        We will be dependent on the game developers to release patch notes and their detailed information, especially at the beginning of a patch cycle.  This information is used for us to make suggestions before enough matches have been played where we can have more reliability on the data.
-      </li>
-    </ul>
-    <h2>Risks and Mitigation</h2>
-    <ul>
-      <li>
-        <i>Risk of game not reaching popularity</i>
-        <br/>
-        If the game does not launch well and the player count is small or the game does not develop competitively, then this feature will not be used.
-        <ul>
-          <li>
-            <i>Mitigation</i>
-            <br/>
-            The way to mitigate this is to bet not just on this game but rather this genre of games.  This allows us to hedge our bets and as long as we create this tool generically enough, it should be easy enough to port over.  Best scenario is that if multiple games in this genre are popular, then we can have a tool that works for all of them and we can have a larger user base.
-          </li>
-        </ul>
-      </li>
-      <li>
-        <i>Risk of not getting enough data to provide accurate and useful suggestions</i>
-        <br/>
-        There are times where we simply do not have enough data to make an accurate suggestion.  This will definitely occur anytime there is a patch with either new content or game balance changes but it may also occur if a new strategy is discovered and starts trending.
-        <ul>
-          <li>
-            <i>Mitigation</i>
-            <br/>
-            This is where GenAI can shine.  We can provide weighting for suggestions based on statistics or reasoning of the patch notes and commentary on social media.  We can ask the LLM to provide us for these weights.  At the beginning of the patch cycle, the LLM can decide whether this patch is similar or different to the previous patch.  If it is similar, we can give more weights using the previous patch's data.  If it is different, we can increase the weight that the LLM suggests based on the patch notes.  In both cases, as we progress more and more into the patch cycle, we can increase the weights of the suggestions based on the data.
-          </li>
-        </ul>
-      </li>
-    </ul>
-    <h2>Metrics for Success</h2>
-    <ul>
-      <li>
-        Primary Metrics to measure product-fit
-        <ul>
-          <li>
-            <i>Daily Active Users</i><br/>
-            This will help us know if we even have an audience or not.  We should also put, as a background, the daily active users of the game in general.
-            <ul>
-              <li>
-                We should be setting this target based on the growth rate.  For the purposes of this study, we can set this to be 5% growth rate per month until we get to 10% of the daily active users of the game.
-              </li>
-            </ul>
-          </li>
-          <li>
-            <i>Week over Week Retention rate</i><br/>
-            This will let us know if users, after they have had time to digest their results and how useful the tool is, comes back for more.
-            <ul>
-              <li>
-                For the purposes of this case study, we can set this target to be > 30%.  We can adjust this as we start seeing more data.
-              </li>
-            </ul>
-          </li>
-        </ul>
-      </li>
-      <li>
-        Secondary Metrics
-        <ul>
-          <li>
-            <i>Usage Frequency per day</i><br/>
-            We want the user to keep relying on this for more and more of their matches.
-            <ul>
-              <li>
-                For the purposes of this case study, we can set this target to be 50% of all games played for those that used this feature at least once that day and played more than one game.  This is a good starter target as it means the user went back at least once.
-              </li>
-            </ul>
-          </li>
-          <li>
-            <i>50th percentile percentage of times the user followed the suggestion given</i><br/>
-            Suppose in each drafting round, the user has an opportunity to pick 6 and ban 3 heroes.  This means we have 9 opportunities to provide suggestions.  If the user followed our suggestion 6 times, that would be 66.67%.
-            <ul>
-              <li>
-                For the purposes of this case study, we can set this target to be >50%.  This means the user has more trust in us than not.  We can adjust this as we start seeing more data.
-              </li>
-            </ul>
-          </li>
-          <li>
-            <i>Percentage of matches won if the user followed our suggestion more than 75% of the time</i><br/>
-            While it is expected that the user can still lose even if they followed our suggestion 100% because of skill issues, we should at least be above 50% in this regard to even be viable.  If we are below 50%, then we should look into the suggestions and see if they are actually good or not.  We also expect the user to not follow us 100% of the time but still be able to get good results.
-            <ul>
-              <li>
-                For the purposes of this case study, we can set this target to be > 60%.  It has to be better than 50% or else why would anybody use it.  A 10% increase seems like a good start and we can adjust this as we start seeing more data.
-              </li>
-            </ul>
-          </li>
-        </ul>
-      </li>
-    </ul>
-    <h2>Future Roadmap</h2>
-
-    <h3>Play Style</h3>
-    The user can ask PickWinBan to suggest heroes to pick and ban to suit their play style (pick the heroes that suit and ban the heroes that would be a good counter to their play style).  For example, a team may wish to be really strong early game and are fine fading away in power as the game goes on.  PickWinBan will take that into account and suggest picks and bans accordingly to fit their play style.
-
-    <h3>Build suggestion</h3>
-    In addition to suggesting hero picks and bans, given both team's compositions, PickWinBan can also suggest which skills to select and level up and also items to buy.  This ensures that both the strategic and tactical choices of the game are unified as one clear vision and really lets the user focus on the game rather than following a random guide on the internet that may not fit this strategy.
-
-    <h3>Restricted Hero Picking set</h3>
-    The user may only choose to play with a certain subset of heroes for a number of reasons (fun, familiarity, want to try new heroes).  The user can ask PickWinBan to suggest the best hero pick choice amongst this restricted set of heroes.  This will allow the user to have a more personalized experience and not feel like they are being forced to play heroes that they do not want to play.
-
-    <h3>Disregard and re-suggest</h3>
-    PickWinBan may suggest a hero to pick or ban based on a specific reason.  If the user wishes to dismiss this reason, they can and PickWinBan will retry the hero suggestion process for picking and banning.
-    <section class="contact">
-      <h2>Contact</h2>
-      <ul class="contact__list">
-        <li>Email: <a href="mailto:amcheng@umich.edu">amcheng@umich.edu</a></li>
-        <li>LinkedIn: <a href="https://www.linkedin.com/in/andy-mkc/" target="_blank">https://www.linkedin.com/in/andy-mkc/</a></li>
+    </details>
+    <details>
+      <summary class="collapsible-title">Goal</summary>
+      We are building a 0-1 here so the main goal is to find product-market fit.
+    </details>
+    <details>
+      <summary class="collapsible-title">Constraints</summary>
+      Due to technical reasons, we cannot hook into a currently running game and gather live information.
+    </details>
+    <details>
+      <summary class="collapsible-title">Customer segmentations</summary>
+      There are several types of players that we could possibly target:
+      <ul>
+        <li>
+          Ultra competitive players that have this tool running as they are playing the game. These people have a high
+          degree of understanding in the game and keep up with the current discussion as the game updates. However, they
+          may not know the exact precise win/loss statistics as they shift.
+        </li>
+        <li>
+          Players that want to theorize possible combinations. These are people that visit the tool but are not under a
+          time crunch of an actual game. They can play around with the draft by themselves or with anothe person
+          simulating the other team.
+        </li>
+        <li>
+          Players that do not know the game well and want suggestions to be more like decision makers. These are people
+          that are trying to not be overwhelmed and will trust this suggestion from the tool without reservation.
+        </li>
       </ul>
-    </section>
+      Based on our goal of finding a product-market fit, the greatest value we can get is from the group of ultra
+      competitive players that want to use this as they play. They will be very inclined to use this tool if it thinks
+      it can help them and since they want to win, they will have higher chance of providing feedback to improve the
+      tool than the other two groups which are more casual.
+    </details>
+    <details>
+      <summary class="collapsible-title">Personas</summary>
+
+      <h3>Online Friend Group Team Captain</h3>
+      <ul>
+        <li>
+          Goals
+          <ul>
+            <li>
+              Secure Divine tier ranking for team.
+            </li>
+            <li>
+              Develop a go-to pool of reliable heroes for each teammate’s playstyle.
+            </li>
+            <li>
+              Scout opponents’ draft habits to gain a strategic edge.
+            </li>
+          </ul>
+        </li>
+        <li>
+          Frustrations
+          <ul>
+            <li>
+              Limited prep time—patch notes and meta analysis take hours.
+            </li>
+            <li>
+              Inconsistent draft plans when teammates suggest conflicting picks.
+            </li>
+            <li>
+              Relies on manual notes and community tier lists that often disagree.
+            </li>
+          </ul>
+        </li>
+        <li>
+          Quote: "If I could see which heroes our rivals favor and get instant counter-picks, it would give us a mental
+          advantage."
+        </li>
+      </ul>
+
+      <h3>High-Rank Solo Queue Player</h3>
+      <ul>
+        <li>
+          Goals
+          <ul>
+            <li>
+              Reach Ancient rank by mastering meta picks and counter-picks.
+            </li>
+            <li>
+              Learn opponent drafting patterns to avoid being outdrafted in solo queue.
+            </li>
+          </ul>
+        </li>
+        <li>
+          Frustrations
+          <ul>
+            <li>
+              No coach or team to guide picks—decisions feel like guesswork.
+            </li>
+            <li>
+              Fragmented information across apps, sites, and patch notes.
+            </li>
+            <li>
+              Time constraints often give a feeling of anxiety causing inability to think clearly.
+            </li>
+          </ul>
+        </li>
+        <li>
+          Quote: "I wish I had a draft coach in my pocket—something that tells me ‘ban this hero’ or ‘pick that one’
+          based on who I’m facing."
+        </li>
+      </ul>
+
+    </details>
+    <details>
+      <summary class="collapsible-title">User Stories</summary>
+      <ul>
+        <li>
+          As an Online Friend Group Team Captain, I want to have recommended target picks and bans based on opponent's
+          historical draft tendencies and specific match data.
+        </li>
+        <li>
+          As an Online Friend Group Team Captain, I want to customize draft recommendations by selecting our team’s
+          strategic preference (e.g., early-game aggression vs. late-game scaling) so that suggested picks align with
+          our strengths.
+        </li>
+        <li>
+          As an Online Friend Group Team Captain, I want to run draft simulations for multiple scenario variations so
+          that I can prepare fallback plans for real-time adjustments during live drafts.
+        </li>
+        <li>
+          As an Online Friend Group Team Captain, I want to generate a comprehensive draft plan—including pick order and
+          ban targets for our weekly scrims so that my team can practice and internalize the recommended strategies.
+        </li>
+        <li>
+          As a High-Rank Solo Queue Player, I want to receive instantaneous pick/ban recommendations within the
+          30-second draft timer so that I can avoid being outdrafted and improve my solo queue win rate.
+        </li>
+        <li>
+          As a High-Rank Solo Queue Player, I want to view a meta summary of patch-specific win rates for my rank
+          bracket so that I can optimize my hero pool with the most effective picks.
+        </li>
+      </ul>
+
+    </details>
+    <details>
+      <summary class="collapsible-title">Use Cases and Pain Points</summary>
+      <h3>The Hero Suggester</h3>
+      Given the current state of the draft, they need to understand what the next hero to pick or ban should be that
+      would maximize their chances of winning.
+      <ul>
+        <li>
+          <i>Pain Point</i><br />
+          With a typical MOBA game having over 100 heroes to choose from and therefore seemingly endless
+          combinations along with other factors such as your both teams' strengths and weaknesses, it may be
+          overwhelming to decide which heroes to pick and ban. There are simply too many factors that comes into
+          play and factors such as the opinion of the other team members and the clocking counting down only adds to
+          the stress. This leads to:
+          <ul>
+            <li>Paralysis Analysis</li>
+            <li>Influenced by several teammates leading to a non-cohesive strategy</li>
+            <li>Missing obvious picks or bans or making mistakes</li>
+          </ul>
+        </li>
+      </ul>
+
+      <h3>The Player Scouter</h3>
+      Scout out the their teammates and opponents and understand what heroes they usually play and how well they do
+      with each hero.
+      <ul>
+        <li>
+          <i>Pain Point</i><br />
+          Besides knowing good hero synergy compositions to pick and ban, it is important to understand what heroes
+          your teammates and opponents like to play when formulating your plan. Currently. this requires loading up
+          each player's profile and looking at their hero statistics individually which is a time consuming process
+          and difficult to organize with many browser windows.
+        </li>
+      </ul>
+
+      <h3>The Hero Pairing Suggester</h3>
+      Understand what their gameplan is and how their hero pairings (which heroes to play together) work.
+      <ul>
+        <li>
+          <i>Pain Point</i><br />
+          Certain heroes work better together than others and this differs at different stages of the game. It is
+          crucial to have this data on hand when selecting not just hero picks and bans, but also how they will be
+          played on in the game. Currently, this is done by instinct and experience which may be biased or outdated
+          -- both of which will not be aligning with the data.
+        </li>
+      </ul>
+    </details>
+    <details>
+      <summary class="collapsible-title">Prioritized Solutions</summary>
+      <h3>The Hero Suggester</h3>
+      At both the beginning of the draft (if the user drafts first) and after every hero pick/ban choice is made,
+      PickWinBan will suggest three heroes for the user to select from based on a variety of factors such as already
+      picked and banned heros, statistics, patch notes, and list of players and opponents. With each hero
+      suggestion, PickWinBan will provide a reason as to why this hero was suggested and what kind of role or
+      playstyle this hero needs to play in order to maximize the chances of winning. Lastly, if it is a hero pick
+      suggestion, it will suggest a player on the team that is most suitable to play.
+      <h4>Priority 1</h4>
+      The reason this is first is because this is what we are betting on as the core functionality of the tool
+      that will attract users. Other features, while they can be standalone, are expected to fold into this
+      decision making process here.
+      <h3>The Player Scouter</h3>
+      Provide a way to quickly see what the top three heroes their teammate and opponents like to play and how well
+      they do with each hero.
+      <h4>Priority 2</h4>
+      The reason this is second is because it allows people to feel like they are being heard and respected.
+      Even if a hero is good for the team overall, it may not be good or fun for a specific player which would
+      lead to lower morale.
+      <h3>The Hero Pairing Suggester</h3>
+      After the user has confirmed all their and their opponent's hero picks, PickWinBan will predict how the
+      opponent will play their hero pairings (or groupings if more than two heroes together or it could be solo).
+      PickWinBan will then suggest to the player how to play out their hero picks to both counter the opponent's
+      predicted move and also to make sure the two heros are as synergistic as possible.
+      <h4>Priority 3</h4>
+      The reason this is third is because this is functionality is pretty easily gathered from already existing
+      websites. It is provided here to "complete" the suite of tools and make this a one-stop-shop but it is not
+      the core functionality of the tool.
+    </details>
+    <details>
+      <summary class="collapsible-title">Dependencies</summary>
+      <h3>Data Retrieval</h3>
+      The biggest dependency is on the game developer's APIs to be able to retrieve match information but also to
+      provide the data necessary to make the suggestions. This includes hero statistics and player statistics. Using
+      Dota2 and League of Legends as an example, this is reliant on APIs such as <a
+        href="https://wiki.teamfortress.com/wiki/WebAPI/GetMatchDetails" target="_blank">Valve's Web API</a> and <a
+        href="hhttps://developer.riotgames.com/apis" target="_blank">Riot Games API</a> to provide the data we need
+      to make the suggestions.
+      <h3>Patch Notes</h3>
+      We will be dependent on the game developers to release patch notes and their detailed information, especially
+      at the beginning of a patch cycle. This information is used for us to make suggestions before enough matches
+      have been played where we can have more reliability on the data.
+    </details>
+    <details>
+      <summary class="collapsible-title">Risks and Mitigation</summary>
+      <h3>Risk of game not reaching popularity</h3>
+      If the game does not launch well and the player count is small or the game does not develop competitively,
+      then this feature will not be used.
+      <ul>
+        <li>
+          <i>Mitigation</i>
+          <br />
+          The way to mitigate this is to bet not just on this game but rather this genre of games. This allows us to
+          hedge our bets and as long as we create this tool generically enough, it should be easy enough to port
+          over. Best scenario is that if multiple games in this genre are popular, then we can have a tool that
+          works for all of them and we can have a larger user base.
+        </li>
+      </ul>
+      <h3>Risk of not getting enough data to provide accurate and useful suggestions</h3>
+      There are times where we simply do not have enough data to make an accurate suggestion. This will definitely
+      occur anytime there is a patch with either new content or game balance changes but it may also occur if a new
+      strategy is discovered and starts trending.
+      <ul>
+        <li>
+          <i>Mitigation</i>
+          <br />
+          This is where GenAI can shine. We can provide weighting for suggestions based on statistics or reasoning
+          of the patch notes and commentary on social media. We can ask the LLM to provide us for these weights. At
+          the beginning of the patch cycle, the LLM can decide whether this patch is similar or different to the
+          previous patch. If it is similar, we can give more weights using the previous patch's data. If it is
+          different, we can increase the weight that the LLM suggests based on the patch notes. In both cases, as we
+          progress more and more into the patch cycle, we can increase the weights of the suggestions based on the
+          data.
+        </li>
+      </ul>
+    </details>
+    <details>
+      <summary class="collapsible-title">Metrics for Success</summary>
+      <h3>Primary Metrics to measure product-fit</h3>
+      <ul>
+        <li>
+          <i>Daily Active Users</i><br />
+          This will help us know if we even have an audience or not. We should also put, as a background, the daily
+          active users of the game in general.
+          <ul>
+            <li>
+              We should be setting this target based on the growth rate. For the purposes of this study, we can set
+              this to be 5% growth rate per month until we get to 10% of the daily active users of the game.
+            </li>
+          </ul>
+        </li>
+        <li>
+          <i>Week over Week Retention rate</i><br />
+          This will let us know if users, after they have had time to digest their results and how useful the tool
+          is, comes back for more.
+          <ul>
+            <li>
+              For the purposes of this case study, we can set this target to be > 30%. We can adjust this as we
+              start seeing more data.
+            </li>
+          </ul>
+        </li>
+      </ul>
+      <h3>Secondary Metrics</h3>
+      <ul>
+        <li>
+          <i>Usage Frequency per day</i><br />
+          We want the user to keep relying on this for more and more of their matches.
+          <ul>
+            <li>
+              For the purposes of this case study, we can set this target to be 50% of all games played for those
+              that used this feature at least once that day and played more than one game. This is a good starter
+              target as it means the user went back at least once.
+            </li>
+          </ul>
+        </li>
+        <li>
+          <i>50th percentile percentage of times the user followed the suggestion given</i><br />
+          Suppose in each drafting round, the user has an opportunity to pick 6 and ban 3 heroes. This means we have
+          9 opportunities to provide suggestions. If the user followed our suggestion 6 times, that would be 66.67%.
+          <ul>
+            <li>
+              For the purposes of this case study, we can set this target to be >50%. This means the user has more
+              trust in us than not. We can adjust this as we start seeing more data.
+            </li>
+          </ul>
+        </li>
+        <li>
+          <i>Percentage of matches won if the user followed our suggestion more than 75% of the time</i><br />
+          While it is expected that the user can still lose even if they followed our suggestion 100% because of
+          skill issues, we should at least be above 50% in this regard to even be viable. If we are below 50%, then
+          we should look into the suggestions and see if they are actually good or not. We also expect the user to
+          not follow us 100% of the time but still be able to get good results.
+          <ul>
+            <li>
+              For the purposes of this case study, we can set this target to be > 60%. It has to be better than 50%
+              or else why would anybody use it. A 10% increase seems like a good start and we can adjust this as we
+              start seeing more data.
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </details>
+    <details>
+      <summary class="collapsible-title">Future Roadmap</summary>
+
+      <h3>Play Style</h3>
+      The user can ask PickWinBan to suggest heroes to pick and ban to suit their play style (pick the heroes that suit
+      and ban the heroes that would be a good counter to their play style). For example, a team may wish to be really
+      strong early game and are fine fading away in power as the game goes on. PickWinBan will take that into account
+      and suggest picks and bans accordingly to fit their play style.
+
+      <h3>Build suggestion</h3>
+      In addition to suggesting hero picks and bans, given both team's compositions, PickWinBan can also suggest which
+      skills to select and level up and also items to buy. This ensures that both the strategic and tactical choices of
+      the game are unified as one clear vision and really lets the user focus on the game rather than following a random
+      guide on the internet that may not fit this strategy.
+
+      <h3>Restricted Hero Picking set</h3>
+      The user may only choose to play with a certain subset of heroes for a number of reasons (fun, familiarity, want
+      to try new heroes). The user can ask PickWinBan to suggest the best hero pick choice amongst this restricted set
+      of heroes. This will allow the user to have a more personalized experience and not feel like they are being forced
+      to play heroes that they do not want to play.
+
+      <h3>Disregard and re-suggest</h3>
+      PickWinBan may suggest a hero to pick or ban based on a specific reason. If the user wishes to dismiss this
+      reason, they can and PickWinBan will retry the hero suggestion process for picking and banning.
+      <section class="contact">
+        <h2>Contact</summary>
+          <ul class="contact__list">
+            <li>Email: <a href="mailto:amcheng@umich.edu">amcheng@umich.edu</a></li>
+            <li>LinkedIn: <a href="https://www.linkedin.com/in/andy-mkc/"
+                target="_blank">https://www.linkedin.com/in/andy-mkc/</a></li>
+          </ul>
+      </section>
   </main>
   <footer class="footer">
     <p>&copy; 2025 Andy Cheng</p>
   </footer>
 
 </body>
+
 </html>

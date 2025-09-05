@@ -1,35 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Andy Cheng – Product Management Portfolio</title>
 
   <!-- CSS Reset -->
-  <link rel="stylesheet" href="../css/reset.css"/>
+  <link rel="stylesheet" href="../css/reset.css" />
 
   <!-- Design Tokens -->
-  <link rel="stylesheet" href="../css/colors.css"/>
+  <link rel="stylesheet" href="../css/colors.css" />
 
   <!-- Typography -->
-  <link rel="stylesheet" href="../css/typography.css"/>
+  <link rel="stylesheet" href="../css/typography.css" />
 
   <!-- Layout Helpers -->
-  <link rel="stylesheet" href="../css/layout.css"/>
+  <link rel="stylesheet" href="../css/layout.css" />
 
   <!-- Components & Utilities -->
-  <link rel="stylesheet" href="../css/components.css"/>
+  <link rel="stylesheet" href="../css/components.css" />
 </head>
+
 <body>
   <header class="hero">
     <a href="../index.html" class="hero__home-link">
-      <img
-        src="../img/linkedin.jpg"
-        alt="Andy Cheng Portrait"
-        class="hero__avatar"
-      />
+      <img src="../img/linkedin.jpg" alt="Andy Cheng Portrait" class="hero__avatar" />
       <h1 class="hero__title">Andy Cheng</h1>
-      <p class="hero__subtitle">Product Leader:  Driven by Data and Forged in Code</p>
+      <p class="hero__subtitle">Product Leader: Driven by Data and Forged in Code</p>
     </a>
   </header>
   <main>
@@ -47,231 +45,301 @@
       <li>Rely less on community content as the patch just release and then rely more as it goes on</li>
     </ul>
     -->
-    <h1>NexPost's Inspired Post Generation</h1>
-    Social media is ubiquitous and affects both the personal and professional aspect of our lives.  Content creators wish to post content on their social media accounts in order to generate reach and attract a bigger audience.<br/>
-    <br/>
-    <a href="https://www.nexpost.ai/" target="_blank">NexPost.ai</a> is an AI-powered social media content assistant that helps you create content posts across platforms like LinkedIn, Facebook, Instagram, Reddit, and blogs.  It leverages LLMs to generate social media posts content such as text and images.  My friend Nia made it and it is great so check it out!
-    <h2>Overview</h2>
-    NexPost.ai's Inspired Post Generation feature allows users to generate new posts based on existing content, making it easier for them to share relevant and engaging content with their audience.
-    <h2>Context and Background</h2>
-    In today’s digital age, social media platforms are essential channels for both personal expression and professional outreach. With billions of daily users on LinkedIn, Facebook, Instagram, Reddit, and blogs, creators face relentless pressure to publish fresh, engaging content that resonates with diverse audiences.<br/>
-    <br/>
-    Yet many content creators spend hours each week manually brainstorming, rewriting, and formatting posts to fit each platform’s unique conventions. This repetitive work leads to creative fatigue, inconsistent brand voice, and missed opportunities to leverage proven content.
-    <br/>
-    We are all surrounded by powerful voices that we learn from and admire and the best content should survive.  It is important to spread this content to more audiences so more people benefit.
-    <h2>Problem Statement</h2>
-    
-    <h3>Current State</h3>
-    Content creators admire powerful voices and want to share the best ideas with their own audiences, but they spend hours manually copying, paraphrasing, and reformatting others’ posts to fit LinkedIn, Facebook, Instagram, Reddit, and blogs. This tedious process drains creativity, introduces inconsistency, and risks unintentional plagiarism.
-    <h3></h3>Desired Outcome</h3>
-    Creators need an AI assistant that can ingest high-quality public content, rewrite it in their unique voice, and output platform-ready posts—so they can quickly amplify valuable ideas while maintaining authenticity and compliance.
-    <h3></h3>Gap & Impact</h3>
-    Existing AI writing tools either generate generic copy from scratch or leave creators to handle all the manual paraphrasing themselves. As a result, valuable content remains siloed, creators face workflow bottlenecks, and audiences miss out on proven ideas presented in fresh, personalized ways.
-    <h3></h3>Full Statement</h3>
-    Despite the abundance of inspiring social media content, there is no seamless, ethical system that automatically transforms admired posts into new, on-brand, platform-optimized content. Without such a solution, creators endure creative fatigue, inconsistent messaging, and missed opportunities to spread high-impact ideas to broader audiences.
+    <details open>
+      <summary class="collapsible-title">NexPost's Inspired Post Generation</summary>
+      Social media is ubiquitous and affects both the personal and professional aspect of our lives. Content creators
+      wish to post content on their social media accounts in order to generate reach and attract a bigger
+      audience.<br />
+      <br />
+      <a href="https://www.nexpost.ai/" target="_blank">NexPost.ai</a> is an AI-powered social media content assistant
+      that helps you create content posts across platforms like LinkedIn, Facebook, Instagram, Reddit, and blogs. It
+      leverages LLMs to generate social media posts content such as text and images. My friend Nia made it and it is
+      great so check it out!
+    </details>
+    <details>
+      <summary class="collapsible-title">Overview</summary>
+        NexPost.ai's Inspired Post Generation feature allows users to generate new posts based on existing content,
+        making it easier for them to share relevant and engaging content with their audience.
+    </details>
+    <details>
+      <summary class="collapsible-title">Context and Background</summary>
+        In today’s digital age, social media platforms are essential channels for both personal expression and
+        professional outreach. With billions of daily users on LinkedIn, Facebook, Instagram, Reddit, and blogs,
+        creators face relentless pressure to publish fresh, engaging content that resonates with diverse
+        audiences.<br />
+        <br />
+        Yet many content creators spend hours each week manually brainstorming, rewriting, and formatting posts to fit
+        each platform’s unique conventions. This repetitive work leads to creative fatigue, inconsistent brand voice,
+        and missed opportunities to leverage proven content.
+        <br />
+        We are all surrounded by powerful voices that we learn from and admire and the best content should survive. It
+        is important to spread this content to more audiences so more people benefit.
+    </details>
+    <details>
+      <summary class="collapsible-title">Problem Statement</summary>
 
-    <h2>Goal</h2>
-    We are building a feature to make it easier for users to generate posts so the main goal here is to drive higher activation and retention of NexPost.ai.
-    <h2>Constraints</h2>
-      Unlike other features of content generation in NexPost.ai where the content ideas stems from the user, this one is sourced from another author.  This means it is difficult to assign responsibility for inappropriate content.  NexPost.ai must flag a warning if the generated content may be deemed inappropriate or offensive.
-    <h2>Customer segmentations</h2>
-    There are several types of content creators that we could possibly target:
-    <ul>
-      <li>
-        <i>Personal Brand Builders</i><br/>
-        These are the users that want to build up their following in order to become influencers in their respective fields.  They may be looking to build up their personal brand in order to attract job offers, consulting gigs, or speaking engagements.
-      </li>
-      <li>
-        <i>Business Promoters</i><br/>
-        These are the users that want to promote their business or products.  They may be looking to drive traffic to their website or online store in order to generate sales or other platforms such as YouTube to generate ad revenue.
-      </li>
-      <li>
-        <i>Thought Leaders</i><br/>
-        These are the users that want to share their expertise and insights with their audience.  They may be looking to establish themselves as thought leaders in their respective fields in order to attract consulting gigs, speaking engagements, or book deals.
-      </li>
-    </ul>
-    Based on our goal of driving higher adoption and engagement amongst existing users, we would target the Personal Brand Builders.  The reason for this is because they are frequently (low stakes, high volume) with types of content such as quick top of the mind thoughts or personal anecdotes.  Comparatively, both the Business Promoters and Thought Leaders have more in depth content with higher stakes.
+        <h3>Current State</h3>
+        Content creators admire powerful voices and want to share the best ideas with their own audiences, but they
+        spend hours manually copying, paraphrasing, and reformatting others’ posts to fit LinkedIn, Facebook, Instagram,
+        Reddit, and blogs. This tedious process drains creativity, introduces inconsistency, and risks unintentional
+        plagiarism.
+        <h3>Desired Outcome</h3>
+        Creators need an AI assistant that can ingest high-quality public content, rewrite it in their unique voice, and
+        output platform-ready posts—so they can quickly amplify valuable ideas while maintaining authenticity and
+        compliance.
+        <h3>Gap & Impact</h3>
+        Existing AI writing tools either generate generic copy from scratch or leave creators to handle all the manual
+        paraphrasing themselves. As a result, valuable content remains siloed, creators face workflow bottlenecks, and
+        audiences miss out on proven ideas presented in fresh, personalized ways.
+        <h3>Full Statement</h3>
+        Despite the abundance of inspiring social media content, there is no seamless, ethical system that automatically
+        transforms admired posts into new, on-brand, platform-optimized content. Without such a solution, creators
+        endure creative fatigue, inconsistent messaging, and missed opportunities to spread high-impact ideas to broader
+        audiences.
 
-    <h2>Personas</h2>
+    </details>
+    <details>
+      <summary class="collapsible-title">Goal</summary>
+        We are building a feature to make it easier for users to generate posts so the main goal here is to drive higher
+        activation and retention of NexPost.ai.
+    </details>
+    <details>
+      <summary class="collapsible-title">Constraints</summary>
+        Unlike other features of content generation in NexPost.ai where the content ideas stems from the user, this one
+        is sourced from another author. This means it is difficult to assign responsibility for inappropriate content.
+        NexPost.ai must flag a warning if the generated content may be deemed inappropriate or offensive.
+    </details>
+    <details>
+      <summary class="collapsible-title">Customer segmentations</summary>
+        There are several types of content creators that we could possibly target:
 
-    <h3>Personal Brand Builder</h3>
-    <ul>
-      <li>
-        Goals
+        <!-- TODO:  Should we be more targetted such as "Career Coach/ResumeBuilder Brand Builder"??? -->
         <ul>
           <li>
-            Post short, top-of-mind observations 3–5 times per week.
+            <i>Personal Brand Builders</i><br />
+            These are the users that want to build up their following in order to become influencers in their respective
+            fields. They may be looking to build up their personal brand in order to attract job offers, consulting
+            gigs, or speaking engagements.
           </li>
           <li>
-            Increase LinkedIn followers from 3k to 10k in six months.
+            <i>Business Promoters</i><br />
+            These are the users that want to promote their business or products. They may be looking to drive traffic to
+            their website or online store in order to generate sales or other platforms such as YouTube to generate ad
+            revenue.
           </li>
           <li>
-            Land speaking gigs at industry meetups.
+            <i>Thought Leaders</i><br />
+            These are the users that want to share their expertise and insights with their audience. They may be looking
+            to establish themselves as thought leaders in their respective fields in order to attract consulting gigs,
+            speaking engagements, or book deals.
           </li>
         </ul>
-      </li>
-      <li>
-        Frustrations
-        <ul>
-          <li>
-            Creative blocks when trying to spin personal anecdotes into posts.
-          </li>
-          <li>
-            Wasted hours manually rewriting and resizing content for each platform.
-          </li>
-          <li>
-            Inconsistent tone and lost momentum after missed posting days.
-          </li>
-        </ul>
-      </li>
-      <li>
-        Quote:  "I have so many thoughts on UX, but turning them into quick, engaging posts eats up my time and creativity."
-      </li>
-    </ul>
+        Based on our goal of driving higher adoption and engagement amongst existing users, we would target the Personal
+        Brand Builders. The reason for this is because they post frequently (low stakes, high volume) with types of
+        content such as quick top of the mind thoughts or personal anecdotes. Comparatively, both the Business Promoters
+        and Thought Leaders have more in depth content with higher stakes.
 
-    <h3>Thought Leader</h3>
-    <ul>
-      <li>
-        Goals
-        <ul>
-          <li>
-            Publish in-depth LinkedIn articles and blog posts twice a month.
-          </li>
-          <li>
-            Secure three speaking engagements at major conferences this year.
-          </li>
-          <li>
-            Establish credibility for a forthcoming book deal.
-          </li>
-        </ul>
-      </li>
-      <li>
-        Frustrations
-        <ul>
-          <li>
-            Researching, drafting, and citing insights takes days per post.
-          </li>
-          <li>
-            Adapting long-form content to bite-sized social snippets feels forced.
-          </li>
-          <li>
-            Rarely has bandwidth to engage in comment threads and foster community.
-          </li>
-        </ul>
-      </li>
-      <li>
-        Quote:  "My audience expects deep analysis, but slicing those long takes into engaging social posts is a constant headache."
-      </li>
-    </ul>
+    </details>
+    <details>
+      <summary class="collapsible-title">Personas</summary>
 
-    <h2>User Stories</h2>
-    <ul>
-      <li>
-        As a Personal Brand Builder, I want to paste an existing influencer post URL so that NexPost.ai can extract the core ideas and rewrite them in my unique voice.
-      </li>
-      <li>
-        As a Personal Brand Builder, I want to create platform-specific variants (LinkedIn, Instagram, Twitter) from one input so that I don’t spend extra time reformatting.
-      </li>
-      <li>
-        As a Personal Brand Builder, I want NexPost.ai to suggest relevant, trending hashtags based on my domain so that I can boost post discoverability without manual research.
-      </li>
-      <li>
-        As a Thought Leader, I want to upload a link to a long-form whitepaper or article so that NexPost.ai can generate a series of bite-sized social snippets for different platforms.
-      </li>
-      <li>
-        As a Thought Leader, I want to enrich my posts with branded call-to-action elements (links to my podcast, speaking page, or upcoming book) so that each post drives measurable engagement and opportunities.
-      </li>
-    </ul>
+        <h3>Personal Brand Builder</h3>
+        <ul>
+          <li>
+            Goals
+            <ul>
+              <li>
+                Post short, top-of-mind observations 3–5 times per week.
+              </li>
+              <li>
+                Increase LinkedIn followers from 3k to 10k in six months.
+              </li>
+              <li>
+                Land speaking gigs at industry meetups.
+              </li>
+            </ul>
+          </li>
+          <li>
+            Frustrations
+            <ul>
+              <li>
+                Creative blocks when trying to spin personal anecdotes into posts.
+              </li>
+              <li>
+                Wasted hours manually rewriting and resizing content for each platform.
+              </li>
+              <li>
+                Inconsistent tone and lost momentum after missed posting days.
+              </li>
+            </ul>
+          </li>
+          <li>
+            Quote: "I have so many thoughts on UX, but turning them into quick, engaging posts eats up my time and
+            creativity."
+          </li>
+        </ul>
 
-    <h2>Use Cases and Pain Points</h2>
-    The user comes across a post they really like and wishes to repost it.  However, they want to either:
-    <ul>
-      <li>
-        <i>Copy/Paste but Different</i><br/>
-        The user wishes to, as quickly and as easily as possible, repost this to their audience but they do not want to be seen as somebody who copies other people's content without giving credit.
+        <h3>Thought Leader</h3>
         <ul>
           <li>
-            <i>Pain Point</i><br/>
-            The user has to invest non-insignificant mental effort to think about how to change the content.  This is especially true if the user is not a native speaker of the language of the post.
+            Goals
+            <ul>
+              <li>
+                Publish in-depth LinkedIn articles and blog posts twice a month.
+              </li>
+              <li>
+                Secure three speaking engagements at major conferences this year.
+              </li>
+              <li>
+                Establish credibility for a forthcoming book deal.
+              </li>
+            </ul>
+          </li>
+          <li>
+            Frustrations
+            <ul>
+              <li>
+                Researching, drafting, and citing insights takes days per post.
+              </li>
+              <li>
+                Adapting long-form content to bite-sized social snippets feels forced.
+              </li>
+              <li>
+                Rarely has bandwidth to engage in comment threads and foster community.
+              </li>
+            </ul>
+          </li>
+          <li>
+            Quote: "My audience expects deep analysis, but slicing those long takes into engaging social posts is a
+            constant headache."
           </li>
         </ul>
-      </li>
-      <li>
-        <i>Content Modification</i><br/>
-        In this case, the user wishes to either change the content slightly to make it more relevant to their audience and/or they may wish to change the style of the message to fit their writing style.
+
+    </details>
+    <details>
+      <summary class="collapsible-title">User Stories</summary>
         <ul>
           <li>
-            <i>Pain Point</i><br/>
-            The user has to invest non-insignificant mental effort to think about how to change the content.  This is especially true if the user is not a native speaker of the language of the post.
+            As a Personal Brand Builder, I want to paste an existing influencer post URL so that NexPost.ai can extract
+            the core ideas and rewrite them in my unique voice.
+          </li>
+          <li>
+            As a Personal Brand Builder, I want to create platform-specific variants (LinkedIn, Instagram, Twitter) from
+            one input so that I don’t spend extra time reformatting.
+          </li>
+          <li>
+            As a Personal Brand Builder, I want NexPost.ai to suggest relevant, trending hashtags based on my domain so
+            that I can boost post discoverability without manual research.
+          </li>
+          <li>
+            As a Thought Leader, I want to upload a link to a long-form whitepaper or article so that NexPost.ai can
+            generate a series of bite-sized social snippets for different platforms.
+          </li>
+          <li>
+            As a Thought Leader, I want to enrich my posts with branded call-to-action elements (links to my podcast,
+            speaking page, or upcoming book) so that each post drives measurable engagement and opportunities.
           </li>
         </ul>
-      </li>
-    </ul>
-    <h2>Prioritized Solutions</h2>
-    Given the use cases and pain points, the solutions in a priority order are:
-    <ul>
-      <li>
-        <i>Copy/Paste but Different</i>
-        <br/>
-        NexPost.ai will generate a new post that conveys the same meaning but using slightly different words, different ordering, or presentation style (perhaps where the content is in an ordered list to the content being prefixed by an emoji).  If there is a critical point that is saved for last to keep the reader engaged (such as "read until the end for the best tip"), then that ordering will be preserved.  Any emojis are subjected to be switched out and/or reordered as long as the meaning is preserved.
+
+    </details>
+    <details>
+      <summary class="collapsible-title">Use Cases and Pain Points</summary>
+        <!-- TODO:  Should we strip away a lot of the options to make this as simple as possible?  Less is more? -->
+        <h3>Copy/Paste but Different</h3>
+        The user wishes to, as quickly and as easily as possible, repost this to their audience but they do not want
+        to be seen as somebody who copies other people's content without giving credit.
         <ul>
           <li>
-            <i>Priority 1</i>
-            <br/>
-            The reason this is first is because this is the lowest effort scenario for the user.  All they need to do is copy and paste the content.
+            <i>Pain Point</i><br />
+            The user has to invest non-insignificant mental effort to think about how to change the content. This is
+            especially true if the user is not a native speaker of the language of the post.
           </li>
         </ul>
-      </li>
-      <li>
-        <i>Content Modification</i>
-        <br/>
-        In addition to the various customization (Writing Tone, Creativity Slider, Post Size slider, etc), NexPost.ai will allow the user to enter two pieces of information:  The original post and ther desired modification.  NexPost.ai will detect whether the two are in conflict with each other and will prompt the user to resolve the conflict.  An example of this would be if the original content talks about french fries best dipped with tartar sauce while the added modification talks about the best dip for french fries being ketchup.  In this case, the user will be prompted to either choose one or the other or to rephrase the modification to be more in line with the original content.  After conflict resolution is complete, NexPost.ai will generate a new post that conveys the same meaning as the original post but with the desired modification.
+        <h3>Writing style adaptation</h3>
+        In this case, the user wishes to either change the content to match a specific writing style (perhaps their
+        own to keep consistent branding or somebody else they admire like Shakespeare).
         <ul>
           <li>
-            <i>Priority 2</i>
-            <br/>
-            The reason this is second is because this step requires a bit more effort from the user and we want to offer the lowest barrier of entry solution first.  This can be viewed as a feature-add later.
+            <i>Pain Point</i><br />
+            The user has to invest non-insignificant mental effort to think about how to change the content. This is
+            especially true if the user is not a native speaker of the language of the post.
           </li>
         </ul>
-      </li>
-    </ul>
-    All solutions will subject the input data for inappropriate content detection and will flag a warning if the generated content may be deemed inappropriate or offensive either globally or to a specific region or audience.
-    <h2>Dependencies</h2>
-    In a rarity, there really is not much that the MVP of this product is dependent on besides the LLM it needs to do the generation.  It relies on the user to copy/paste the material so there are no APIs it needs to rely on being supported.  Besides the usual infrastructure staying alive, it is self-contained.
-    <h2>Risks and Mitigation</h2>
-     <ul>
-      <li>
-        <i>Inconsistent settings and message</i>
-        <br/>
-        Given there are custom settings such as Writing Tone where it can range from Professional or Helpful to Humorous or Persuasive, the user may accidentally set the wrong tone for the generated content, especially if the user did not read it enough or it is written in a language they are not proficient in.
+    </details>
+    <details>
+      <summary class="collapsible-title">Prioritized Solutions</summary>
+      All solutions will subject the input data for inappropriate content detection and will flag a warning if the generated content may be deemed inappropriate or offensive either globally or to a specific region or audience.
+      <h3>Copy/Paste but Different</h3>
+      NexPost.ai will generate a new post that conveys the same meaning but using slightly different words,
+      different ordering, or presentation style (perhaps where the original content is in an ordered list and
+      NexPost.ai will change the content to be prefixed by an emoji). If there is a critical point that is saved
+      for last to keep the reader engaged (such as "read until the end for the best tip"), then that ordering will
+      be preserved. Any emojis are subjected to be switched out and/or reordered as long as the meaning is
+      preserved (such as steps that need to be taken chronologically).
+      <h4>Priority 1</h4>
+      The reason this is first is because this is the lowest effort scenario for the user. All they need to do
+      is copy and paste the content.
+      <h3>Writing style adaptation</h3>
+      NexPost.ai will crawl through previous writing samples of the user (or perhaps another person that the user
+      wishes to imitate) and regenerate the content in that same specific style to keep the branding consistent.
+      For example, if the user is somebody who likes to rhyme a lot, then NexPost.ai will try to regenerate the
+      content but make it rhyme.
+      <h4>Priority 2</h4>
+      The reason this is second is because this step requires a bit more effort from the user to supply
+      examples of the writing style they wish to imitate and we want to offer the lowest barrier of entry
+      solution first. This can be viewed as a feature-add later.
+      <!--
+    <h3>Content Modification</h3>
+    In addition to the various customization (Writing Tone, Creativity Slider, Post Size slider, etc), NexPost.ai will allow the user to enter two pieces of information:  The original post and ther desired modification.  NexPost.ai will detect whether the two are in conflict with each other and will prompt the user to resolve the conflict.  An example of this would be if the original content talks about french fries best dipped with tartar sauce while the added modification talks about the best dip for french fries being ketchup.  In this case, the user will be prompted to either choose one or the other or to rephrase the modification to be more in line with the original content.  After conflict resolution is complete, NexPost.ai will generate a new post that conveys the same meaning as the original post but with the desired modification.
+        <h4>Priority 2</h4>
+        The reason this is second is because this step requires a bit more effort from the user and we want to offer the lowest barrier of entry solution first.  This can be viewed as a feature-add later.
+  -->
+    </details>
+    <details>
+      <summary class="collapsible-title">Dependencies</summary>
+        In a rarity, there really is not much that the MVP of this product is dependent on besides the LLM it needs to
+        do the generation. It relies on the user to copy/paste the material so there are no APIs it needs to rely on
+        being supported. Besides the usual infrastructure staying alive, it is self-contained.
+    </details>
+    <details>
+      <summary class="collapsible-title">Risks and Mitigation</summary>
+        <h3>Inconsistent settings and message</h3>
+        Given there are custom settings such as Writing Tone where it can range from Professional or Helpful to
+        Humorous or Persuasive, the user may accidentally set the wrong tone for the generated content, especially
+        if the user did not read it enough or it is written in a language they are not proficient in.
         <ul>
           <li>
             <i>Mitigation</i>
-            <br/>
-            While the user is ultimately responsible for the generated content, one thing that we can do is ask in the prompt to detect the writing tone of the original content and defaulty select that tone for the newly generated content.  Before generation, we can still offer a way for the user to change the tone if they wish so we do not rip control from them.
+            <br />
+            While the user is ultimately responsible for the generated content, one thing that we can do is ask in
+            the prompt to detect the writing tone of the original content and defaulty select that tone for the
+            newly generated content. Before generation, we can still offer a way for the user to change the tone if
+            they wish so we do not rip control from them.
           </li>
         </ul>
-      </li>
-      <li>
-        <i>Detection of sarcasm</i>
-        <br/>
-        Considering the expected low bar of effort from the user or possibly the language the original content was written in may not be one of the user's proficient languages, the user may not be able to detect sarcasm in the original content.  Currently, LLMs are not consistent in detecting sarcasm.  This may lead to generated content that puts the user in a poor light.
+
+        <h3>Detection of sarcasm</h3>
+        Considering the expected low bar of effort from the user or possibly the language the original content was
+        written in may not be one of the user's proficient languages, the user may not be able to detect sarcasm in
+        the original content. Currently, LLMs are not consistent in detecting sarcasm. This may lead to generated
+        content that puts the user in a poor light.
         <ul>
           <li>
             <i>Mitigation</i>
-            <br/>
-            We can try to have the prompt edited so that it tries to detect sarcasm but this may not work given the current performance of the LLM.  In addition to the attempt at sarcasm detection, we can ask the LLM given the user's historical post and social media content, is what was generated consistent with the user's message or beneficial to their cause.
+            <br />
+            We can try to have the prompt edited so that it tries to detect sarcasm but this may not work given the
+            current performance of the LLM. In addition to the attempt at sarcasm detection, we can ask the LLM
+            given the user's historical post and social media content, is what was generated consistent with the
+            user's message or beneficial to their cause.
           </li>
         </ul>
-      </li>
-    </ul>
-    <h2>Metrics for Success</h2>
-    <ul>
-      <li>
-        Primary Metrics for Activation and Retention
+    </details>
+    <details>
+      <summary class="collapsible-title">Metrics for Success</summary>
+        <h3>Primary Metrics for Activation and Retention</h3>
         <ul>
           <li>
-            <i>Daily Active Users</i><br/>
+            <i>Daily Active Users</i><br />
             We are expecting more users to use this as it is lowest cost of entry.
             <ul>
               <li>
@@ -280,40 +348,42 @@
             </ul>
           </li>
           <li>
-            <i>Day over Day Retention rate</i><br/>
+            <i>Day over Day Retention rate</i><br />
             We want to measure this day over day as we expect users to be posting on social media 7 days of the week.
             <ul>
               <li>
-                For the purposes of this case study, we can set this target to be > 30%.  We can adjust this as we start seeing more data.
+                For the purposes of this case study, we can set this target to be > 30%. We can adjust this as we start
+                seeing more data.
               </li>
             </ul>
           </li>
         </ul>
-      </li>
-      <li>
-        Secondary Metrics
+        <h3>Secondary Metrics</h3>
         <ul>
           <li>
-            <i>Usage Frequency</i><br/>
+            <i>Usage Frequency</i><br />
             This will help us know if we even have an audience or not.
             <ul>
               <li>
-                For the purposes of this case study, we can set this target to be > 1 per day.  1 per day seems to fit a nice quota to stay on people's radar but this is something we should certainly look at in the future, especially when compared to usage of the other generation types.
+                For the purposes of this case study, we can set this target to be > 1 per day. 1 per day seems to fit a
+                nice quota to stay on people's radar but this is something we should certainly look at in the future,
+                especially when compared to usage of the other generation types.
               </li>
             </ul>
           </li>
           <li>
-            <i>Frequency of use for the same source material</i><br/>
-            We would want this to be as low as possible as that would indicate the user is satisfied with the first generation and does not need to keep going back to the same source material.
+            <i>Frequency of use for the same source material</i><br />
+            We would want this to be as low as possible as that would indicate the user is satisfied with the first
+            generation and does not need to keep going back to the same source material.
             <ul>
               <li>
-                For the purposes of this case study, we can set this to be < 3 times at the 50th percentile mark.
-              </li>
+                For the purposes of this case study, we can set this to be < 3 times at the 50th percentile mark. </li>
             </ul>
           </li>
           <li>
-            <i>Week over Week Retention rate</i><br/>
-            This will let us know if users, after they have had time to digest their results and how useful the tool is, comes back for more.
+            <i>Week over Week Retention rate</i><br />
+            This will let us know if users, after they have had time to digest their results and how useful the tool is,
+            comes back for more.
             <ul>
               <li>
                 For the purposes of this case study, we can set this to be > 75%.
@@ -321,41 +391,53 @@
             </ul>
           </li>
         </ul>
-      </li>
-    </ul>
-    <h2>Future Roadmap</h2>
+    </details>
+    <details>
+      <summary class="collapsible-title">Future Roadmap</summary>
 
-    <h3>Content parsing from link</h3>
-    Instead of having the user copy and paste the content, they can share a link to the post.  NexPost.ai will then extract the content and generate an inspired post based on that.
+        <h3>Content parsing from link</h3>
+        Instead of having the user copy and paste the content, they can share a link to the post. NexPost.ai will then
+        extract the content and generate an inspired post based on that.
 
-    <h3>Content generation from image and video</h3>
-    Instead of just being able to generate content from text, NexPost.ai can also generate content from images and videos.  This is especially useful for platforms like Instagram where the image is the main content and YouTube where the videos is the main content.
+        <h3>Content generation from image and video</h3>
+        Instead of just being able to generate content from text, NexPost.ai can also generate content from images and
+        videos. This is especially useful for platforms like Instagram where the image is the main content and YouTube
+        where the videos is the main content.
 
-    <h3>Content based on a topic</h3>
-    Instead of generating a post based on another post but also not the current method of topic + thoughts from the author, NexPost allows creation of a content based on topic alone.  This is especially useful for users that may not have a specific post in mind but have a general idea of what they want to post about.
+        <h3>Content based on a topic</h3>
+        Instead of generating a post based on another post but also not the current method of topic + thoughts from the
+        author, NexPost allows creation of a content based on topic alone. This is especially useful for users that may
+        not have a specific post in mind but have a general idea of what they want to post about.
 
-    <h3>Unprompted Topic Generation</h3>
-    Instead of the user discovering a topic to speak about, NexPost.ai goes and searches online the most talked about topics in either the user's area of expertise, what resonates with their existing audience, or what is trending with an audience group they wish to capture.
+        <h3>Unprompted Topic Generation</h3>
+        Instead of the user discovering a topic to speak about, NexPost.ai goes and searches online the most talked
+        about topics in either the user's area of expertise, what resonates with their existing audience, or what is
+        trending with an audience group they wish to capture.
 
-    <h3>Top post gatherer</h3>
-    Upon given a topic, Nexpost.ai will scour the internet and gather the highest trending posts about that topic.  The user can then select one of these posts to be the source of inspiration for their new post.
+        <h3>Top post gatherer</h3>
+        Upon given a topic, Nexpost.ai will scour the internet and gather the highest trending posts about that topic.
+        The user can then select one of these posts to be the source of inspiration for their new post.
 
-    <h3>Auto-consume</h3>
-    Upon given a list of social media channels, NexPost.ai will automatically grab the ones that it feels are relevant and onbrand for the user and automatically repost it in the style of the user's voice.<br/>
-    <br/>
-    Similarly, NexPost.ai can be configured to watch for white papers or news articles in the user's field and generate posts based on that.
+        <h3>Auto-consume</h3>
+        Upon given a list of social media channels, NexPost.ai will automatically grab the ones that it feels are
+        relevant and onbrand for the user and automatically repost it in the style of the user's voice.<br />
+        <br />
+        Similarly, NexPost.ai can be configured to watch for white papers or news articles in the user's field and
+        generate posts based on that.
 
-    <section class="contact">
-      <h2>Contact</h2>
-      <ul class="contact__list">
-        <li>Email: <a href="mailto:amcheng@umich.edu">amcheng@umich.edu</a></li>
-        <li>LinkedIn: <a href="https://www.linkedin.com/in/andy-mkc/" target="_blank">https://www.linkedin.com/in/andy-mkc/</a></li>
-      </ul>
-    </section>
+        <section class="contact">
+          <h2>Contact</summary>
+          <ul class="contact__list">
+            <li>Email: <a href="mailto:amcheng@umich.edu">amcheng@umich.edu</a></li>
+            <li>LinkedIn: <a href="https://www.linkedin.com/in/andy-mkc/"
+                target="_blank">https://www.linkedin.com/in/andy-mkc/</a></li>
+          </ul>
+        </section>
   </main>
   <footer class="footer">
     <p>&copy; 2025 Andy Cheng</p>
   </footer>
 
 </body>
+
 </html>
