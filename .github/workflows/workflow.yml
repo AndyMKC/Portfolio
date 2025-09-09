@@ -20,4 +20,4 @@ jobs:
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-        run: databricks jobs reset --job-id 711720472221178 --json @case_studies/StorySpark/src/book_inventory/sync_book_inventory_job.json
+        run: databricks jobs reset 711720472221178 --json @case_studies/StorySpark/src/book_inventory/sync_book_inventory_job.json
