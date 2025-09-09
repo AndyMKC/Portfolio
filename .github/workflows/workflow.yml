@@ -21,4 +21,4 @@ jobs:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }} # Store your host as a secret
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
           run: databricks jobs create --json-file case_studies/StorySpark/src/book_inventory/sync_book_inventory_job.json
-#        run: databricks jobs reset --job-id <YOUR_JOB_ID> --json-file case_studies/StorySpark/src/book_inventory/sync_book_inventory_job.json
+
