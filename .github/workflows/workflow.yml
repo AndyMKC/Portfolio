@@ -7,7 +7,7 @@ on:
   workflow_dispatch: # Allows you to run the workflow manually
 
 jobs:
-  deploy:
+  deploy-job:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -21,3 +21,16 @@ jobs:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
         run: databricks jobs reset 711720472221178 --json @case_studies/StorySpark/src/book_inventory/sync_book_inventory_job.json
+  deploy-app:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy Databricks App
+        uses: databricks/databricks-cli-action@v1
+        with:
+          databricks-host: ${{ secrets.DATABRICKS_HOST }}
+          databricks-token: ${{ secrets.DATABRICKS_TOKEN }}
+          commands: |
+            databricks apps deploy .
