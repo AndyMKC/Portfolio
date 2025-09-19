@@ -1,0 +1,39 @@
+name: Deploy Python project to Azure Function App
+
+on:
+  push:
+    branches:
+      - deploy
+
+env:
+  AZURE_FUNCTIONAPP_NAME: 'StorySparkAPIGateway'
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: 'case_studies/StorySpark/src/api_gateway'
+  PYTHON_VERSION: '3.12'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@v3
+
+      - name: 'Setup Python'
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        working-directory: ${{ github.workspace }}/${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt --target=".python_packages/lib/site-packages"
+
+      - name: 'Deploy to Azure Functions'
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+          package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE_2e14fb5e66ec4e8e8e6f1a395235113c }}
+          scm-do-build-during-deployment: true
+          enable-oryx-build: true
