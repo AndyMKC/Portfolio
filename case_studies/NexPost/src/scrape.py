@@ -65,7 +65,7 @@ if __name__ == "__main__":
         print(f"\n=== Paper {idx}: {paper['title']} ===\n")
         print(f"PDF URL: {paper['pdf_url']}\n")
         text = extract_pdf_text(paper['pdf_url'])
-        # Print only the first 1000 characters to avoid console overload
-        print(text[:10000] + "\n\n... [truncated] ...\n")
+        # Print only the first 100 characters to avoid console overload
+        print(text[:100] + "\n\n... [truncated] ...\n")
         with open(f"{idx}.txt", "w", encoding="utf-8") as file_object:
             file_object.write(text)
