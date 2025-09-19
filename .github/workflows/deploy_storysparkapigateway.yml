@@ -7,7 +7,7 @@ on:
 
 env:
   AZURE_FUNCTIONAPP_NAME: 'StorySparkAPIGateway'
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.'
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: 'case_studies/StorySpark/src/api_gateway'
   PYTHON_VERSION: '3.12'
 
 jobs:
@@ -23,12 +23,11 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: 'Install dependencies'
+      - name: Install dependencies
+        working-directory: ${{ github.workspace }}/${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
         run: |
-          pushd '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
           python -m pip install --upgrade pip
           pip install -r requirements.txt --target=".python_packages/lib/site-packages"
-          popd
 
       - name: 'Deploy to Azure Functions'
         uses: Azure/functions-action@v1
