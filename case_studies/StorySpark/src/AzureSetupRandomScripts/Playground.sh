@@ -62,28 +62,37 @@ githubBranch="deploy"
 #   --query "{ repo: repoUrl, branch: branch, type: type, manual: isManualIntegration }" \
 #   -o table
 
+# Enabling logs
+az webapp log tail \
+  --name StorySparkAPIGateway \
+  --resource-group StorySparkResourceGroup
+
 SUB_ID=$(az account show --query id -o tsv)
-az rest \
-  --method PUT \
-  --uri "/subscriptions/$SUB_ID/resourceGroups/StorySparkResourceGroup/providers/Microsoft.Web/sites/StorySparkAPIGateway/sourcecontrols/web?api-version=2024-11-01" \
-  --body '{
-    "properties": {
-      "repoUrl": "https://github.com/AndyMKC/Portfolio",
-      "branch": "deploy",
-      "isManualIntegration": false
-    }
-  }'
+# az rest \
+#   --method PUT \
+#   --uri "/subscriptions/$SUB_ID/resourceGroups/StorySparkResourceGroup/providers/Microsoft.Web/sites/StorySparkAPIGateway/sourcecontrols/web?api-version=2024-11-01" \
+#   --body '{
+#     "properties": {
+#       "repoUrl": "https://github.com/AndyMKC/Portfolio",
+#       "branch": "deploy",
+#       "isManualIntegration": false
+#     }
+#   }'
 
-  az functionapp deployment github-actions add \
-  --name StorySparkAPIGateway \
-  --resource-group StorySparkResourceGroup \
-  --repo AndyMKC/Portfolio \
-  --branch deploy \
-  --login-with-github
+#   az functionapp deployment github-actions add \
+#   --name StorySparkAPIGateway \
+#   --resource-group StorySparkResourceGroup \
+#   --repo AndyMKC/Portfolio \
+#   --branch deploy \
+#   --login-with-github
 
 
-az functionapp deployment source show \
-  --name StorySparkAPIGateway \
-  --resource-group StorySparkResourceGroup \
-  --query "{repo:repoUrl, branch:branch, manual:isManualIntegration}" \
-  -o table
+# az functionapp deployment source show \
+#   --name StorySparkAPIGateway \
+#   --resource-group StorySparkResourceGroup \
+#   --query "{repo:repoUrl, branch:branch, manual:isManualIntegration}" \
+#   -o table
+
+
+
+
