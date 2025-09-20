@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>StorySpark API Test</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+    fieldset { margin-bottom: 2rem; padding: 1rem; }
+    label { display: inline-block; width: 80px; }
+    input, button, textarea { font-size: 1rem; margin: 0.2rem 0; }
+    textarea { width: 100%; height: 6rem; }
+    .response { background: #f6f6f6; padding: 0.5rem; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+
+  <h1>StorySpark API Test</h1>
+
+  <!-- Add Book -->
+  <fieldset>
+    <legend>AddBookFunction [POST]</legend>
+    <form id="addBookForm" data-method="POST" action="http://localhost:7071/api/books/add">
+      <label for="add-ownerId">ownerId:</label>
+      <input id="add-ownerId" name="ownerId" type="text" value="alice"><br>
+      <label for="add-isbn13">isbn13:</label>
+      <input id="add-isbn13" name="isbn13" type="text" value="9781234567897"><br>
+      <button type="submit">Send POST</button>
+    </form>
+    <div class="response" id="addBookResponse"></div>
+  </fieldset>
+
+  <!-- Get Recommendations -->
+  <fieldset>
+    <legend>GetBookRecommendationFunction [GET]</legend>
+    <form id="getRecForm" data-method="GET" action="http://localhost:7071/api/books/getRecommendations">
+      <label for="rec-ownerId">ownerId:</label>
+      <input id="rec-ownerId" name="ownerId" type="text" value="alice"><br>
+      <label for="rec-subjects">subjects:</label>
+      <input id="rec-subjects" name="subjects" type="text" value="math,science"><br>
+      <button type="submit">Send GET</button>
+    </form>
+    <div class="response" id="getRecResponse"></div>
+  </fieldset>
+
+  <!-- Mark Book Read -->
+  <fieldset>
+    <legend>MarkBookReadFunction [POST]</legend>
+    <form id="markReadForm" data-method="POST" action="http://localhost:7071/api/books/markRead">
+      <label for="read-ownerId">ownerId:</label>
+      <input id="read-ownerId" name="ownerId" type="text" value="alice"><br>
+      <label for="read-isbn13">isbn13:</label>
+      <input id="read-isbn13" name="isbn13" type="text" value="9781234567897"><br>
+      <label for="read-timeRead">timeRead:</label>
+      <input id="read-timeRead" name="timeRead" type="datetime-local" value="2025-09-19T16:05"><br>
+      <button type="submit">Send POST</button>
+    </form>
+    <div class="response" id="markReadResponse"></div>
+  </fieldset>
+
+  <!-- Remove Book -->
+  <fieldset>
+    <legend>RemoveBookFunction [DELETE]</legend>
+    <form id="removeForm" data-method="DELETE" action="http://localhost:7071/api/books/remove">
+      <label for="rem-ownerId">ownerId:</label>
+      <input id="rem-ownerId" name="ownerId" type="text" value="alice"><br>
+      <label for="rem-isbn13">isbn13:</label>
+      <input id="rem-isbn13" name="isbn13" type="text" value="9781234567897"><br>
+      <button type="submit">Send DELETE</button>
+    </form>
+    <div class="response" id="removeResponse"></div>
+  </fieldset>
+
+  <!-- Health Check -->
+  <fieldset>
+    <legend>HealthFunction [GET]</legend>
+    <button id="healthBtn">Check Health</button>
+    <div class="response" id="healthResponse"></div>
+  </fieldset>
+
+<script>
+  document.querySelectorAll('form[data-method]').forEach(form => {
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const method = form.dataset.method;
+      const url = form.action + '?' + new URLSearchParams(new FormData(form));
+      const responseDiv = document.getElementById(form.id + 'Response');
+      responseDiv.textContent = 'Loading...';
+      try {
+        const res = await fetch(url, { method });
+        const body = await res.text();
+        responseDiv.textContent = 
+          res.ok 
+            ? JSON.stringify(JSON.parse(body), null, 2) 
+            : `Error ${res.status}: ${body}`;
+      } catch (err) {
+        responseDiv.textContent = err;
+      }
+    });
+  });
+
+  document.getElementById('healthBtn').addEventListener('click', async () => {
+    const url = 'http://localhost:7071/api/health';
+    const div = document.getElementById('healthResponse');
+    div.textContent = 'Loading...';
+    try {
+      const res = await fetch(url);
+      const body = await res.text();
+      div.textContent = 
+        res.ok 
+          ? JSON.stringify(JSON.parse(body), null, 2) 
+          : `Error ${res.status}: ${body}`;
+    } catch (err) {
+      div.textContent = err;
+    }
+  });
+</script>
+
+</body>
+</html>
