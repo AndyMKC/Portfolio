@@ -10,9 +10,17 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     isbn13   = req.params.get("isbn13")
     datetimeRead_str = req.params.get("datetimeRead")
 
-    if not owner_id or not isbn13 or not datetimeRead_str:
+    # Validate inputs
+    missing = []
+    if not owner_id:
+        missing.append("ownerId")
+    if not isbn13:
+        missing.append("isbn13")
+    if not datetimeRead_str:
+        missing.append("datetimeRead")
+    if missing:
         return func.HttpResponse(
-            json.dumps({"error": "Please provide all of ownerId, isbn13 and datetimeRead as query parameters."}),
+            json.dumps({"error": f"Missing parameters: {', '.join(missing)}"}),
             status_code=400,
             mimetype="application/json"
         )
