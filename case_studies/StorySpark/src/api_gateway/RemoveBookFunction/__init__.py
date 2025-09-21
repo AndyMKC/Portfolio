@@ -4,6 +4,7 @@ import azure.functions as func
 import json
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
+
     owner_id = req.params.get("ownerId")
     isbn13  = req.params.get("isbn13")
 
