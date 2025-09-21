@@ -4,12 +4,18 @@ import azure.functions as func
 import json
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
-    owner_id = req.params.get("ownerid")
+    owner_id = req.params.get("ownerId")
     isbn13  = req.params.get("isbn13")
 
-    if not owner_id or not isbn13:
+    # Validate inputs
+    missing = []
+    if not owner_id:
+        missing.append("ownerId")
+    if not isbn13:
+        missing.append("isbn13")
+    if missing:
         return func.HttpResponse(
-            json.dumps({"error": "Please provide both ownerId and isbn13 as query parameters."}),
+            json.dumps({"error": f"Missing parameters: {', '.join(missing)}"}),
             status_code=400,
             mimetype="application/json"
         )
