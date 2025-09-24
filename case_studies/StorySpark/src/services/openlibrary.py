@@ -26,7 +26,7 @@ class LocalOpenLibraryProvider:
             
             # Gather the relevant strings from various parts of the JSON
             relevant_strings.extend([subj for subj in data.get("subjects", [])])
-            # Description and notes are whole sentences as opposted to 1-3 words in subjects.  We will eventually need to parse it better.
+            # Description and notes are whole sentences as opposed to 1-3 words in subjects.  We will eventually need to parse it better.
             if (value := data.get("description", {}).get("value")):
                 relevant_strings.append(value)
             if (value := data.get("notes", {}).get("value")):

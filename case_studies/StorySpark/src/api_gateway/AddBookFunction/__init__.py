@@ -30,6 +30,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             "Failed to collect metadata", status_code=502
         )
 
+    # TODO:  Do translation
 
     # Stub logic: echo back the values
     response_payload = {

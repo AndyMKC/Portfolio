@@ -4,11 +4,17 @@ from .interfaces import BookMetadataProvider
 IA_API_URL = "https://archive.org/metadata"
 
 class LocalInternetArchiveProvider:
-    def fetch(self, all_isbns: list) -> dict:
+    def fetch(self, all_isbns: list) -> list:
         # Given each ISBN, fetch the "work" it is associated with.  Different editions of the same book should share the same work.
-        editions_filtered = get_editions(all_isbns)
-        
+        metadata = list()
+
+        editions_filtered = LocalInternetArchiveProvider.get_editions(all_isbns)
         # Now that we have the work (there should be only one but we will iterate through as a precaution)
+        for edition in editions_filtered:
+            metadata_for_edition = LocalInternetArchiveProvider.get_metadata_for_edition(edition)
+            metadata.extend(metadata_for_edition)
+
+        return sorted(set(metadata))
     
     def get_editions(all_isbns:list) -> list:
         query = " OR ".join(f"isbn:{isbn}" for isbn in all_isbns)
@@ -33,5 +39,22 @@ class LocalInternetArchiveProvider:
 
         return editions_filtered
 
-    def get_metadata_for_edition(edition: str) -> dict
+    def get_metadata_for_edition(edition: str) -> list:
+        resp = requests.get(
+            f"https://archive.org/metadata/{edition}",
+            params=None,
+            timeout=5.0,
+        )
+        resp.raise_for_status()
+        data = resp.json().get("metadata", {})
+
+        relevant_strings = []
+        # Gather the relevant strings from various parts of the JSON
+        relevant_strings.extend([subj for subj in data.get("subject", [])])
+        # Description and title are whole sentences as opposed to 1-3 words in subjects.  We will eventually need to parse it better.
+        relevant_strings.extend([desc for desc in data.get("description", [])]) 
+        if (value := data.get("title", {})):
+            relevant_strings.append(value)
+
+        return relevant_strings
         
