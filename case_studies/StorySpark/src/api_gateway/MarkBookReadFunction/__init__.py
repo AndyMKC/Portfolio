@@ -7,15 +7,15 @@ from datetime import datetime
 def main(req: func.HttpRequest) -> func.HttpResponse:
 
     owner_id = req.params.get("ownerId")
-    isbn13   = req.params.get("isbn13")
+    isbn   = req.params.get("isbn")
     datetimeRead_str = req.params.get("datetimeRead")
 
     # Validate inputs
     missing = []
     if not owner_id:
         missing.append("ownerId")
-    if not isbn13:
-        missing.append("isbn13")
+    if not isbn:
+        missing.append("isbn")
     if not datetimeRead_str:
         missing.append("datetimeRead")
     if missing:
@@ -37,7 +37,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     # Stub payload
     response_payload = {
         "ownerId": owner_id,
-        "isbn13": isbn13,
+        "isbn": isbn,
         "timeRead": datetime_read.isoformat(),
         "message": "MarkBookReadFunction stub received"
     }
