@@ -18,22 +18,22 @@ def gather_metadata(isbn: str) -> Dict[str, Dict]:
     all_isbns: List[str] = get_all_isbns_for_isbn(isbn)
 
     sources = {
-        "openlibrary": get_openlibrary_provider(),
         "internet_archive": get_internet_archive_provider(),
+        "openlibrary": get_openlibrary_provider(),
     }
 
     results: Dict[str, Dict] = {}
 
     for source_name, provider in sources.items():
-        for isbn in all_isbns:
-            try:
-                data = provider.fetch(all_isbns)
-                if source_name in results:
-                    results[source_name].update(data)
-                else:
-                    results[source_name] = data
-            except Exception as ex:
-                # you can choose to drop missing sources or surface errors
-                results[source_name] = {"error": str(ex)}
+        try:
+            data = provider.fetch(all_isbns)
+            if source_name in results:
+                raise ValueError(f"Duplicate source name:  {source_name}")
+                #results[source_name].update(data)
+            else:
+                results[source_name] = data
+        except Exception as ex:
+            # you can choose to drop missing sources or surface errors
+            results[source_name] = {"error": str(ex)}
 
     return results
