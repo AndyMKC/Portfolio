@@ -1,4 +1,4 @@
 *.txt
 *.terraform/
-tfplan
+*.tfplan
 terraform.tfstate*
