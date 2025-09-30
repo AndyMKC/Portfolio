@@ -2,9 +2,11 @@ name: Build push image and deploy
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - deploy
+    inputs:
+      release_tag:
+        description: 'Release tag (optional)'
+        required: false
+        default: ''
 
 concurrency:
   group: deploy-${{ github.ref_name }}
