@@ -40,11 +40,12 @@ jobs:
       - name: Log in to ACR
         run: az acr login --name ${{ env.ACR_NAME }}
 
-      - name: Determine image tag
-        id: meta
+      - name: Set IMAGE_TAG
+        run: echo "IMAGE_TAG=sha-${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+
+      - name: Set IMAGE_FULL and save to file
         run: |
           set -euo pipefail
-          echo "IMAGE_TAG=sha-${GITHUB_SHA::7}" >> "$GITHUB_ENV"
           echo "IMAGE_FULL=${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_REPO }}:${IMAGE_TAG}" >> "$GITHUB_ENV"
           echo "image_full=${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_REPO }}:${IMAGE_TAG}" > image_full.txt
 
