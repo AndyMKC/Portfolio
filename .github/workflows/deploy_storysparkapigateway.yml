@@ -1,9 +1,14 @@
 name: Build push image and deploy
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - deploy
+
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: false
 
 env:
   ACR_NAME: storysparkacr
@@ -15,6 +20,7 @@ env:
 jobs:
   build-push-deploy:
     runs-on: ubuntu-latest
+    environment: production
     permissions:
       contents: read
       id-token: write
@@ -37,12 +43,14 @@ jobs:
       - name: Determine image tag
         id: meta
         run: |
+          set -euo pipefail
           echo "IMAGE_TAG=sha-${GITHUB_SHA::7}" >> "$GITHUB_ENV"
           echo "IMAGE_FULL=${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_REPO }}:${IMAGE_TAG}" >> "$GITHUB_ENV"
           echo "image_full=${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_REPO }}:${IMAGE_TAG}" > image_full.txt
 
       - name: Build and push image
         run: |
+          set -euo pipefail
           docker build -t ${ACR_LOGIN_SERVER}/${IMAGE_REPO}:${IMAGE_TAG} -f ./docker/Dockerfile .
           docker push ${ACR_LOGIN_SERVER}/${IMAGE_REPO}:${IMAGE_TAG}
 
@@ -63,9 +71,10 @@ jobs:
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
         run: |
+          set -euo pipefail
           terraform plan -input=false -var="acr_name=${{ env.ACR_NAME }}" -var="image_tag=${IMAGE_TAG}" -out=tfplan
 
-      - name: Terraform apply
+      - name: Terraform apply (only on deploy branch)
         if: github.ref == 'refs/heads/deploy'
         working-directory: ${{ env.TF_DIR }}
         env:
@@ -73,10 +82,33 @@ jobs:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-        run: terraform apply -input=false -auto-approve tfplan
-
-      - name: Prune old images keep latest N
         run: |
+          set -euo pipefail
+          terraform apply -input=false -auto-approve tfplan
+
+      - name: Prune old images keep latest N (dry-run then delete)
+        run: |
+          set -euo pipefail
+          ACR=${{ env.ACR_NAME }}
+          REPO=${{ env.IMAGE_REPO }}
+          KEEP=${{ env.KEEP }}
+          # list tags newest-first
+          tags=$(az acr repository show-tags --name "$ACR" --repository "$REPO" --orderby time_desc -o tsv)
+          count=0
+          echo "Dry-run: tags that would be deleted (keeping latest $KEEP):"
+          for tag in $tags; do
+            count=$((count+1))
+            if [ $count -le $KEEP ]; then
+              echo "Keeping $REPO:$tag"
+              continue
+            fi
+            echo "Would delete $REPO:$tag"
+          done
+
+      - name: Prune old images keep latest N (delete step)
+        if: github.ref == 'refs/heads/deploy'
+        run: |
+          set -euo pipefail
           ACR=${{ env.ACR_NAME }}
           REPO=${{ env.IMAGE_REPO }}
           KEEP=${{ env.KEEP }}
@@ -89,5 +121,5 @@ jobs:
               continue
             fi
             echo "Deleting $REPO:$tag"
-            az acr repository delete --name "$ACR" --image "$REPO:$tag" --yes
+            az acr repository delete --name "$ACR" --image "$REPO:$tag" --yes || echo "Failed to delete $REPO:$tag, continuing"
           done
