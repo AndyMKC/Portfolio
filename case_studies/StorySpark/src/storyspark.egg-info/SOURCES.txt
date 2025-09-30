@@ -1,0 +1,12 @@
+setup.py
+src/services/__init__.py
+src/services/http_clients.py
+src/services/interfaces.py
+src/services/internet_archive.py
+src/services/metadata_gatherer.py
+src/services/openlibrary.py
+src/services/provider_factory.py
+src/storyspark.egg-info/PKG-INFO
+src/storyspark.egg-info/SOURCES.txt
+src/storyspark.egg-info/dependency_links.txt
+src/storyspark.egg-info/top_level.txt

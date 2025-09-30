@@ -1,0 +1,9 @@
+{
+    "python-envs.pythonProjects": [],
+    "azureFunctions.deploySubpath": "api_gateway",
+    "azureFunctions.scmDoBuildDuringDeployment": true,
+    "azureFunctions.pythonVenv": "venv_api_gateway",
+    "azureFunctions.projectLanguage": "Python",
+    "azureFunctions.projectRuntime": "~4",
+    "debug.internalConsoleOptions": "neverOpen"
+}

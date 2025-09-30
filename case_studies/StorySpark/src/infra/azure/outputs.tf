@@ -1,15 +1,3 @@
-output "search_service_id" {
-  value = azurerm_search_service.storyspark.id
-}
-
-output "search_service_name" {
-  value = azurerm_search_service.storyspark.name
-}
-
-output "search_location" {
-  value = azurerm_search_service.storyspark.location
-}
-
 output "search_sku" {
   value = azurerm_search_service.storyspark.sku
 }
@@ -20,6 +8,18 @@ output "replica_count" {
 
 output "partition_count" {
   value = azurerm_search_service.storyspark.partition_count
+}
+
+output "search_service_id" {
+  value = azurerm_search_service.storyspark.id
+}
+
+output "search_service_name" {
+  value = azurerm_search_service.storyspark.name
+}
+
+output "search_location" {
+  value = azurerm_search_service.storyspark.location
 }
 
 output "primary_admin_key" {
@@ -34,4 +34,12 @@ output "secondary_admin_key" {
 
 output "query_keys" {
   value = azurerm_search_service.storyspark.query_keys
+}
+
+output "acr_login_server" {
+  value = azurerm_container_registry.acr.login_server
+}
+
+output "function_default_hostname" {
+  value = azurerm_function_app.fn.default_hostname
 }

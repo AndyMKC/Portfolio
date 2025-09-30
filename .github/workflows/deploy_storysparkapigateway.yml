@@ -1,4 +1,4 @@
-name: Deploy Python project to Azure Function App
+name: Build push image and deploy
 
 on:
   push:
@@ -6,34 +6,88 @@ on:
       - deploy
 
 env:
-  AZURE_FUNCTIONAPP_NAME: 'StorySparkAPIGateway'
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: 'case_studies/StorySpark/src/api_gateway'
-  PYTHON_VERSION: '3.12'
+  ACR_NAME: storysparkacr
+  ACR_LOGIN_SERVER: storysparkacr.azurecr.io
+  KEEP: 2
+  IMAGE_REPO: storyspark
+  TF_DIR: infra/azure
 
 jobs:
-  build-and-deploy:
+  build-push-deploy:
     runs-on: ubuntu-latest
-    environment: dev
+    permissions:
+      contents: read
+      id-token: write
+
     steps:
-      - name: 'Checkout code'
-        uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: 'Setup Python'
-        uses: actions/setup-python@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Azure
+        uses: azure/login@v1
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Install dependencies
-        working-directory: ${{ github.workspace }}/${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+      - name: Log in to ACR
+        run: az acr login --name ${{ env.ACR_NAME }}
+
+      - name: Determine image tag
+        id: meta
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt --target=".python_packages/lib/site-packages"
+          echo "IMAGE_TAG=sha-${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+          echo "IMAGE_FULL=${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_REPO }}:${IMAGE_TAG}" >> "$GITHUB_ENV"
+          echo "image_full=${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_REPO }}:${IMAGE_TAG}" > image_full.txt
 
-      - name: 'Deploy to Azure Functions'
-        uses: Azure/functions-action@v1
+      - name: Build and push image
+        run: |
+          docker build -t ${ACR_LOGIN_SERVER}/${IMAGE_REPO}:${IMAGE_TAG} -f ./docker/Dockerfile .
+          docker push ${ACR_LOGIN_SERVER}/${IMAGE_REPO}:${IMAGE_TAG}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
         with:
-          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
-          package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE_2e14fb5e66ec4e8e8e6f1a395235113c }}
-          scm-do-build-during-deployment: true
-          enable-oryx-build: true
+          terraform_version: 1.5.0
+
+      - name: Terraform init
+        working-directory: ${{ env.TF_DIR }}
+        run: terraform init -input=false
+
+      - name: Terraform plan
+        working-directory: ${{ env.TF_DIR }}
+        env:
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+        run: |
+          terraform plan -input=false -var="acr_name=${{ env.ACR_NAME }}" -var="image_tag=${IMAGE_TAG}" -out=tfplan
+
+      - name: Terraform apply
+        if: github.ref == 'refs/heads/deploy'
+        working-directory: ${{ env.TF_DIR }}
+        env:
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+        run: terraform apply -input=false -auto-approve tfplan
+
+      - name: Prune old images keep latest N
+        run: |
+          ACR=${{ env.ACR_NAME }}
+          REPO=${{ env.IMAGE_REPO }}
+          KEEP=${{ env.KEEP }}
+          tags=$(az acr repository show-tags --name "$ACR" --repository "$REPO" --orderby time_desc -o tsv)
+          count=0
+          for tag in $tags; do
+            count=$((count+1))
+            if [ $count -le $KEEP ]; then
+              echo "Keeping $REPO:$tag"
+              continue
+            fi
+            echo "Deleting $REPO:$tag"
+            az acr repository delete --name "$ACR" --image "$REPO:$tag" --yes
+          done
