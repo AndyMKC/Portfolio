@@ -30,6 +30,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Export ARM_* from AZURE_CREDENTIALS
+        shell: bash
+        run: |
+          echo "Parsing AZURE_CREDENTIALS into ARM_* env vars"
+          echo "$AZURE_CREDENTIALS" > /tmp/azure_creds.json
+          ARM_CLIENT_ID=$(jq -r '.clientId // .client_id // empty' /tmp/azure_creds.json)
+          ARM_CLIENT_SECRET=$(jq -r '.clientSecret // .client_secret // empty' /tmp/azure_creds.json)
+          ARM_TENANT_ID=$(jq -r '.tenantId // .tenant_id // empty' /tmp/azure_creds.json)
+          ARM_SUBSCRIPTION_ID=$(jq -r '.subscriptionId // .subscription_id // empty' /tmp/azure_creds.json)
+          if [ -z "$ARM_CLIENT_ID" ] || [ -z "$ARM_CLIENT_SECRET" ] || [ -z "$ARM_TENANT_ID" ] || [ -z "$ARM_SUBSCRIPTION_ID" ]; then
+            echo "Missing one or more fields in AZURE_CREDENTIALS; printing presence only"
+            echo "ARM_CLIENT_ID present: $([ -n \"$ARM_CLIENT_ID\" ] && echo yes || echo no)"
+            echo "ARM_CLIENT_SECRET present: $([ -n \"$ARM_CLIENT_SECRET\" ] && echo yes || echo no)"
+            echo "ARM_TENANT_ID present: $([ -n \"$ARM_TENANT_ID\" ] && echo yes || echo no)"
+            echo "ARM_SUBSCRIPTION_ID present: $([ -n \"$ARM_SUBSCRIPTION_ID\" ] && echo yes || echo no)"
+            exit 1
+          fi
+          echo "ARM_CLIENT_ID=$ARM_CLIENT_ID" >> $GITHUB_ENV
+          echo "ARM_CLIENT_SECRET=$ARM_CLIENT_SECRET" >> $GITHUB_ENV
+          echo "ARM_TENANT_ID=$ARM_TENANT_ID" >> $GITHUB_ENV
+          echo "ARM_SUBSCRIPTION_ID=$ARM_SUBSCRIPTION_ID" >> $GITHUB_ENV
+        env:
+          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+
       - name: Debug secret presence (temporary)
         run: |
           echo "AZURE_CREDENTIALS present: $([[ -n '${{ secrets.AZURE_CREDENTIALS }}' ]] && echo yes || echo no)"
