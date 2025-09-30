@@ -17,7 +17,7 @@ env:
   ACR_LOGIN_SERVER: storysparkacr.azurecr.io
   KEEP: 2
   IMAGE_REPO: storyspark
-  TF_DIR: infra/azure
+  TF_DIR: case_studies/StorySpark/src/infra/azure
 
 jobs:
   build-push-deploy:
@@ -61,6 +61,17 @@ jobs:
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.0
+
+      - name: Verify workspace and list files
+        run: |
+          echo "Running on ref: $GITHUB_REF"
+          pwd
+          ls -la
+          ls -la case_studies || true
+          ls -la case_studies/StorySpark || true
+          ls -la case_studies/StorySpark/src || true
+          ls -la case_studies/StorySpark/src/infra || true
+          ls -la case_studies/StorySpark/src/infra/azure || true
 
       - name: Terraform init
         working-directory: ${{ env.TF_DIR }}
