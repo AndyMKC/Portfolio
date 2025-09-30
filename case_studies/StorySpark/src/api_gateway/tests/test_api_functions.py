@@ -4,11 +4,19 @@ from azure.functions import HttpRequest, HttpResponse
 import inspect
 
 # Import your handler functions
+<<<<<<< HEAD
 from api_gateway.AddBookFunction.__init__ import main as add_book
 from api_gateway.GetBookRecommendationFunction.__init__ import main as get_recommendations
 from api_gateway.MarkBookReadFunction.__init__ import main as mark_read
 from api_gateway.RemoveBookFunction.__init__ import main as remove_book
 from api_gateway.z_HealthFunction.__init__ import main as health_check
+=======
+from AddBookFunction.__init__ import main as add_book
+from GetBookRecommendationFunction.__init__ import main as get_recommendations
+from MarkBookReadFunction.__init__ import main as mark_read
+from RemoveBookFunction.__init__ import main as remove_book
+from z_HealthFunction.__init__ import main as health_check
+>>>>>>> deploy
 
 def make_request(method: str, url: str, params: dict = None, body: dict = None):
     return HttpRequest(
