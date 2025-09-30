@@ -4,11 +4,19 @@ from azure.functions import HttpRequest, HttpResponse
 import inspect
 
 # Import your handler functions
+<<<<<<< HEAD
+from api_gateway.AddBookFunction.__init__ import main as add_book
+from api_gateway.GetBookRecommendationFunction.__init__ import main as get_recommendations
+from api_gateway.MarkBookReadFunction.__init__ import main as mark_read
+from api_gateway.RemoveBookFunction.__init__ import main as remove_book
+from api_gateway.z_HealthFunction.__init__ import main as health_check
+=======
 from AddBookFunction.__init__ import main as add_book
 from GetBookRecommendationFunction.__init__ import main as get_recommendations
 from MarkBookReadFunction.__init__ import main as mark_read
 from RemoveBookFunction.__init__ import main as remove_book
 from z_HealthFunction.__init__ import main as health_check
+>>>>>>> deploy
 
 def make_request(method: str, url: str, params: dict = None, body: dict = None):
     return HttpRequest(
@@ -39,7 +47,7 @@ def test_get_recommendations():
     validate_request(resp)
 
 def test_add_and_remove_book():
-    add_params = {"ownerId": "alice", "isbn13": "9781234567897"}
+    add_params = {"ownerId": "alice", "isbn": "9780763680077"}
     req_add = make_request("POST", "/api/books/add", params=add_params)
     resp_add = add_book(req_add)
     validate_request(resp_add)
@@ -51,7 +59,7 @@ def test_add_and_remove_book():
 def test_mark_book_read():
     params = {
         "ownerId": "alice",
-        "isbn13": "9781234567897",
+        "isbn": "9780763680077",
         "datetimeRead": "2025-09-19T16:05:00"
     }
     req = make_request("POST", "/api/books/markRead", params=params)

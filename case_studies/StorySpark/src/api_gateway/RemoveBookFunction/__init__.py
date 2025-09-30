@@ -6,14 +6,14 @@ import json
 def main(req: func.HttpRequest) -> func.HttpResponse:
 
     owner_id = req.params.get("ownerId")
-    isbn13  = req.params.get("isbn13")
+    isbn  = req.params.get("isbn")
 
     # Validate inputs
     missing = []
     if not owner_id:
         missing.append("ownerId")
-    if not isbn13:
-        missing.append("isbn13")
+    if not isbn:
+        missing.append("isbn")
     if missing:
         return func.HttpResponse(
             json.dumps({"error": f"Missing parameters: {', '.join(missing)}"}),
@@ -24,7 +24,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     # Stub logic: echo deletion request
     payload = {
         "ownerId": owner_id,
-        "isbn13": isbn13,
+        "isbn": isbn,
         "message": "RemoveBookFunction stub received"
     }
     return func.HttpResponse(

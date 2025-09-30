@@ -1,1 +1,6 @@
-*.txt
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+plan.tfplan
+tfplan
+*.pyc
