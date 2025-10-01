@@ -125,8 +125,7 @@ jobs:
           done
 
       - name: Prune old images keep latest N (delete step -- only on main branch)
-        #if: github.ref == 'refs/heads/main'
-        if: github.ref == 'refs/heads/andymkc/2025_09_30_DeployBuildFixes2'
+        if: github.ref == 'refs/heads/main'
         run: |
           set -euo pipefail
           ACR=${{ env.ACR_NAME }}
