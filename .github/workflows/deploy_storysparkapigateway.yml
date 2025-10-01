@@ -30,13 +30,40 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Export ARM_* from AZURE_CREDENTIALS
+      - name: Print Azure IDs (masked)
         shell: bash
+        env:
+          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
         run: |
           set -euo pipefail
-          echo "clientId -- ${{secrets.AZURE_CREDENTIALS.clientId}}"
-          echo "tenantId -- ${{secrets.AZURE_CREDENTIALS.tenantId}}"
-          echo "subscriptionId -- ${{secrets.AZURE_CREDENTIALS.subscriptionId}}"
+          # write secret to temp file for jq parsing
+          echo "$AZURE_CREDENTIALS" > /tmp/azcreds.json
+
+          # extract values (support common key variants)
+          clientId=$(jq -r '.clientId // .client_id // empty' /tmp/azcreds.json)
+          tenantId=$(jq -r '.tenantId // .tenant_id // empty' /tmp/azcreds.json)
+          subscriptionId=$(jq -r '.subscriptionId // .subscription_id // empty' /tmp/azcreds.json)
+
+          # helper to mask a value: keep first 6 and last 4 chars, replace middle with "..."
+          mask() {
+            v="$1"
+            if [ -z "$v" ]; then
+              echo "(missing)"
+              return
+            fi
+            len=${#v}
+            if [ "$len" -le 12 ]; then
+              echo "$v"
+              return
+            fi
+            head=${v:0:6}
+            tail=${v: -4}
+            echo "${head}...${tail}"
+          }
+
+          echo "clientId:    $(mask "$clientId")"
+          echo "tenantId:    $(mask "$tenantId")"
+          echo "subscriptionId: $(mask "$subscriptionId")"
 
         # run: |
         #   echo "Parsing AZURE_CREDENTIALS into ARM_* env vars"
@@ -57,8 +84,8 @@ jobs:
         #   echo "ARM_CLIENT_SECRET=$ARM_CLIENT_SECRET" >> $GITHUB_ENV
         #   echo "ARM_TENANT_ID=$ARM_TENANT_ID" >> $GITHUB_ENV
         #   echo "ARM_SUBSCRIPTION_ID=$ARM_SUBSCRIPTION_ID" >> $GITHUB_ENV
-        env:
-          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+        # env:
+        #   AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Debug secret presence (temporary)
         run: |
