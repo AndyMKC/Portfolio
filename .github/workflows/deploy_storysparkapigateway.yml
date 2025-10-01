@@ -87,11 +87,6 @@ jobs:
 
       - name: Terraform plan
         working-directory: ${{ env.TF_DIR }}
-        env:
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
         run: |
           set -euo pipefail
           terraform plan -input=false -var="acr_name=${{ env.ACR_NAME }}" -var="image_tag=${IMAGE_TAG}" -out=tfplan
@@ -99,11 +94,6 @@ jobs:
       - name: Terraform apply (only on deploy branch)
         if: github.ref == 'refs/heads/deploy'
         working-directory: ${{ env.TF_DIR }}
-        env:
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
         run: |
           set -euo pipefail
           terraform apply -input=false -auto-approve tfplan
