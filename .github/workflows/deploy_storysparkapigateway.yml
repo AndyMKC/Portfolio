@@ -33,20 +33,12 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Azure Login (service principal)
+        # This is fetching from Github Action secrets.  The Service Principal this maps to is "github-actions-sp-storyspark" with applicationId of eb6672c3-c9cb-4bff-8bfc-3ad50520949d.  To generate a new set of credentials, use:
+        # az ad sp create-for-rbac --name "github-actions-sp-storyspark" --role "Contributor" --scopes "/subscriptions/5ab40d90-e237-422e-a575-b5b73033077c" --sdk-auth
+      - name: Azure Login (service principal, from AZURE_CREDENTIALS)
         uses: azure/login@v1
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
-
-      - name: Export ARM environment variables for Terraform
-        run: |
-          echo "ARM_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}" >> $GITHUB_ENV
-          echo "ARM_CLIENT_SECRET=${{ secrets.AZURE_CLIENT_SECRET }}" >> $GITHUB_ENV
-          echo "ARM_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}" >> $GITHUB_ENV
-          echo "ARM_SUBSCRIPTION_ID=${{ secrets.AZURE_SUBSCRIPTION_ID }}" >> $GITHUB_ENV
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Log in to ACR
         run: az acr login --name ${{ env.ACR_NAME }}
@@ -58,58 +50,57 @@ jobs:
         run: |
           set -euo pipefail
           echo "IMAGE_FULL=${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_REPO }}:${IMAGE_TAG}" >> "$GITHUB_ENV"
-          echo "image_full=${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_REPO }}:${IMAGE_TAG}" > image_full.txt
 
-      - name: Build and push image
+      - name: Build docker image
+        shell: bash
         run: |
           set -euo pipefail
           docker build -t ${ACR_LOGIN_SERVER}/${IMAGE_REPO}:${IMAGE_TAG} -f ./case_studies/StorySpark/src/docker/Dockerfile ./case_studies/StorySpark/src/docker
+          # keep IMAGE_FULL available for later steps
+
+      - name: Push docker image (only on main)
+        if: github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          set -euo pipefail
           docker push ${ACR_LOGIN_SERVER}/${IMAGE_REPO}:${IMAGE_TAG}
+
+      - name: Export ARM_* from AZURE_CREDENTIALS
+        shell: bash
+        env:
+          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+        run: |
+          clientId=$(jq -r '.clientId // .client_id // empty' <<<"$AZURE_CREDENTIALS")
+          clientSecret=$(jq -r '.clientSecret // .client_secret // empty' <<<"$AZURE_CREDENTIALS")
+          tenantId=$(jq -r '.tenantId // .tenant_id // empty' <<<"$AZURE_CREDENTIALS")
+          subscriptionId=$(jq -r '.subscriptionId // .subscription_id // empty' <<<"$AZURE_CREDENTIALS")
+          if [ -z "$clientId" ] || [ -z "$clientSecret" ] || [ -z "$tenantId" ] || [ -z "$subscriptionId" ]; then
+            echo "Missing required fields in AZURE_CREDENTIALS"
+            exit 1
+          fi
+          echo "ARM_CLIENT_ID=$clientId" >> $GITHUB_ENV
+          echo "ARM_CLIENT_SECRET=$clientSecret" >> $GITHUB_ENV
+          echo "ARM_TENANT_ID=$tenantId" >> $GITHUB_ENV
+          echo "ARM_SUBSCRIPTION_ID=$subscriptionId" >> $GITHUB_ENV
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.0
 
-      - name: Verify workspace and list files
-        run: |
-          echo "Running on ref: $GITHUB_REF"
-          pwd
-          ls -la
-          ls -la case_studies || true
-          ls -la case_studies/StorySpark || true
-          ls -la case_studies/StorySpark/src || true
-          ls -la case_studies/StorySpark/src/infra || true
-          ls -la case_studies/StorySpark/src/infra/azure || true
-
       - name: Terraform init
         working-directory: ${{ env.TF_DIR }}
-        env:
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
         run: terraform init -input=false
 
       - name: Terraform plan
         working-directory: ${{ env.TF_DIR }}
-        env:
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
         run: |
           set -euo pipefail
           terraform plan -input=false -var="acr_name=${{ env.ACR_NAME }}" -var="image_tag=${IMAGE_TAG}" -out=tfplan
 
-      - name: Terraform apply (only on deploy branch)
-        if: github.ref == 'refs/heads/deploy'
+      - name: Terraform apply (only on main branch)
+        if: github.ref == 'refs/heads/main'
         working-directory: ${{ env.TF_DIR }}
-        env:
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
         run: |
           set -euo pipefail
           terraform apply -input=false -auto-approve tfplan
@@ -133,8 +124,8 @@ jobs:
             echo "Would delete $REPO:$tag"
           done
 
-      - name: Prune old images keep latest N (delete step)
-        if: github.ref == 'refs/heads/deploy'
+      - name: Prune old images keep latest N (delete step -- only on main branch)
+        if: github.ref == 'refs/heads/main'
         run: |
           set -euo pipefail
           ACR=${{ env.ACR_NAME }}
