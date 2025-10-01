@@ -50,7 +50,7 @@ jobs:
         run: |
           set -euo pipefail
           echo "IMAGE_FULL=${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_REPO }}:${IMAGE_TAG}" >> "$GITHUB_ENV"
-          echo "image_full=${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_REPO }}:${IMAGE_TAG}" > image_full.txt
+#          echo "image_full=${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_REPO }}:${IMAGE_TAG}" > image_full.txt
 
       - name: Build docker image
         shell: bash
@@ -58,7 +58,7 @@ jobs:
           set -euo pipefail
           docker build -t ${ACR_LOGIN_SERVER}/${IMAGE_REPO}:${IMAGE_TAG} -f ./case_studies/StorySpark/src/docker/Dockerfile ./case_studies/StorySpark/src/docker
           # keep IMAGE_FULL available for later steps
-          echo "IMAGE_FULL=${ACR_LOGIN_SERVER}/${IMAGE_REPO}:${IMAGE_TAG}" >> "$GITHUB_ENV"
+#          echo "IMAGE_FULL=${ACR_LOGIN_SERVER}/${IMAGE_REPO}:${IMAGE_TAG}" >> "$GITHUB_ENV"
 
       - name: Push docker image (only on main)
         #if: github.ref == 'refs/heads/main'
