@@ -32,6 +32,7 @@ jobs:
 
       - name: Export ARM_* from AZURE_CREDENTIALS
         shell: bash
+        run: |
           set -euo pipefail
           echo "clientId -- $AZURE_CREDENTIALS.clientId"
           echo "tenantId -- $AZURE_CREDENTIALS.tenantId"
