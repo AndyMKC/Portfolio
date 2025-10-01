@@ -34,9 +34,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo "clientId -- ${{AZURE_CREDENTIALS.clientId}}"
-          echo "tenantId -- ${{AZURE_CREDENTIALS.tenantId}}"
-          echo "subscriptionId -- ${{AZURE_CREDENTIALS.subscriptionId}}"
+          echo "clientId -- ${{secrets.AZURE_CREDENTIALS.clientId}}"
+          echo "tenantId -- ${{secrets.AZURE_CREDENTIALS.tenantId}}"
+          echo "subscriptionId -- ${{secrets.AZURE_CREDENTIALS.subscriptionId}}"
 
         # run: |
         #   echo "Parsing AZURE_CREDENTIALS into ARM_* env vars"
