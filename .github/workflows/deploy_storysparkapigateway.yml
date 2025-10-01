@@ -30,49 +30,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Print Azure IDs (masked)
-        shell: bash
-        env:
-          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
-        run: |
-          set -euo pipefail
-          # write secret to temp file for jq parsing
-          echo "$AZURE_CREDENTIALS" > /tmp/azcreds.json
-
-          # extract values (support common key variants)
-          clientId=$(jq -r '.clientId // .client_id // empty' /tmp/azcreds.json)
-          tenantId=$(jq -r '.tenantId // .tenant_id // empty' /tmp/azcreds.json)
-          subscriptionId=$(jq -r '.subscriptionId // .subscription_id // empty' /tmp/azcreds.json)
-
-          # helper to mask a value: keep first 6 and last 4 chars, replace middle with "..."
-          mask() {
-            v="$1"
-            if [ -z "$v" ]; then
-              echo "(missing)"
-              return
-            fi
-            len=${#v}
-            if [ "$len" -le 12 ]; then
-              echo "$v"
-              return
-            fi
-            head=${v:0:6}
-            tail=${v: -4}
-            echo "${head}...${tail}"
-          }
-
-          echo "clientId:    $(mask "$clientId")"
-          echo "tenantId:    $(mask "$tenantId")"
-          echo "subscriptionId: $(mask "$subscriptionId")"
-
-      # - name: Debug secret presence (temporary)
-      #   run: |
-      #     echo "AZURE_CREDENTIALS present: $([[ -n '${{ secrets.AZURE_CREDENTIALS }}' ]] && echo yes || echo no)"
-      #     echo "AZURE_CLIENT_ID present: $([[ -n '${{ secrets.AZURE_CLIENT_ID }}' ]] && echo yes || echo no)"
-      #     echo "AZURE_CLIENT_SECRET present: $([[ -n '${{ secrets.AZURE_CLIENT_SECRET }}' ]] && echo yes || echo no)"
-      #     echo "AZURE_TENANT_ID present: $([[ -n '${{ secrets.AZURE_TENANT_ID }}' ]] && echo yes || echo no)"
-      #     echo "AZURE_SUBSCRIPTION_ID present: $([[ -n '${{ secrets.AZURE_SUBSCRIPTION_ID }}' ]] && echo yes || echo no)"
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
@@ -83,12 +40,46 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Export ARM environment variables for Terraform
+      # - name: Export ARM environment variables for Terraform
+      #   run: |
+      #     echo "ARM_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}" >> $GITHUB_ENV
+      #     echo "ARM_CLIENT_SECRET=${{ secrets.AZURE_CLIENT_SECRET }}" >> $GITHUB_ENV
+      #     echo "ARM_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}" >> $GITHUB_ENV
+      #     echo "ARM_SUBSCRIPTION_ID=${{ secrets.AZURE_SUBSCRIPTION_ID }}" >> $GITHUB_ENV
+
+###############################
+      - name: Export ARM_* from AZURE_CREDENTIALS
+        shell: bash
+        env:
+          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
         run: |
-          echo "ARM_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}" >> $GITHUB_ENV
-          echo "ARM_CLIENT_SECRET=${{ secrets.AZURE_CLIENT_SECRET }}" >> $GITHUB_ENV
-          echo "ARM_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}" >> $GITHUB_ENV
-          echo "ARM_SUBSCRIPTION_ID=${{ secrets.AZURE_SUBSCRIPTION_ID }}" >> $GITHUB_ENV
+          clientId=$(jq -r '.clientId // .client_id // empty' <<<"$AZURE_CREDENTIALS")
+          clientSecret=$(jq -r '.clientSecret // .client_secret // empty' <<<"$AZURE_CREDENTIALS")
+          tenantId=$(jq -r '.tenantId // .tenant_id // empty' <<<"$AZURE_CREDENTIALS")
+          subscriptionId=$(jq -r '.subscriptionId // .subscription_id // empty' <<<"$AZURE_CREDENTIALS")
+          if [ -z "$clientId" ] || [ -z "$clientSecret" ] || [ -z "$tenantId" ] || [ -z "$subscriptionId" ]; then
+            echo "Missing required fields in AZURE_CREDENTIALS"
+            exit 1
+          fi
+          echo "ARM_CLIENT_ID=$clientId" >> $GITHUB_ENV
+          echo "ARM_CLIENT_SECRET=$clientSecret" >> $GITHUB_ENV
+          echo "ARM_TENANT_ID=$tenantId" >> $GITHUB_ENV
+          echo "ARM_SUBSCRIPTION_ID=$subscriptionId" >> $GITHUB_ENV
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
+      - name: Terraform init
+        working-directory: ${{ env.TF_DIR }}
+        env:
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        run: terraform init -input=false
+##############################
 
       - name: Log in to ACR
         run: az acr login --name ${{ env.ACR_NAME }}
@@ -108,30 +99,19 @@ jobs:
           docker build -t ${ACR_LOGIN_SERVER}/${IMAGE_REPO}:${IMAGE_TAG} -f ./case_studies/StorySpark/src/docker/Dockerfile ./case_studies/StorySpark/src/docker
           docker push ${ACR_LOGIN_SERVER}/${IMAGE_REPO}:${IMAGE_TAG}
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.5.0
+      # - name: Setup Terraform
+      #   uses: hashicorp/setup-terraform@v2
+      #   with:
+      #     terraform_version: 1.5.0
 
-      - name: Verify workspace and list files
-        run: |
-          echo "Running on ref: $GITHUB_REF"
-          pwd
-          ls -la
-          ls -la case_studies || true
-          ls -la case_studies/StorySpark || true
-          ls -la case_studies/StorySpark/src || true
-          ls -la case_studies/StorySpark/src/infra || true
-          ls -la case_studies/StorySpark/src/infra/azure || true
-
-      - name: Terraform init
-        working-directory: ${{ env.TF_DIR }}
-        env:
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-        run: terraform init -input=false
+      # - name: Terraform init
+      #   working-directory: ${{ env.TF_DIR }}
+      #   env:
+      #     ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      #     ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      #     ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      #     ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      #   run: terraform init -input=false
 
       - name: Terraform plan
         working-directory: ${{ env.TF_DIR }}
