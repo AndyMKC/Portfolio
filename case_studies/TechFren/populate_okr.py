@@ -66,7 +66,7 @@ def update_active_users_okr(login_info):
     print("Issues to update:", issues)
 
     for k in issues:
-        status = update_jira_field(k, metric, login_info.jira_api_token)
+        status = update_jira_field(k, metric, login_info)
         print("Updated", k, "status", status)
 
 def main():
