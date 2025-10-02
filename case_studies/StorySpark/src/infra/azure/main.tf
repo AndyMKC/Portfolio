@@ -61,7 +61,7 @@ resource "azurerm_role_assignment" "acr_pull" {
 # If using existing resource group, use data.azurerm_resource_group.existing.* as shown earlier.
 
 resource "azurerm_storage_account" "sa" {
-  name                            = var.sa_name
+  name                            = var.storyspark_storage_account_name
   resource_group_name             = data.azurerm_resource_group.existing.name
   location                        = data.azurerm_resource_group.existing.location
   account_kind                    = "StorageV2"
