@@ -54,7 +54,7 @@ def update_jira_field(issue_key, value, login_info):
 
 def update_active_users_okr(login_info):
     # Get the metric value
-    r_window = 7
+    r_window = 28
     metric_name = "activeUsers"
     metric = fetch_ga4_metric(login_info, r_window, metric_name)
     print("GA4 metric:", metric)
