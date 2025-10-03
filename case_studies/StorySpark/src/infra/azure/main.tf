@@ -49,16 +49,11 @@ resource "azurerm_user_assigned_identity" "fn_identity" {
 }
 
 resource "azurerm_role_assignment" "acr_pull" {
+  #principal_id         = azurerm_linux_function_app.fn.identity[0].principal_id
   principal_id         = azurerm_user_assigned_identity.fn_identity.principal_id
   scope                = azurerm_container_registry.acr.id
   role_definition_name = "AcrPull"
 }
-
-# Update your existing azurerm_function_app resource's site_config:
-# linux_fx_version = "DOCKER|${azurerm_container_registry.acr.login_server}/storyspark:${var.image_tag}"
-# and attach the user assigned identity
-
-# If using existing resource group, use data.azurerm_resource_group.existing.* as shown earlier.
 
 resource "azurerm_storage_account" "sa" {
   name                            = var.storyspark_storage_account_name
@@ -81,14 +76,13 @@ resource "azurerm_service_plan" "sp" {
   sku_name = "Y1"
 }
 
-resource "azurerm_function_app" "fn" {
+resource "azurerm_linux_function_app" "fn" {
   name                       = var.function_name
   resource_group_name        = data.azurerm_resource_group.existing.name
   location                   = data.azurerm_resource_group.existing.location
-  app_service_plan_id        = azurerm_service_plan.sp.id
+  service_plan_id            = azurerm_service_plan.sp.id
   storage_account_name       = azurerm_storage_account.sa.name
   storage_account_access_key = azurerm_storage_account.sa.primary_access_key
-  version                    = "~4"
 
   identity {
     type         = "UserAssigned"
@@ -97,9 +91,12 @@ resource "azurerm_function_app" "fn" {
 
   site_config {
     #linux_fx_version = "DOCKER|${azurerm_container_registry.acr.login_server}/${var.image_repo}:${var.image_tag}"
-    linux_fx_version = "DOCKER|azurermcontainerregistry.acr.loginserver/{azurerm_container_registry.acr.login_server}/{var.image_repo}:${var.image_tag}"
+    #linux_fx_version = "DOCKER|azurermcontainerregistry.acr.loginserver/{azurerm_container_registry.acr.login_server}/{var.image_repo}:${var.image_tag}"
     # Optional: if your container requires a custom start command, set app_command_line here.
     # app_command_line = ""
+    application_stack {
+      python_version = "3.11"
+    }
   }
 
   app_settings = {
@@ -111,5 +108,8 @@ resource "azurerm_function_app" "fn" {
     "WEBSITES_PORT"                       = tostring(var.app_port)
     # If your container expects additional runtime env vars, add them here.
   }
+
+  # Give the Function App's system-assigned identity permission to pull from ACR
+  depends_on = [azurerm_role_assignment.acr_pull]
 }
 
