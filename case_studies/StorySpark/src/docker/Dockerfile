@@ -1,20 +1,20 @@
-FROM python:3.11-slim
+# Use the official Azure Functions base image for Python 3.11
+FROM mcr.microsoft.com/azure-functions/python:4-python3.11
 
-ENV PYTHONUNBUFFERED=1 \
-    TRANSFORMERS_CACHE=/home/site/wwwroot/models \
-    PATH="/home/site/.local/bin:${PATH}"
+# Set working directory to where the Functions host expects your app
+WORKDIR /home/site/wwwroot
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential git curl && \
-    rm -rf /var/lib/apt/lists/*
+# Copy all function app files from api_gateway/ into the container
+# Assumes you run docker build from Portfolio/case_studies/StorySpark/
+COPY src/api_gateway/ /home/site/wwwroot/
 
-WORKDIR /app
+# Install Python dependencies if requirements.txt is present
+RUN if [ -f requirements.txt ]; then \
+      pip install --no-cache-dir -r requirements.txt; \
+    fi
 
-COPY requirements.txt .
-RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
+# Optional: verify azure.functions is installed
+RUN python -c "import azure.functions"
 
-COPY . .
-
+# Expose port 80 (Functions host listens here)
 EXPOSE 80
-
-CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "app.main:app", "--bind", "0.0.0.0:80", "--workers", "1"]
