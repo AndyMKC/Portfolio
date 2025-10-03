@@ -41,5 +41,11 @@ output "acr_login_server" {
 }
 
 output "function_default_hostname" {
-  value = azurerm_function_app.fn.default_hostname
+  description = "Function App default hostname"
+  value       = azurerm_function_app.fn.default_hostname
+}
+
+output "deployed_image" {
+  description = "Confirm which tag was applied"
+  value = "${azurerm_container_registry.acr.login_server}/${var.image_repo}:${var.image_tag}"
 }

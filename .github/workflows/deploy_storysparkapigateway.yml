@@ -142,3 +142,16 @@ jobs:
             echo "Deleting $REPO:$tag"
             az acr repository delete --name "$ACR" --image "$REPO:$tag" --yes || echo "Failed to delete $REPO:$tag, continuing"
           done
+
+      - name: Smoke test endpoint
+        if: github.ref == 'refs/heads/main'
+        run: |
+          set -euo pipefail
+          url="https://storysparkapigateway.azurewebsites.net/api/books/getRecommendations"
+          echo "Testing $url"
+          status=$(curl -s -o /dev/null -w "%{http_code}" "$url")
+          if [ "$status" -ne 200 ]; then
+            echo "Smoke test failed with status $status"
+            exit 1
+          fi
+          echo "Smoke test passed"

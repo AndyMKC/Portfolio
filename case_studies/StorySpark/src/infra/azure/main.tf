@@ -96,7 +96,10 @@ resource "azurerm_function_app" "fn" {
   }
 
   site_config {
-    linux_fx_version = "DOCKER|${azurerm_container_registry.acr.login_server}/storyspark:${var.image_tag}"
+    #linux_fx_version = "DOCKER|${azurerm_container_registry.acr.login_server}/${var.image_repo}:${var.image_tag}"
+    linux_fx_version = "DOCKER|azurermcontainerregistry.acr.loginserver/{azurerm_container_registry.acr.login_server}/{var.image_repo}:${var.image_tag}"
+    # Optional: if your container requires a custom start command, set app_command_line here.
+    # app_command_line = ""
   }
 
   app_settings = {
@@ -104,6 +107,9 @@ resource "azurerm_function_app" "fn" {
     "WEBSITE_RUN_FROM_PACKAGE"            = "0"
     "DOCKER_REGISTRY_SERVER_URL"          = "https://${azurerm_container_registry.acr.login_server}"
     "TRANSFORMERS_CACHE"                  = "/home/site/wwwroot/models"
-    # include any other env vars you need
+    "FUNCTIONS_WORKER_RUNTIME"            = var.functions_worker_runtime
+    "WEBSITES_PORT"                       = tostring(var.app_port)
+    # If your container expects additional runtime env vars, add them here.
   }
 }
+

@@ -5,13 +5,13 @@ variable "subscription_id" {
 }
 
 variable "resource_group_name" {
-  description = "Resource group containing the search service"
+  description = "Resource group"
   type        = string
   default     = "StorySparkResourceGroup"
 }
 
 variable "location" {
-  description = "Azure region for the Search service"
+  description = "Azure region"
   type        = string
   default     = "westus2"
 }
@@ -43,7 +43,7 @@ variable "search_partition_count" {
 variable "image_tag" {
   type        = string
   description = "Docker image tag pushed to ACR (CI should override with immutable tag)"
-  default     = "latest"
+  #default     = "latest"
 }
 
 variable "acr_sku" {
@@ -79,4 +79,22 @@ variable "sa_name" {
   description = "Storage account name used for StorySpark"
   type        = string
   default     = "storysparkstorageacct"
+}
+
+variable "functions_worker_runtime" {
+  description = "Functions worker runtime"
+  type        = string
+  default     = "python"
+}
+
+variable "app_port" {
+  description = "Port your container listens on; set same value inside Dockerfile"
+  type        = number
+  default     = 80
+}
+
+variable "image_repo" {
+  description = "Repository name inside ACR"
+  type        = string
+  default     = "storyspark"
 }
