@@ -4,9 +4,8 @@ FROM mcr.microsoft.com/azure-functions/python:4-python3.11
 # Set working directory to where the Functions host expects your app
 WORKDIR /home/site/wwwroot
 
-# Copy all function app files from api_gateway/ into the container
-# Assumes you run docker build from Portfolio root
-COPY case_studies/StorySpark/src/api_gateway/ /home/site/wwwroot/
+# When build context is ./case_studies/StorySpark/src, copy api_gateway/ from that context
+COPY api_gateway/ /home/site/wwwroot/
 
 # Install Python dependencies if requirements.txt is present
 RUN if [ -f requirements.txt ]; then \
