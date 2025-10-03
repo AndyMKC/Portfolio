@@ -1,0 +1,47 @@
+name: Run GA4 to Jira
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag (optional)'
+        required: false
+        default: ''
+  schedule:
+    - cron: '0 8 * * *'  # daily at 08:00 UTC
+
+
+jobs:
+  run-ga4-to-jira:
+    runs-on: ubuntu-latest
+    env:
+      TECHFREN_GOOGLE_CLOUD_CRED: ${{ secrets.TECHFREN_GOOGLE_CLOUD_CRED }}
+      TECHFREN_GA4_PROPERTY_ID: ${{ vars.TECHFREN_GA4_PROPERTY_ID }}
+      TECHFREN_JIRA_BASE: ${{ vars.TECHFREN_JIRA_BASE }}
+      TECHFREN_JIRA_USER: ${{ vars.TECHFREN_JIRA_USER }}
+      TECHFREN_JIRA_API_TOKEN: ${{ secrets.TECHFREN_JIRA_API_TOKEN }}
+      WORKING_DIR: case_studies/TechFren
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+            ref: main
+
+      - name: Install Python dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run ga4_to_jira script (only on main branch)
+        working-directory: ${{ env.WORKING_DIR }}
+        env:
+          # Export values expected by the script
+          TECHFREN_GOOGLE_CLOUD_CRED: ${{ env.TECHFREN_GOOGLE_CLOUD_CRED }}
+          TECHFREN_GA4_PROPERTY_ID: ${{ env.TECHFREN_GA4_PROPERTY_ID }}
+          TECHFREN_JIRA_BASE: ${{ env.TECHFREN_JIRA_BASE }}
+          TECHFREN_JIRA_USER: ${{ env.TECHFREN_JIRA_USER }}
+          TECHFREN_JIRA_API_TOKEN: ${{ env.TECHFREN_JIRA_API_TOKEN }}
+        run: |
+          python populate_okr.py
