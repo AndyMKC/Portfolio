@@ -80,7 +80,7 @@ resource "azurerm_linux_function_app" "fn" {
   name                       = var.function_name
   resource_group_name        = data.azurerm_resource_group.existing.name
   location                   = data.azurerm_resource_group.existing.location
-  service_plan_id        = azurerm_service_plan.sp.id
+  service_plan_id            = azurerm_service_plan.sp.id
   storage_account_name       = azurerm_storage_account.sa.name
   storage_account_access_key = azurerm_storage_account.sa.primary_access_key
 
@@ -91,7 +91,7 @@ resource "azurerm_linux_function_app" "fn" {
 
   site_config {
     #linux_fx_version = "DOCKER|${azurerm_container_registry.acr.login_server}/${var.image_repo}:${var.image_tag}"
-    linux_fx_version = "DOCKER|azurermcontainerregistry.acr.loginserver/{azurerm_container_registry.acr.login_server}/{var.image_repo}:${var.image_tag}"
+    #linux_fx_version = "DOCKER|azurermcontainerregistry.acr.loginserver/{azurerm_container_registry.acr.login_server}/{var.image_repo}:${var.image_tag}"
     # Optional: if your container requires a custom start command, set app_command_line here.
     # app_command_line = ""
     application_stack {

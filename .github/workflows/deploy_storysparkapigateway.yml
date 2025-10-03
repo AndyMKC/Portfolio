@@ -1,4 +1,4 @@
-name: Build push image and deploy for StorySpark
+name: Build/Push/Deploy image for StorySpark
 
 on:
   workflow_dispatch:
