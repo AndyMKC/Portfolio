@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 4.0"
+      version = ">= 4.47.0"
     }
   }
 }
@@ -49,7 +49,6 @@ resource "azurerm_user_assigned_identity" "fn_identity" {
 }
 
 resource "azurerm_role_assignment" "acr_pull" {
-  #principal_id         = azurerm_linux_function_app.fn.identity[0].principal_id
   principal_id         = azurerm_user_assigned_identity.fn_identity.principal_id
   scope                = azurerm_container_registry.acr.id
   role_definition_name = "AcrPull"
@@ -90,10 +89,6 @@ resource "azurerm_linux_function_app" "fn" {
   }
 
   site_config {
-    #linux_fx_version = "DOCKER|${azurerm_container_registry.acr.login_server}/${var.image_repo}:${var.image_tag}"
-    #linux_fx_version = "DOCKER|azurermcontainerregistry.acr.loginserver/{azurerm_container_registry.acr.login_server}/{var.image_repo}:${var.image_tag}"
-    # Optional: if your container requires a custom start command, set app_command_line here.
-    # app_command_line = ""
     application_stack {
       python_version = "3.11"
     }
@@ -103,13 +98,14 @@ resource "azurerm_linux_function_app" "fn" {
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE" = "false"
     "WEBSITE_RUN_FROM_PACKAGE"            = "0"
     "DOCKER_REGISTRY_SERVER_URL"          = "https://${azurerm_container_registry.acr.login_server}"
+    "DOCKER_CUSTOM_IMAGE_NAME"            = "${azurerm_container_registry.acr.login_server}/${var.image_repo}:${var.image_tag}"
     "TRANSFORMERS_CACHE"                  = "/home/site/wwwroot/models"
     "FUNCTIONS_WORKER_RUNTIME"            = var.functions_worker_runtime
     "WEBSITES_PORT"                       = tostring(var.app_port)
     # If your container expects additional runtime env vars, add them here.
   }
 
-  # Give the Function App's system-assigned identity permission to pull from ACR
+  # Give the Function App's system-assigned identity permission to pull from ACR.  This way the principal exists before the app tries to pull the image.
   depends_on = [azurerm_role_assignment.acr_pull]
 }
 
