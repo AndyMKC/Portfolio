@@ -3,5 +3,8 @@ terraform.tfstate
 terraform.tfstate.backup
 plan.tfplan
 tfplan
+*.tfplan
 *.pyc
 service-account-*.json
+*.tfvars
+*.tfvars.*
