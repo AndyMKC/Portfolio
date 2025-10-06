@@ -19,7 +19,7 @@ env:
   #IMAGE_REPO: storyspark
   TF_GOOGLE_DIR: case_studies/StorySpark/src/infra/google
   PROJECT_ID: storyspark-474223
-  TF_GOOGLE_BACKEND_DIR: src/infra/google/bootstrap_backend
+  TF_GOOGLE_BACKEND_DIR: case_studies/StorySpark/src/infra/google/bootstrap_backend
   GCS_BUCKET: sstoryspark-474223-terraform-state
   TF_PLAN_FILE: storyspark-bootstrap.tfplan
 
