@@ -78,7 +78,18 @@ jobs:
 
       - name: Terraform plan
         working-directory: ${{ env.TF_GOOGLE_BACKEND_DIR }}
-        run: terraform plan --var-file="terraform.tfvars" -out="${{ env.TF_PLAN_FILE }}"
+        #run: terraform plan --var-file="terraform.tfvars" -out="${{ env.TF_PLAN_FILE }}"
+        run: |
+          set -euo pipefail
+          TF_DIR=case_studies/StorySpark/src/infra/google/bootstrap_backend
+          echo "Checking for variables file in $TF_DIR"
+          if [ ! -f "$TF_DIR/terraform.tfvars" ]; then
+            echo "ERROR: $TF_DIR/terraform.tfvars not found"
+            ls -la "$TF_DIR"
+            exit 1
+          fi
+          cd "$TF_DIR"
+          terraform plan --var-file="terraform.tfvars" -out="${{ env.TF_PLAN_FILE }}"
         shell: bash
 
       - name: Upload plan artifact
