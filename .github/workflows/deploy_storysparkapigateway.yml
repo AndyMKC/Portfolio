@@ -60,9 +60,20 @@ jobs:
             -reconfigure
         shell: bash
 
-      - name: Terraform fmt check
-        working-directory: ${{ env.TF_GOOGLE_BACKEND_DIR }}
-        run: terraform fmt -check
+      # - name: Terraform fmt check
+      #   working-directory: ${{ env.TF_GOOGLE_BACKEND_DIR }}
+      #   run: terraform fmt -check
+      #   shell: bash
+
+      - name: Terraform fmt diagnostics
+        working-directory: case_studies/StorySpark/src/infra/google/bootstrap_backend
+        run: |
+          set -euo pipefail
+          echo "Running fmt diff list"
+          terraform fmt -diff -list=true .
+          echo "Running fmt check (will exit non‑zero if issues)"
+          terraform fmt -check .
+          echo "If fmt failed, show validate and head of main.tf for parse errors"
         shell: bash
 
       - name: Terraform plan
