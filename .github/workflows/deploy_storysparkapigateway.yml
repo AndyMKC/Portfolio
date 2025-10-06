@@ -82,7 +82,7 @@ jobs:
         shell: bash
 
       - name: Write terraform.tfvars from secrets
-        working-directory: ${{ env.TF_GOOGLE_BACKEND_DIR }}
+        working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_BACKEND_DIR }}
         run: |
           set -euo pipefail
           cat > terraform.tfvars <<EOF
@@ -96,7 +96,7 @@ jobs:
         shell: bash
 
       - name: Terraform plan
-        working-directory: ${{ env.TF_GOOGLE_BACKEND_DIR }}
+        working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_BACKEND_DIR }}
         #run: terraform plan --var-file="terraform.tfvars" -out="${{ env.TF_PLAN_FILE }}"
         run: |
           set -euo pipefail
