@@ -76,6 +76,20 @@ jobs:
           echo "If fmt failed, show validate and head of main.tf for parse errors"
         shell: bash
 
+      - name: Write terraform.tfvars from secrets
+        working-directory: ${{ env.TF_GOOGLE_BACKEND_DIR }}
+        run: |
+          set -euo pipefail
+          cat > terraform.tfvars <<EOF
+          project_id = "${{ vars.STORYSPARK_GCP_PROJECT_ID }}"
+          region     = "${{ vars.STORYSPARK_GCP_REGION }}"
+          zone       = "${{ vars.STORYSPARK_GCP_ZONE }}"
+          bucket     = "${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}"
+          # add other variables here
+          EOF
+          chmod 600 terraform.tfvars
+        shell: bash
+
       - name: Terraform plan
         working-directory: ${{ env.TF_GOOGLE_BACKEND_DIR }}
         #run: terraform plan --var-file="terraform.tfvars" -out="${{ env.TF_PLAN_FILE }}"
