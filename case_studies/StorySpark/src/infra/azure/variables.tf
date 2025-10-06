@@ -1,100 +1,95 @@
-variable "subscription_id" {
-  description = "Azure subscription id"
+variable "environment" {
+  description = "Deployment environment tag"
   type        = string
-  default     = "5ab40d90-e237-422e-a575-b5b73033077c"
+  default     = "dev"
 }
 
-variable "resource_group_name" {
-  description = "Resource group"
+variable "subscription_id" {
+  description = "Azure subscription id to deploy into"
   type        = string
-  default     = "StorySparkResourceGroup"
 }
 
 variable "location" {
-  description = "Azure region"
+  description = "Azure region to deploy resources into"
   type        = string
-  default     = "westus2"
+  default     = "eastus"
 }
 
-variable "search_name" {
-  description = "Name of the Cognitive Search service"
+variable "acr_admin_enabled" {
+  description = "Set true to enable ACR admin user for initial deploy; not recommended long-term"
+  type        = bool
+  # Current one uses false
+  default     = false
+}
+
+# variable "acr_admin_password" {
+#   description = "Optional ACR admin password; prefer using GitHub Actions secrets instead"
+#   type        = string
+#   sensitive   = true
+#   default     = ""
+# }
+
+variable "project_prefix" {
+  description = "Prefix used for resource names"
   type        = string
-  default     = "storyspark-ai-search"
+  # TODO:  change this to StorySpark when done
+  default     = "StorySpark2"
 }
 
-variable "search_sku" {
-  description = "SKU for the Search service"
+variable "resource_group" {
+  description = "Name of the resource group to deploy all resources into"
   type        = string
-  default     = "free"
+  default     = "${var.project_prefix}ResourceGroup"
 }
 
-variable "search_replica_count" {
-  description = "Number of replicas"
-  type        = number
-  default     = 1
-}
-
-variable "search_partition_count" {
-  description = "Number of partitions"
-  type        = number
-  default     = 1
-}
-
-variable "image_tag" {
-  type        = string
-  description = "Docker image tag pushed to ACR (CI should override with immutable tag)"
-  #default     = "latest"
-}
-
-variable "acr_sku" {
-  type    = string
-  default = "Basic"
-}
+# variable "function_app_image" {
+#   description = "Container image for the Function App in the format <registry>/<repo>:<tag>"
+#   type        = string
+#   # TODO:  change this to storysparkacr.azurecr.io/storysparkrepo:latest when done
+#   default     = "storysparkacr2.azurecr.io/storysparkrepo2:latest"
+# }
 
 variable "acr_name" {
+  description = "Container Registry name; defaults to derived value from project_prefix"
   type        = string
-  description = "Name for the Azure Container Registry"
-  default     = "storysparkacr" # change or override in tfvars/CI
+  default     = ""
 }
 
-variable "function_name" {
-  type        = string
-  description = "Name for the Function App"
-  default     = "StorySparkAPIGateway"
-}
-
-variable "azurerm_service_plan_name" {
-  type        = string
-  description = "Existing App Service Plan name"
-  default     = "WestUS2LinuxDynamicPlan"
-}
-
-variable "storyspark_storage_account_name" {
-  type        = string
-  description = "Existing storage account to use"
-  default     = "storysparkstorageacct"
-}
-
-variable "sa_name" {
-  description = "Storage account name used for StorySpark"
-  type        = string
-  default     = "storysparkstorageacct"
-}
-
-variable "functions_worker_runtime" {
-  description = "Functions worker runtime"
-  type        = string
-  default     = "python"
-}
-
-variable "app_port" {
-  description = "Port your container listens on; set same value inside Dockerfile"
-  type        = number
-  default     = 80
-}
-
-variable "image_repo" {
+variable "acr_repo" {
   description = "Repository name inside ACR"
   type        = string
-  default     = "storyspark"
+  default     = "storysparkrepo"
 }
+
+
+
+
+
+
+
+
+# variable "bootstrap_backend_resource_group" {
+#   description = "Resource group containing the bootstrapbackend storage account used for remote state"
+#   type        = string
+#   default     = "${var.resource_group}"
+# }
+
+# variable "bootstrap_backend_storage_account" {
+#   description = "Storage account name used for remote state"
+#   type        = string
+#   default     = "bootstrapbackend"
+# }
+
+# variable "bootstrap_backend_container" {
+#   description = "Container name inside the bootstrapbackend storage account used for tfstate"
+#   type        = string
+#   default     = "StorySpark"
+# }
+
+# variable "bootstrap_backend_key" {
+#   description = "Key name inside the container used for tfstate"
+#   type        = string
+#   default     = "tfstate"
+# }
+
+
