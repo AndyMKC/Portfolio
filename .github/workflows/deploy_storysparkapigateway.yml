@@ -20,7 +20,8 @@ env:
   TF_GOOGLE_DIR: case_studies/StorySpark/src/infra/google
   PROJECT_ID: storyspark-474223
   TF_GOOGLE_BACKEND_DIR: case_studies/StorySpark/src/infra/google/bootstrap_backend
-  GCS_BUCKET: sstoryspark-474223-terraform-state
+  #GCS_BUCKET: sstoryspark-474223-terraform-state
+  GCS_BUCKET: storyspark-474223-terraform-state-1759710853
   TF_PLAN_FILE: storyspark-bootstrap.tfplan
 
 jobs:
@@ -89,7 +90,6 @@ jobs:
           project_id = "${{ vars.STORYSPARK_GCP_PROJECT_ID }}"
           region     = "${{ vars.STORYSPARK_GCP_REGION }}"
           zone       = "${{ vars.STORYSPARK_GCP_ZONE }}"
-          bucket     = "${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}"
           # add other variables here
           EOF
           chmod 600 terraform.tfvars
