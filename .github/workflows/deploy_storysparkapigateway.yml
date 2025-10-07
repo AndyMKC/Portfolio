@@ -97,7 +97,6 @@ jobs:
 
       - name: Terraform plan
         working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_BACKEND_DIR }}
-        #run: terraform plan --var-file="terraform.tfvars" -out="${{ env.TF_PLAN_FILE }}"
         run: |
           set -euo pipefail
           echo "GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS"; jq -e . "$GOOGLE_APPLICATION_CREDENTIALS" >/dev/null 2>&1 && echo "JSON OK" || { echo "Invalid JSON in credentials file; showing first 200 bytes:"; dd if="$GOOGLE_APPLICATION_CREDENTIALS" bs=200 count=1 2>/dev/null | sed -n '1,200p'; exit 1; }
@@ -140,11 +139,16 @@ jobs:
           name: tfplan
           path: ${{ env.TF_DIR }}
 
-      - name: Write GCP service account key
+      - name: Write and validate GCP service account key
+        env:
+          STORYSPARK_GCP_TERRAFORM_SA_JSON: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
+        working-directory: ${{ github.workspace }}
         run: |
-          mkdir -p ${{ github.workspace }}/.secrets
-          echo "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" > ${{ github.workspace }}/.secrets/gcp-key.json
-          chmod 600 ${{ github.workspace }}/.secrets/gcp-key.json
+          set -euo pipefail
+          mkdir -p "${GITHUB_WORKSPACE}/.secrets"
+          printf '%s' "$STORYSPARK_GCP_TERRAFORM_SA_JSON" > "${GITHUB_WORKSPACE}/.secrets/gcp-key.json"
+          chmod 600 "${GITHUB_WORKSPACE}/.secrets/gcp-key.json"
+          jq -e . "${GITHUB_WORKSPACE}/.secrets/gcp-key.json" >/dev/null && echo "valid JSON"
         shell: bash
 
       - name: Export credentials
@@ -155,9 +159,11 @@ jobs:
 
       - name: Init Terraform (reconfigure)
         working-directory: ${{ env.TF_GOOGLE_BACKEND_DIR }}
-        run: terraform init -reconfigure \
+        run: |
+          terraform init \
           -backend-config="bucket=${{ env.GCS_BUCKET }}" \
-          -backend-config="prefix=terraform/state"
+          -backend-config="prefix=terraform/state" \
+          -reconfigure
         shell: bash
 
       - name: Terraform apply (apply plan artifact)
