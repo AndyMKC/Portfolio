@@ -47,13 +47,23 @@ jobs:
       - name: Write and validate GCP service account key
         run: |
           set -euo pipefail
+
+          echo "********************************************* Start Debugging"
+          sed -n '1,12p' "${{ github.workspace }}/.secrets/gcp-key.json"
+          echo "*********************************** 1"
+          awk 'NR==1{gsub(/^[ \t\r\n]+/,""); print substr($0,1,1); exit}' "${{ github.workspace }}/.secrets/gcp-key.json" | od -An -t x1
+          echo "*********************************** 2"
+          base64 --decode "${{ github.workspace }}/.secrets/gcp-key.json" > /tmp/gcp-key-decoded.json 2>/dev/null && jq -e . /tmp/gcp-key-decoded.json && echo "Decoded JSON OK" || echo "Not base64 or decode failed"
+          echo "*********************************** 3"
+          jq . "${{ github.workspace }}/.secrets/gcp-key.json" 2>&1 | sed -n '1,200p'
+          echo "*********************************** 4"
+          echo "********************************************* End Debugging"
+
+
           mkdir -p "${{ github.workspace }}/.secrets"
           printf '%s\n' "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" > "${{ github.workspace }}/.secrets/gcp-key.json"
-          echo "******************************* Finished with printf"
           chmod 600 "${{ github.workspace }}/.secrets/gcp-key.json"
-          echo "******************************* Finished with chmod"
           jq -e . "${{ github.workspace }}/.secrets/gcp-key.json"
-          echo "******************************* Finished with jq"
           echo "GOOGLE_APPLICATION_CREDENTIALS=${{ github.workspace }}/.secrets/gcp-key.json" >> $GITHUB_ENV
 
 
