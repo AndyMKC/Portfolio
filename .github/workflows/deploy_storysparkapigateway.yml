@@ -48,10 +48,12 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "${{ github.workspace }}/.secrets"
-          printf '%b' "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" > "${{ github.workspace }}/.secrets/gcp-key.json"
+          printf '%b' "${{ env.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" > "${{ github.workspace }}/.secrets/gcp-key.json"
           chmod 600 "${{ github.workspace }}/.secrets/gcp-key.json"
           jq -e . "${{ github.workspace }}/.secrets/gcp-key.json" >/dev/null 2>&1 && echo "JSON OK" || (echo "JSON invalid"; exit 1)
         working-directory: ${{ github.workspace }}
+        env:
+          STORYSPARK_GCP_TERRAFORM_SA_KEY: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
         shell: bash
 
       # - name: Terraform fmt check
