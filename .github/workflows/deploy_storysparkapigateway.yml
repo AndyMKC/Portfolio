@@ -48,9 +48,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "${{ github.workspace }}/.secrets"
-          cat > "${{ github.workspace }}/.secrets/gcp-key.json" <<'JSON'
-      ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
-      JSON
+          printf '%s\n' "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" > "${{ github.workspace }}/.secrets/gcp-key.json"
           chmod 600 "${{ github.workspace }}/.secrets/gcp-key.json"
           jq -e . "${{ github.workspace }}/.secrets/gcp-key.json"
           echo "GOOGLE_APPLICATION_CREDENTIALS=${{ github.workspace }}/.secrets/gcp-key.json" >> $GITHUB_ENV
