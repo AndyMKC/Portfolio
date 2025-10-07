@@ -45,12 +45,9 @@ jobs:
           terraform_version: 1.5.7  # adjust to your required version
 
       - name: Write and validate GCP service account key
-      env:
-        STORYSPARK_GCP_TERRAFORM_SA_JSON: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
-        
-        working-directory: ${{ github.workspace }}
         env:
-          STORYSPARK_GCP_TERRAFORM_SA_KEY: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
+          STORYSPARK_GCP_TERRAFORM_SA_JSON: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
+        working-directory: ${{ github.workspace }}
         run: |
           set -euo pipefail
           mkdir -p "${GITHUB_WORKSPACE}/.secrets"
