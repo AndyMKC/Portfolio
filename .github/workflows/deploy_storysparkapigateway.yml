@@ -51,7 +51,9 @@ jobs:
           printf '%s\n' "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" > "${{ github.workspace }}/.secrets/gcp-key.json"
           echo "******************************* Finished with printf"
           chmod 600 "${{ github.workspace }}/.secrets/gcp-key.json"
+          echo "******************************* Finished with chmod"
           jq -e . "${{ github.workspace }}/.secrets/gcp-key.json"
+          echo "******************************* Finished with jq"
           echo "GOOGLE_APPLICATION_CREDENTIALS=${{ github.workspace }}/.secrets/gcp-key.json" >> $GITHUB_ENV
 
 
