@@ -45,34 +45,18 @@ jobs:
           terraform_version: 1.5.7  # adjust to your required version
 
       - name: Write and validate GCP service account key
-        run: |
-          set -euo pipefail
-          mkdir -p "${{ github.workspace }}/.secrets"
-          printf '%b' "${{ env.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" > "${{ github.workspace }}/.secrets/gcp-key.json"
-          chmod 600 "${{ github.workspace }}/.secrets/gcp-key.json"
-
-          echo "**********************************************************************"
-          OUT="${GITHUB_WORKSPACE}/.secrets/gcp-key.json"
-          jq -e . "$OUT" >/dev/null 2>&1 && echo "valid JSON" || (jq . "$OUT" 2>&1 | sed -n '1,120p'; exit 1)
-          echo "**********************************************************************"
-
-          echo "**********************************************************************"
-          OUT="${GITHUB_WORKSPACE}/.secrets/gcp-key.json"
-          mkdir -p "$(dirname "$OUT")"
-          printf '%b' "${STORYSPARK_GCP_TERRAFORM_SA_KEY}" > "$OUT"
-          chmod 600 "$OUT"
-          # count double quotes (prints number only)
-          grep -o '"' "$OUT" | wc -l
-          # print first 32 bytes as hex (one line only, non-printing)
-          head -c32 "$OUT" | od -An -t x1 | tr -d ' \n' && echo
-          echo "**********************************************************************"
-
-
-
-          jq -e . "${{ github.workspace }}/.secrets/gcp-key.json" >/dev/null 2>&1 && echo "JSON OK" || (echo "JSON invalid"; exit 1)
+      env:
+        STORYSPARK_GCP_TERRAFORM_SA_JSON: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
+        
         working-directory: ${{ github.workspace }}
         env:
           STORYSPARK_GCP_TERRAFORM_SA_KEY: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p "${GITHUB_WORKSPACE}/.secrets"
+          printf '%s' "$STORYSPARK_GCP_TERRAFORM_SA_KEY" > "${GITHUB_WORKSPACE}/.secrets/gcp-key.json"
+          chmod 600 "${GITHUB_WORKSPACE}/.secrets/gcp-key.json"
+          jq -e . "${GITHUB_WORKSPACE}/.secrets/gcp-key.json" >/dev/null && echo "valid JSON"
         shell: bash
 
       # - name: Terraform fmt check
