@@ -168,7 +168,9 @@ jobs:
 
       - name: Terraform apply (apply plan artifact)
         working-directory: ${{ env.TF_GOOGLE_BACKEND_DIR }}
-        run: terraform apply "${{ env.TF_PLAN_FILE }}"
+        run: |
+          cd "${{ env.TF_DIR }}"
+          terraform apply "${{ env.TF_PLAN_FILE }}"
         shell: bash
   # build-push-deploy:
   #   runs-on: ubuntu-latest
