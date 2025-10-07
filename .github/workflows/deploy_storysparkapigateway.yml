@@ -47,6 +47,12 @@ jobs:
       - name: Write and validate GCP service account key
         run: |
           set -euo pipefail
+          mkdir -p "${{ github.workspace }}/.secrets"
+          printf '%s\n' "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" > "${{ github.workspace }}/.secrets/gcp-key.json"
+          chmod 600 "${{ github.workspace }}/.secrets/gcp-key.json"
+          jq -e . "${{ github.workspace }}/.secrets/gcp-key.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=${{ github.workspace }}/.secrets/gcp-key.json" >> $GITHUB_ENV
+
 
           FILE="${GITHUB_WORKSPACE}/.secrets/gcp-key.json"
           echo "Path: $FILE"
@@ -60,12 +66,6 @@ jobs:
           echo "--- Attempt jq validation (will print error if invalid) ---"
           jq -e . "$FILE" || true
 
-
-          mkdir -p "${{ github.workspace }}/.secrets"
-          printf '%s\n' "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" > "${{ github.workspace }}/.secrets/gcp-key.json"
-          chmod 600 "${{ github.workspace }}/.secrets/gcp-key.json"
-          jq -e . "${{ github.workspace }}/.secrets/gcp-key.json"
-          echo "GOOGLE_APPLICATION_CREDENTIALS=${{ github.workspace }}/.secrets/gcp-key.json" >> $GITHUB_ENV
         working-directory: ${{ github.workspace }}
         shell: bash
 
