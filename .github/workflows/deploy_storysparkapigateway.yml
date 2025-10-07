@@ -85,9 +85,6 @@ jobs:
         working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_BACKEND_DIR }}
         run: |
           set -euo pipefail
-          echo "***************************************************"
-          ls -R .
-          echo "***************************************************"
           cat > terraform.tfvars <<EOF
           project_id = "${{ vars.STORYSPARK_GCP_PROJECT_ID }}"
           region     = "${{ vars.STORYSPARK_GCP_REGION }}"
@@ -103,6 +100,9 @@ jobs:
         #run: terraform plan --var-file="terraform.tfvars" -out="${{ env.TF_PLAN_FILE }}"
         run: |
           set -euo pipefail
+          echo "***************************************************"
+          ls -R .
+          echo "***************************************************"
           TF_DIR=case_studies/StorySpark/src/infra/google/bootstrap_backend
           echo "Checking for variables file in $TF_DIR"
           if [ ! -f "$TF_DIR/terraform.tfvars" ]; then
