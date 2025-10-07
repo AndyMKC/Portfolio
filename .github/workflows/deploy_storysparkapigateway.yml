@@ -51,7 +51,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "${GITHUB_WORKSPACE}/.secrets"
-          printf '%s' "$STORYSPARK_GCP_TERRAFORM_SA_KEY" > "${GITHUB_WORKSPACE}/.secrets/gcp-key.json"
+          printf '%s' "$STORYSPARK_GCP_TERRAFORM_SA_JSON" > "${GITHUB_WORKSPACE}/.secrets/gcp-key.json"
           chmod 600 "${GITHUB_WORKSPACE}/.secrets/gcp-key.json"
           jq -e . "${GITHUB_WORKSPACE}/.secrets/gcp-key.json" >/dev/null && echo "valid JSON"
         shell: bash
