@@ -48,6 +48,10 @@ jobs:
         run: |
           set -euo pipefail
 
+          mkdir -p "${{ github.workspace }}/.secrets"
+          printf '%s\n' "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" > "${{ github.workspace }}/.secrets/gcp-key.json"
+          chmod 600 "${{ github.workspace }}/.secrets/gcp-key.json"
+
           echo "********************************************* Start Debugging"
           sed -n '1,12p' "${{ github.workspace }}/.secrets/gcp-key.json"
           echo "*********************************** 1"
@@ -60,25 +64,9 @@ jobs:
           echo "********************************************* End Debugging"
 
 
-          mkdir -p "${{ github.workspace }}/.secrets"
-          printf '%s\n' "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" > "${{ github.workspace }}/.secrets/gcp-key.json"
-          chmod 600 "${{ github.workspace }}/.secrets/gcp-key.json"
+
           jq -e . "${{ github.workspace }}/.secrets/gcp-key.json"
           echo "GOOGLE_APPLICATION_CREDENTIALS=${{ github.workspace }}/.secrets/gcp-key.json" >> $GITHUB_ENV
-
-
-          FILE="${GITHUB_WORKSPACE}/.secrets/gcp-key.json"
-          echo "Path: $FILE"
-          echo "First 8 lines:"
-          sed -n '1,8p' "$FILE"
-          echo "---"
-          echo -n "First non-space character (hex): "; tr -d '\r\n' < "$FILE" | sed -n '1,1p' | head -c1 | od -An -t x1 | tr -d ' '
-          echo
-          echo -n "Contains BEGIN PRIVATE KEY? "; grep -q "BEGIN PRIVATE KEY" "$FILE" && echo "yes" || echo "no"
-          echo -n "Contains leading { character? "; head -c1 "$FILE" | tr -d '\r\n' | grep -q '{' && echo "yes" || echo "no"
-          echo "--- Attempt jq validation (will print error if invalid) ---"
-          jq -e . "$FILE" || true
-
         working-directory: ${{ github.workspace }}
         shell: bash
 
