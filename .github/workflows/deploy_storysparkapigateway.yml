@@ -137,7 +137,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: tfplan
-          path: ${{ env.TF_DIR }}
+          path: ${{ env.TF_GOOGLE_BACKEND_DIR }}
 
       - name: Write and validate GCP service account key
         env:
