@@ -50,6 +50,18 @@ jobs:
           mkdir -p "${{ github.workspace }}/.secrets"
           printf '%b' "${{ env.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" > "${{ github.workspace }}/.secrets/gcp-key.json"
           chmod 600 "${{ github.workspace }}/.secrets/gcp-key.json"
+
+          OUT="${GITHUB_WORKSPACE}/.secrets/gcp-key.json"
+          mkdir -p "$(dirname "$OUT")"
+          printf '%b' "${STORYSPARK_GCP_TERRAFORM_SA_KEY}" > "$OUT"
+          chmod 600 "$OUT"
+          # count double quotes (prints number only)
+          grep -o '"' "$OUT" | wc -l
+          # print first 32 bytes as hex (one line only, non-printing)
+          head -c32 "$OUT" | od -An -t x1 | tr -d ' \n' && echo
+
+
+
           jq -e . "${{ github.workspace }}/.secrets/gcp-key.json" >/dev/null 2>&1 && echo "JSON OK" || (echo "JSON invalid"; exit 1)
         working-directory: ${{ github.workspace }}
         env:
