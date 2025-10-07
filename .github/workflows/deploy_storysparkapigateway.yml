@@ -100,6 +100,7 @@ jobs:
         #run: terraform plan --var-file="terraform.tfvars" -out="${{ env.TF_PLAN_FILE }}"
         run: |
           set -euo pipefail
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS"; jq -e . "$GOOGLE_APPLICATION_CREDENTIALS" >/dev/null 2>&1 && echo "JSON OK" || { echo "Invalid JSON in credentials file; showing first 200 bytes:"; dd if="$GOOGLE_APPLICATION_CREDENTIALS" bs=200 count=1 2>/dev/null | sed -n '1,200p'; exit 1; }
           echo "Checking for variables file in current directory"
           if [ ! -f "./terraform.tfvars" ]; then
             echo "ERROR: ./terraform.tfvars not found"
