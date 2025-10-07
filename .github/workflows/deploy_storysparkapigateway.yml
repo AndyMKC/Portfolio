@@ -85,6 +85,9 @@ jobs:
         working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_BACKEND_DIR }}
         run: |
           set -euo pipefail
+          echo "***************************************************"
+          ls -R .
+          echo "***************************************************"
           cat > terraform.tfvars <<EOF
           project_id = "${{ vars.STORYSPARK_GCP_PROJECT_ID }}"
           region     = "${{ vars.STORYSPARK_GCP_REGION }}"
