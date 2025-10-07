@@ -56,20 +56,20 @@ jobs:
           jq -e . "${GITHUB_WORKSPACE}/.secrets/gcp-key.json" >/dev/null && echo "valid JSON"
         shell: bash
 
-       - name: Export credentials
-         run: |
-           export GOOGLE_APPLICATION_CREDENTIALS="${{ github.workspace }}/.secrets/gcp-key.json"
-           echo "GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}" >> $GITHUB_ENV
-         shell: bash
+      - name: Export credentials
+        run: |
+          export GOOGLE_APPLICATION_CREDENTIALS="${{ github.workspace }}/.secrets/gcp-key.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}" >> $GITHUB_ENV
+        shell: bash
  
-       - name: Init Terraform with GCS backend
-         working-directory: ${{ env.TF_GOOGLE_BACKEND_DIR }}
-         run: |
-           terraform init \
-             -backend-config="bucket=${{ env.GCS_BUCKET }}" \
-             -backend-config="prefix=terraform/state" \
-             -reconfigure
-         shell: bash
+      - name: Init Terraform with GCS backend
+        working-directory: ${{ env.TF_GOOGLE_BACKEND_DIR }}
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ env.GCS_BUCKET }}" \
+            -backend-config="prefix=terraform/state" \
+            -reconfigure
+        shell: bash
 
       - name: Terraform fmt diagnostics
         working-directory: case_studies/StorySpark/src/infra/google/bootstrap_backend
