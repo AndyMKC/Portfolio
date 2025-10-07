@@ -106,7 +106,6 @@ jobs:
             ls -la "./"
             exit 1
           fi
-          cd "$TF_DIR"
           terraform plan --var-file="terraform.tfvars" -out="${{ env.TF_PLAN_FILE }}"
         shell: bash
 
