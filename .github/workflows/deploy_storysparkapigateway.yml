@@ -53,6 +53,8 @@ jobs:
           chmod 600 "${{ github.workspace }}/.secrets/gcp-key.json"
 
           echo "********************************************* Start Debugging"
+          xxd -l 64 -g 1 "${GITHUB_WORKSPACE}/.secrets/gcp-key.json"
+          echo "*********************************** 0"
           sed -n '1,5p' "${{ github.workspace }}/.secrets/gcp-key.json"
           echo "*********************************** 1"
           awk 'NR==1{gsub(/^[ \t\r\n]+/,""); print substr($0,1,1); exit}' "${{ github.workspace }}/.secrets/gcp-key.json" | od -An -t x1
