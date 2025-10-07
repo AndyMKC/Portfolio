@@ -53,16 +53,25 @@ jobs:
           chmod 600 "${{ github.workspace }}/.secrets/gcp-key.json"
 
           echo "********************************************* Start Debugging"
-          xxd -l 1024 -g 1 "${GITHUB_WORKSPACE}/.secrets/gcp-key.json"
-          echo "*********************************** 0"
-          sed -n '1,15p' "${{ github.workspace }}/.secrets/gcp-key.json"
+          grep -q '"type"' "${GITHUB_WORKSPACE}/.secrets/gcp-key.json" && echo "contains quoted keys" || echo "no quoted keys"
           echo "*********************************** 1"
-          awk 'NR==1{gsub(/^[ \t\r\n]+/,""); print substr($0,1,1); exit}' "${{ github.workspace }}/.secrets/gcp-key.json" | od -An -t x1
+          grep -o '"' "${GITHUB_WORKSPACE}/.secrets/gcp-key.json" | wc -l
           echo "*********************************** 2"
-          base64 --decode "${{ github.workspace }}/.secrets/gcp-key.json" > /tmp/gcp-key-decoded.json 2>/dev/null && jq -e . /tmp/gcp-key-decoded.json && echo "Decoded JSON OK" || echo "Not base64 or decode failed"
+          head -c1 "${GITHUB_WORKSPACE}/.secrets/gcp-key.json" | od -An -t x1 | tr -d ' '
           echo "*********************************** 3"
-          jq . "${{ github.workspace }}/.secrets/gcp-key.json" 2>&1 | sed -n '1,200p'
+          jq -e . "${GITHUB_WORKSPACE}/.secrets/gcp-key.json" >/dev/null 2>&1 && echo "valid JSON" || echo "invalid JSON"
           echo "*********************************** 4"
+
+          xxd -l 64 -g 1 "${GITHUB_WORKSPACE}/.secrets/gcp-key.json"
+          echo "*********************************** 5"
+          sed -n '1,6p' "${{ github.workspace }}/.secrets/gcp-key.json"
+          echo "*********************************** 6"
+          awk 'NR==1{gsub(/^[ \t\r\n]+/,""); print substr($0,1,1); exit}' "${{ github.workspace }}/.secrets/gcp-key.json" | od -An -t x1
+          echo "*********************************** 7"
+          base64 --decode "${{ github.workspace }}/.secrets/gcp-key.json" > /tmp/gcp-key-decoded.json 2>/dev/null && jq -e . /tmp/gcp-key-decoded.json && echo "Decoded JSON OK" || echo "Not base64 or decode failed"
+          echo "*********************************** 8"
+          jq . "${{ github.workspace }}/.secrets/gcp-key.json" 2>&1 | sed -n '1,200p'
+          echo "*********************************** 9"
           echo "********************************************* End Debugging"
 
 
