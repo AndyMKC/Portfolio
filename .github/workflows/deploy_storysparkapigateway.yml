@@ -47,6 +47,20 @@ jobs:
       - name: Write and validate GCP service account key
         run: |
           set -euo pipefail
+
+          FILE="${GITHUB_WORKSPACE}/.secrets/gcp-key.json"
+          echo "Path: $FILE"
+          echo "First 8 lines:"
+          sed -n '1,8p' "$FILE"
+          echo "---"
+          echo -n "First non-space character (hex): "; tr -d '\r\n' < "$FILE" | sed -n '1,1p' | head -c1 | od -An -t x1 | tr -d ' '
+          echo
+          echo -n "Contains BEGIN PRIVATE KEY? "; grep -q "BEGIN PRIVATE KEY" "$FILE" && echo "yes" || echo "no"
+          echo -n "Contains leading { character? "; head -c1 "$FILE" | tr -d '\r\n' | grep -q '{' && echo "yes" || echo "no"
+          echo "--- Attempt jq validation (will print error if invalid) ---"
+          jq -e . "$FILE" || true
+
+
           mkdir -p "${{ github.workspace }}/.secrets"
           printf '%s\n' "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" > "${{ github.workspace }}/.secrets/gcp-key.json"
           chmod 600 "${{ github.workspace }}/.secrets/gcp-key.json"
