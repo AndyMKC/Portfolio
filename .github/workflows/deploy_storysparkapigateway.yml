@@ -47,37 +47,10 @@ jobs:
       - name: Write and validate GCP service account key
         run: |
           set -euo pipefail
-
           mkdir -p "${{ github.workspace }}/.secrets"
-          printf '%s\n' "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" > "${{ github.workspace }}/.secrets/gcp-key.json"
+          printf '%b' "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" > "${{ github.workspace }}/.secrets/gcp-key.json"
           chmod 600 "${{ github.workspace }}/.secrets/gcp-key.json"
-
-          echo "********************************************* Start Debugging"
-          grep -q '"type"' "${GITHUB_WORKSPACE}/.secrets/gcp-key.json" && echo "contains quoted keys" || echo "no quoted keys"
-          echo "*********************************** 1"
-          grep -o '"' "${GITHUB_WORKSPACE}/.secrets/gcp-key.json" | wc -l
-          echo "*********************************** 2"
-          head -c1 "${GITHUB_WORKSPACE}/.secrets/gcp-key.json" | od -An -t x1 | tr -d ' '
-          echo "*********************************** 3"
-          jq -e . "${GITHUB_WORKSPACE}/.secrets/gcp-key.json" >/dev/null 2>&1 && echo "valid JSON" || echo "invalid JSON"
-          echo "*********************************** 4"
-
-          xxd -l 64 -g 1 "${GITHUB_WORKSPACE}/.secrets/gcp-key.json"
-          echo "*********************************** 5"
-          sed -n '1,6p' "${{ github.workspace }}/.secrets/gcp-key.json"
-          echo "*********************************** 6"
-          awk 'NR==1{gsub(/^[ \t\r\n]+/,""); print substr($0,1,1); exit}' "${{ github.workspace }}/.secrets/gcp-key.json" | od -An -t x1
-          echo "*********************************** 7"
-          base64 --decode "${{ github.workspace }}/.secrets/gcp-key.json" > /tmp/gcp-key-decoded.json 2>/dev/null && jq -e . /tmp/gcp-key-decoded.json && echo "Decoded JSON OK" || echo "Not base64 or decode failed"
-          echo "*********************************** 8"
-          jq . "${{ github.workspace }}/.secrets/gcp-key.json" 2>&1 | sed -n '1,200p'
-          echo "*********************************** 9"
-          echo "********************************************* End Debugging"
-
-
-
-          jq -e . "${{ github.workspace }}/.secrets/gcp-key.json"
-          echo "GOOGLE_APPLICATION_CREDENTIALS=${{ github.workspace }}/.secrets/gcp-key.json" >> $GITHUB_ENV
+          jq -e . "${{ github.workspace }}/.secrets/gcp-key.json" >/dev/null 2>&1 && echo "JSON OK" || (echo "JSON invalid"; exit 1)
         working-directory: ${{ github.workspace }}
         shell: bash
 
