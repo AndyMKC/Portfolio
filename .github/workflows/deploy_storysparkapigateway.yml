@@ -18,11 +18,10 @@ env:
   KEEP: 2
   #IMAGE_REPO: storyspark
   TF_GOOGLE_DIR: case_studies/StorySpark/src/infra/google
-  PROJECT_ID: storyspark-474223
-  TF_GOOGLE_BACKEND_DIR: case_studies/StorySpark/src/infra/google/bootstrap_backend
-  #GCS_BUCKET: sstoryspark-474223-terraform-state
-  GCS_BUCKET: storyspark-474223-terraform-state-1759710853
-  TF_PLAN_FILE: storyspark-bootstrap.tfplan
+  PROJECT_ID: storyspark-555555
+  #TF_GOOGLE_BACKEND_DIR: case_studies/StorySpark/src/infra/google/bootstrap_backend
+  GCS_BUCKET: storyspark-555555-terraform-state
+  TF_PLAN_FILE: storyspark.tfplan
 
 jobs:
   terraform-plan:
@@ -63,7 +62,7 @@ jobs:
         shell: bash
  
       - name: Init Terraform with GCS backend
-        working-directory: ${{ env.TF_GOOGLE_BACKEND_DIR }}
+        working-directory: ${{ env.TF_GOOGLE_DIR }}
         run: |
           terraform init \
             -backend-config="bucket=${{ env.GCS_BUCKET }}" \
@@ -72,7 +71,8 @@ jobs:
         shell: bash
 
       - name: Terraform fmt diagnostics
-        working-directory: case_studies/StorySpark/src/infra/google/bootstrap_backend
+        # This used to work for bootstrapworking-directory: case_studies/StorySpark/src/infra/google/bootstrap_backend
+        working-directory: ${{ env.TF_GOOGLE_DIR }}
         run: |
           set -euo pipefail
           echo "Running fmt diff list"
@@ -83,7 +83,7 @@ jobs:
         shell: bash
 
       - name: Write terraform.tfvars from secrets
-        working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_BACKEND_DIR }}
+        working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
         run: |
           set -euo pipefail
           cat > terraform.tfvars <<EOF
@@ -96,7 +96,7 @@ jobs:
         shell: bash
 
       - name: Terraform plan
-        working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_BACKEND_DIR }}
+        working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
         run: |
           set -euo pipefail
           echo "GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS"; jq -e . "$GOOGLE_APPLICATION_CREDENTIALS" >/dev/null 2>&1 && echo "JSON OK" || { echo "Invalid JSON in credentials file; showing first 200 bytes:"; dd if="$GOOGLE_APPLICATION_CREDENTIALS" bs=200 count=1 2>/dev/null | sed -n '1,200p'; exit 1; }
@@ -113,12 +113,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tfplan
-          path: ${{ env.TF_GOOGLE_BACKEND_DIR }}/${{ env.TF_PLAN_FILE }}
+          path: ${{ env.TF_GOOGLE_DIR }}/${{ env.TF_PLAN_FILE }}
 
   terraform-apply:
     name: Terraform Apply
     runs-on: ubuntu-latest
     needs: terraform-plan
+    # TODO:  Disable applying on workflow_dispatch when fully tested
     if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
     permissions:
       contents: read
@@ -137,7 +138,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: tfplan
-          path: ${{ env.TF_GOOGLE_BACKEND_DIR }}
+          path: ${{ env.TF_GOOGLE_DIR }}
 
       - name: Write and validate GCP service account key
         env:
@@ -158,21 +159,66 @@ jobs:
         shell: bash
 
       - name: Init Terraform (reconfigure)
-        working-directory: ${{ env.TF_GOOGLE_BACKEND_DIR }}
+        working-directory: ${{ env.TF_GOOGLE_DIR }}
         run: |
           terraform init \
           -backend-config="bucket=${{ env.GCS_BUCKET }}" \
-          -backend-config="prefix=terraform/state" \
+          -backend-config="prefix=terraform/state/prod" \
           -reconfigure
         shell: bash
 
       - name: Terraform apply (apply plan artifact)
-        working-directory: ${{ env.TF_GOOGLE_BACKEND_DIR }}
+        working-directory: ${{ env.TF_GOOGLE_DIR }}
         run: |
           cd "${{ env.TF_DIR }}"
           terraform apply "${{ env.TF_PLAN_FILE }}"
         shell: bash
-  # build-push-deploy:
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+        # build-push-deploy:
   #   runs-on: ubuntu-latest
   #   permissions:
   #     contents: read
