@@ -18,10 +18,10 @@ env:
   KEEP: 2
   #IMAGE_REPO: storyspark
   TF_GOOGLE_DIR: case_studies/StorySpark/src/infra/google
-  PROJECT_ID: storyspark-474223
-  TF_GOOGLE_BACKEND_DIR: src/infra/google/bootstrap_backend
-  GCS_BUCKET: sstoryspark-474223-terraform-state
-  TF_PLAN_FILE: storyspark-bootstrap.tfplan
+  PROJECT_ID: storyspark-555555
+  #TF_GOOGLE_BACKEND_DIR: case_studies/StorySpark/src/infra/google/bootstrap_backend
+  GCS_BUCKET: storyspark-555555-terraform-state
+  TF_PLAN_FILE: storyspark.tfplan
 
 jobs:
   terraform-plan:
@@ -32,17 +32,27 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      
+      - name: Debug repo structure
+        run: |
+          echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
+          ls -R $GITHUB_WORKSPACE
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.7  # adjust to your required version
 
-      - name: Write GCP service account key
+      - name: Write and validate GCP service account key
+        env:
+          STORYSPARK_GCP_TERRAFORM_SA_JSON: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
+        working-directory: ${{ github.workspace }}
         run: |
-          mkdir -p ${{ github.workspace }}/.secrets
-          echo "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" > ${{ github.workspace }}/.secrets/gcp-key.json
-          chmod 600 ${{ github.workspace }}/.secrets/gcp-key.json
+          set -euo pipefail
+          mkdir -p "${GITHUB_WORKSPACE}/.secrets"
+          printf '%s' "$STORYSPARK_GCP_TERRAFORM_SA_JSON" > "${GITHUB_WORKSPACE}/.secrets/gcp-key.json"
+          chmod 600 "${GITHUB_WORKSPACE}/.secrets/gcp-key.json"
+          jq -e . "${GITHUB_WORKSPACE}/.secrets/gcp-key.json" >/dev/null && echo "valid JSON"
         shell: bash
 
       - name: Export credentials
@@ -50,9 +60,9 @@ jobs:
           export GOOGLE_APPLICATION_CREDENTIALS="${{ github.workspace }}/.secrets/gcp-key.json"
           echo "GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}" >> $GITHUB_ENV
         shell: bash
-
+ 
       - name: Init Terraform with GCS backend
-        working-directory: ${{ env.TF_GOOGLE_BACKEND_DIR }}
+        working-directory: ${{ env.TF_GOOGLE_DIR }}
         run: |
           terraform init \
             -backend-config="bucket=${{ env.GCS_BUCKET }}" \
@@ -60,26 +70,56 @@ jobs:
             -reconfigure
         shell: bash
 
-      - name: Terraform fmt check
-        working-directory: ${{ env.TF_GOOGLE_BACKEND_DIR }}
-        run: terraform fmt -check
+      - name: Terraform fmt diagnostics
+        # This used to work for bootstrapworking-directory: case_studies/StorySpark/src/infra/google/bootstrap_backend
+        working-directory: ${{ env.TF_GOOGLE_DIR }}
+        run: |
+          set -euo pipefail
+          echo "Running fmt diff list"
+          terraform fmt -diff -list=true .
+          echo "Running fmt check (will exit non‑zero if issues)"
+          terraform fmt -check .
+          echo "If fmt failed, show validate and head of main.tf for parse errors"
+        shell: bash
+
+      - name: Write terraform.tfvars from secrets
+        working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
+        run: |
+          set -euo pipefail
+          cat > terraform.tfvars <<EOF
+          project_id = "${{ vars.STORYSPARK_GCP_PROJECT_ID }}"
+          region     = "${{ vars.STORYSPARK_GCP_REGION }}"
+          zone       = "${{ vars.STORYSPARK_GCP_ZONE }}"
+          # add other variables here
+          EOF
+          chmod 600 terraform.tfvars
         shell: bash
 
       - name: Terraform plan
-        working-directory: ${{ env.TF_GOOGLE_BACKEND_DIR }}
-        run: terraform plan --var-file="terraform.tfvars" -out="${{ env.TF_PLAN_FILE }}"
+        working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
+        run: |
+          set -euo pipefail
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS"; jq -e . "$GOOGLE_APPLICATION_CREDENTIALS" >/dev/null 2>&1 && echo "JSON OK" || { echo "Invalid JSON in credentials file; showing first 200 bytes:"; dd if="$GOOGLE_APPLICATION_CREDENTIALS" bs=200 count=1 2>/dev/null | sed -n '1,200p'; exit 1; }
+          echo "Checking for variables file in current directory"
+          if [ ! -f "./terraform.tfvars" ]; then
+            echo "ERROR: ./terraform.tfvars not found"
+            ls -la "./"
+            exit 1
+          fi
+          terraform plan --var-file="terraform.tfvars" -out="${{ env.TF_PLAN_FILE }}"
         shell: bash
 
       - name: Upload plan artifact
         uses: actions/upload-artifact@v4
         with:
           name: tfplan
-          path: ${{ env.TF_GOOGLE_BACKEND_DIR }}/${{ env.TF_PLAN_FILE }}
+          path: ${{ env.TF_GOOGLE_DIR }}/${{ env.TF_PLAN_FILE }}
 
   terraform-apply:
     name: Terraform Apply
     runs-on: ubuntu-latest
     needs: terraform-plan
+    # TODO:  Disable applying on workflow_dispatch when fully tested
     if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
     permissions:
       contents: read
@@ -98,13 +138,18 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: tfplan
-          path: ${{ env.TF_DIR }}
+          path: ${{ env.TF_GOOGLE_DIR }}
 
-      - name: Write GCP service account key
+      - name: Write and validate GCP service account key
+        env:
+          STORYSPARK_GCP_TERRAFORM_SA_JSON: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
+        working-directory: ${{ github.workspace }}
         run: |
-          mkdir -p ${{ github.workspace }}/.secrets
-          echo "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" > ${{ github.workspace }}/.secrets/gcp-key.json
-          chmod 600 ${{ github.workspace }}/.secrets/gcp-key.json
+          set -euo pipefail
+          mkdir -p "${GITHUB_WORKSPACE}/.secrets"
+          printf '%s' "$STORYSPARK_GCP_TERRAFORM_SA_JSON" > "${GITHUB_WORKSPACE}/.secrets/gcp-key.json"
+          chmod 600 "${GITHUB_WORKSPACE}/.secrets/gcp-key.json"
+          jq -e . "${GITHUB_WORKSPACE}/.secrets/gcp-key.json" >/dev/null && echo "valid JSON"
         shell: bash
 
       - name: Export credentials
@@ -114,17 +159,66 @@ jobs:
         shell: bash
 
       - name: Init Terraform (reconfigure)
-        working-directory: ${{ env.TF_GOOGLE_BACKEND_DIR }}
-        run: terraform init -reconfigure \
+        working-directory: ${{ env.TF_GOOGLE_DIR }}
+        run: |
+          terraform init \
           -backend-config="bucket=${{ env.GCS_BUCKET }}" \
-          -backend-config="prefix=terraform/state"
+          -backend-config="prefix=terraform/state/prod" \
+          -reconfigure
         shell: bash
 
       - name: Terraform apply (apply plan artifact)
-        working-directory: ${{ env.TF_GOOGLE_BACKEND_DIR }}
-        run: terraform apply "${{ env.TF_PLAN_FILE }}"
+        working-directory: ${{ env.TF_GOOGLE_DIR }}
+        run: |
+          cd "${{ env.TF_DIR }}"
+          terraform apply "${{ env.TF_PLAN_FILE }}"
         shell: bash
-  # build-push-deploy:
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+        # build-push-deploy:
   #   runs-on: ubuntu-latest
   #   permissions:
   #     contents: read
