@@ -9,6 +9,8 @@ jobs:
   bootstrap_gcs:
     name: 'GCS State Bucket Setup'
     runs-on: ubuntu-latest
+    # This file should only be run once and you better have a good reason to run it again
+    if: github.ref == 'refs/heads/this_branch_should_not_exist'
     environment: production # Recommended practice for apply steps
 
     # Define the repository variables as environment variables for Terraform
