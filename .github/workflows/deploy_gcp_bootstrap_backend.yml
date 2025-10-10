@@ -9,6 +9,8 @@ jobs:
   bootstrap_gcs:
     name: 'GCS State Bucket Setup'
     runs-on: ubuntu-latest
+    # This file should only be run once and you better have a good reason to run it again
+    if: github.ref == 'refs/heads/this_branch_should_not_exist'
     environment: production # Recommended practice for apply steps
 
     # Define the repository variables as environment variables for Terraform
@@ -38,18 +40,17 @@ jobs:
         with:
           terraform_version: 1.8.0 # Specify a recommended version
 
-      - name: Terraform Init
+      - name: Terraform Init (with -upgrade)
         id: init
-        run: terraform init
+        # Added '-upgrade' flag to force Terraform to re-evaluate provider versions
+        # and ignore any existing lock file that conflicts with versions.tf.
+        run: terraform init -upgrade
         working-directory: ${{ env.TF_WORKING_DIR }}
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan \
-          -var="project_id=${{ env.GCP_PROJECT_ID }}" \
-          -var="region=${{ env.GCP_REGION }}" \
-          -var="bucket_name=${{ env.GCP_BUCKET_NAME }}" \
-          -out=tfplan
+        # Combined the run command into a single line to avoid issues with shell line continuation (\)
+        run: terraform plan -var="project_id=${{ env.GCP_PROJECT_ID }}" -var="region=${{ env.GCP_REGION }}" -var="bucket_name=${{ env.GCP_BUCKET_NAME }}" -out=tfplan
         working-directory: ${{ env.TF_WORKING_DIR }}
 
       - name: Terraform Apply
