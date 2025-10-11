@@ -14,6 +14,12 @@ variable "region" {
   type        = string
 }
 
+# The desired zone for the GCS bucket (e.g., us-west1)
+variable "zone" {
+  description = "The region for the GCS backend bucket."
+  type        = string
+}
+
 # The name of the GCS bucket to store the Terraform state (e.g., storyspark-555555-terraform-state)
 variable "bucket_name" {
   description = "The globally unique name for the GCS bucket used for Terraform state storage."
