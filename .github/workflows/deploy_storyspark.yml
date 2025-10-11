@@ -43,6 +43,11 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    - name: Debug repo structure
+      run: |
+        echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
+        ls -R $GITHUB_WORKSPACE
+
     # 2. Authenticate to GCP using the Service Account Key Secret
     - id: 'auth'
       name: 'Authenticate to Google Cloud via SA Key'
@@ -75,7 +80,7 @@ jobs:
     # 5. Terraform Init - Configure GCS backend
     - name: Terraform Init
       id: init
-      working-directory: ${{ env.TF_GOOGLE_DIR }}
+      working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
       run: |
         # Initialize Terraform and configure the GCS backend for state locking and persistence
         terraform init \
@@ -85,7 +90,7 @@ jobs:
     # 6. Terraform Plan & Save Artifact
     - name: Terraform Plan and Save
       id: plan
-      working-directory: ${{ env.TF_GOOGLE_DIR }}
+      working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
       run: |
         # Generate the plan and save it to a file (tfplan) for the next job
         terraform plan -out=tfplan \
@@ -98,7 +103,8 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: tfplan-artifact
-        path: ${{ env.TF_GOOGLE_DIR }}/tfplan
+        #path: ${{ env.TF_GOOGLE_DIR }}/tfplan
+        path: tfplan
 
   terraform-apply: # New job: Runs only on push to 'main' and requires 'plan' to succeed
     runs-on: ubuntu-latest
@@ -154,7 +160,7 @@ jobs:
     # 6. Terraform Init (required before apply to ensure backend configuration)
     - name: Terraform Init
       id: init
-      working-directory: ${{ env.TF_GOOGLE_DIR }}
+      working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
       run: |
         # Re-initialize to configure the GCS backend (state is needed for apply)
         terraform init \
@@ -163,7 +169,7 @@ jobs:
           
     # 7. Terraform Apply the saved plan
     - name: Terraform Apply
-      working-directory: ${{ env.TF_GOOGLE_DIR }}
+      working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
       run: |
         # Execute the apply using the downloaded plan file
         terraform apply -auto-approve tfplan
