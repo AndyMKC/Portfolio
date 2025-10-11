@@ -57,7 +57,22 @@ jobs:
       with:
         terraform_version: 1.4.6
 
-    # 4. Terraform Init - Configure GCS backend
+    # 4. Calculate the State Prefix based on the branch name
+    - name: Calculate State Prefix
+      id: prefix
+      run: |
+        # Get the branch name (e.g., 'main' or 'feature/new-api')
+        BRANCH_NAME=$(echo ${{ github.ref_name }} | tr '/' '-') 
+        
+        # Use 'main/infra' for the main branch, otherwise use the branch name.
+        if [ "$BRANCH_NAME" == "main" ]; then
+          echo "tf_prefix=terraform/main/infra" >> $GITHUB_OUTPUT
+        else
+          echo "tf_prefix=terraform/$BRANCH_NAME/infra" >> $GITHUB_OUTPUT
+        fi
+      shell: bash
+    
+    # 5. Terraform Init - Configure GCS backend
     - name: Terraform Init
       id: init
       working-directory: ${{ env.TF_GOOGLE_DIR }}
@@ -65,9 +80,9 @@ jobs:
         # Initialize Terraform and configure the GCS backend for state locking and persistence
         terraform init \
           -backend-config="bucket=${{ env.GCP_TF_STATE_BUCKET }}" \
-          -backend-config="prefix=terraform/state"
+          -backend-config="prefix=${{ steps.prefix.outputs.tf_prefix }}"
 
-    # 5. Terraform Plan & Save Artifact
+    # 6. Terraform Plan & Save Artifact
     - name: Terraform Plan and Save
       id: plan
       working-directory: ${{ env.TF_GOOGLE_DIR }}
@@ -78,7 +93,7 @@ jobs:
           -var="region=${{ env.GCP_REGION }}" \
           -var="zone=${{ env.GCP_ZONE }}"
     
-    # 6. Upload the generated plan file for the next job (Apply)
+    # 7. Upload the generated plan file for the next job (Apply)
     - name: Upload Terraform Plan Artifact
       uses: actions/upload-artifact@v4
       with:
@@ -121,7 +136,22 @@ jobs:
       with:
         name: tfplan-artifact
         
-    # 5. Terraform Init (required before apply to ensure backend configuration)
+    # 5. Calculate the State Prefix based on the branch name
+    - name: Calculate State Prefix
+      id: prefix
+      run: |
+        # Get the branch name (e.g., 'main' or 'feature/new-api')
+        BRANCH_NAME=$(echo ${{ github.ref_name }} | tr '/' '-') 
+        
+        # Use 'main/infra' for the main branch, otherwise use the branch name.
+        if [ "$BRANCH_NAME" == "main" ]; then
+          echo "tf_prefix=terraform/main/infra" >> $GITHUB_OUTPUT
+        else
+          echo "tf_prefix=terraform/$BRANCH_NAME/infra" >> $GITHUB_OUTPUT
+        fi
+      shell: bash
+    
+    # 6. Terraform Init (required before apply to ensure backend configuration)
     - name: Terraform Init
       id: init
       working-directory: ${{ env.TF_GOOGLE_DIR }}
@@ -129,9 +159,9 @@ jobs:
         # Re-initialize to configure the GCS backend (state is needed for apply)
         terraform init \
           -backend-config="bucket=${{ env.GCP_TF_STATE_BUCKET }}" \
-          -backend-config="prefix=terraform/state"
+          -backend-config="prefix=${{ steps.prefix.outputs.tf_prefix }}"
           
-    # 6. Terraform Apply the saved plan
+    # 7. Terraform Apply the saved plan
     - name: Terraform Apply
       working-directory: ${{ env.TF_GOOGLE_DIR }}
       run: |
