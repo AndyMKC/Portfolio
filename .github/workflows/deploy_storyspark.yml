@@ -103,7 +103,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: tfplan-artifact
-        path: ${{ env.TF_GOOGLE_DIR }}/${{ env.TF_PLAN_FILE }}
+        path: ${{ env.TF_GOOGLE_DIR }}
 
   terraform-apply: # New job: Runs only on push to 'main' and requires 'plan' to succeed
     runs-on: ubuntu-latest
