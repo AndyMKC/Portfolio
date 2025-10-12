@@ -1,26 +1,19 @@
-#
-# GCP Provider Configuration
-#
-provider "google" {
-  project = var.project_id
-  region  = var.region
+locals {
+  # Base name for the dataset structure
+  dataset_base_id = "book_inventory_vectors"
+  
+  # The full, environment-prefixed dataset IDs
+  dataset_dev_id  = "dev_${local.dataset_base_id}"
+  dataset_prod_id = "prod_${local.dataset_base_id}"
+  
+  target_dataset_id = var.git_branch == "main" ? local.dataset_prod_id : local.dataset_dev_id
 }
 
-provider "google-beta" {
-  project = var.project_id
-  region  = var.region
-}
-
-# The backend configuration is defined in backend.tf and uses the following:
-# bucket = var.tfstate_bucket_name
-
 #
-# 1 & 2. API Gateway and Compute (Cloud Run)
+# API Gateway and Compute (Cloud Run)
 # Cloud Run is the core compute, serving as both the backend and API endpoint.
 #
-# NOTE: Cloud Run free tier includes 2M requests/month. Setting min_instance_count = 0
-# ensures you pay nothing when the service is idle (scales to zero).
-#
+
 resource "google_artifact_registry_repository" "api_repo" {
   project      = var.project_id
   location     = var.region
@@ -37,7 +30,7 @@ resource "google_cloud_run_v2_service" "api_service" {
   location = var.region
 
   template {
-    # CRITICAL FOR FREE TIER: Ensure the service scales down completely when idle.
+    # Ensure the service scales down completely when idle.
     scaling {
       min_instance_count = 0 
       max_instance_count = 1 # Keep this low for testing to stay within vCPU-second limits.
@@ -78,13 +71,8 @@ resource "google_cloud_run_v2_service_iam_member" "allow_public_access" {
   member   = "allUsers"
 }
 
-#
-# 3. Vector Database (Firestore in Native Mode)
-# This is used for perpetually free document/vector storage.
-#
-# NOTE: The free tier includes 1 GB storage. If your vectors are large, you
-# may hit this limit quickly. True vector indexing must be implemented 
-# in the application layer or you must switch to a paid service later.
+# 
+# Vector Database (Firestore in Native Mode)
 #
 resource "google_firestore_database" "default_db" {
   project = var.project_id
@@ -100,16 +88,114 @@ resource "google_firestore_database" "default_db" {
   concurrency_mode = "OPTIMISTIC"
 }
 
-
-#
-# Outputs
-#
-output "api_endpoint" {
-  description = "The public URL endpoint for the Cloud Run service."
-  value       = google_cloud_run_v2_service.api_service.uri
+# BigQuery Dataset
+# A container for the table and ML model
+resource "google_bigquery_dataset" "vector_dataset" {
+  dataset_id                  = var.dataset_id
+  friendly_name               = "Book Inventory"
+  description                 = "Books inventory per user"
+  location                    = var.region
+  delete_contents_on_destroy  = false # Set to false in production!
 }
 
-output "artifact_registry_url" {
-  description = "The full URL for the Docker Artifact Registry."
-  value       = google_artifact_registry_repository.api_repo.name
+resource "google_bigquery_dataset" "dev_dataset" {
+  dataset_id                  = local.dataset_dev_id
+  friendly_name               = "Book Inventory for Dev"
+  description                 = "Books inventory per user for dev"
+  location                    = var.region
+  delete_contents_on_destroy  = true
 }
+
+resource "google_bigquery_dataset" "prod_dataset" {
+  dataset_id = local.dataset_prod_id
+  friendly_name               = "Book Inventory for Prod"
+  description                 = "Books inventory per user for prod"
+  location                    = var.region
+  delete_contents_on_destroy  = false # Set to false in production!
+}
+
+# BigQuery Connection (for ML Remote Model)
+# Creates a connection resource to securely access Vertex AI
+resource "google_bigquery_connection" "vertex_connection" {
+  connection_id = "vertex-ai-embed-conn"
+  location      = google_bigquery_dataset.vector_dataset.location
+  cloud_resource {}
+}
+
+# BigQuery ML Remote Model (for Embeddings)
+# This model acts as a proxy to a Vertex AI model (e.g., text-embedding-004)
+resource "google_bigquery_model" "text_embedding_model" {
+  model_id   = "book_metadata_embedding_remote"
+  dataset_id = local.target_dataset_id
+  location   = google_bigquery_dataset.vector_dataset.location
+  
+  remote_model_info {
+    connection_id = google_bigquery_connection.vertex_connection.connection_id
+    remote_model_type = "CLOUD_AI_SERVICE_MODEL"
+    endpoint          = "text-embedding-004" # The Vertex AI embedding model
+  }
+}
+
+# BigQuery Table (to hold documents and embeddings)
+resource "google_bigquery_table" "embeddings_table" {
+  # This single resource block conditionally points to either the DEV or PROD dataset.
+  # Terraform will automatically identify the dependency on the chosen dataset.
+  dataset_id = local.target_dataset_id
+  table_id   = "book_metadata_embeddings"
+  
+  schema = jsonencode([
+    {
+      name        = "book_id"
+      type        = "STRING"
+      mode        = "REQUIRED"
+      description = "The unique identifier for the book (Primary Key)."
+    },
+    {
+      name        = "title"
+      type        = "STRING"
+      mode        = "NULLABLE"
+      description = "The title of the book."
+    },
+    {
+      name        = "author"
+      type        = "STRING"
+      mode        = "NULLABLE"
+      description = "The author of the book."
+    },
+    {
+      name        = "owner"
+      type        = "STRING"
+      mode        = "NULLABLE"
+      description = "The owner/user who uploaded the book."
+    },
+    {
+      name        = "last_read_datetime"
+      type        = "TIMESTAMP"
+      mode        = "NULLABLE"
+      description = "The last read date and time of the book."
+    },
+    {
+      name        = "text_content"
+      type        = "STRING"
+      mode        = "NULLABLE"
+      description = "The raw text content (or chunk) used to generate the embedding."
+    },
+    {
+      # This is the vector embedding column
+      name        = "embedding_vector"
+      type        = "FLOAT"
+      mode        = "REPEATED"
+      description = "The vector embedding (Array of FLOAT64) generated by the remote model."
+    },
+  ])
+}
+
+# BigQuery Vector Index (for Fast Search)
+# NOTE: As of today, there is no direct `google_bigquery_vector_index` resource.
+# You must use an external tool (like a `null_resource` with `local-exec`)
+# to run the CREATE VECTOR INDEX DDL, or use a tool that supports running DDL.
+
+# The DDL would look like this (if running manually or via an external script):
+# CREATE OR REPLACE VECTOR INDEX my_index 
+# ON vector_search_demo_dataset.document_embeddings(embedding_vector) 
+# OPTIONS(distance_type='COSINE', index_type='IVF');

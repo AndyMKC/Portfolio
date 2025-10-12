@@ -29,3 +29,15 @@ variable "tfstate_bucket_name" {
   type        = string
   default     = "storyspark-555555-terraform-state"
 }
+
+variable "dataset_id" {
+  description = "The unique ID for the BigQuery dataset."
+  type        = string
+  default     = "book_inventory_vectors"
+}
+
+variable "git_branch" {
+  description = "The name of the branch currently being deployed."
+  type        = string
+  default     = "dev-feature-branch" # A safe default for non-main branches
+}
