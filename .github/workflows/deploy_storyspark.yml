@@ -16,7 +16,7 @@ env:
   #ACR_NAME: storysparkacr
   #ACR_LOGIN_SERVER: storysparkacr.azurecr.io
   KEEP: 2
-  TF_GOOGLE_DIR: case_studies/StorySpark/src/infra/gcp
+  TF_GOOGLE_DIR: case_studies/StorySpark/src/infra/gcp/main
   PROJECT_ID: storyspark-555555
   GCS_BUCKET: storyspark-555555-terraform-state
   TF_PLAN_FILE: storyspark.tfplan

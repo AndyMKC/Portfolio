@@ -3,7 +3,7 @@
 #
 
 terraform {
-  required_version = ">= 1.0"
+  required_version = ">= 1.2.0"
 
   required_providers {
     google = {
@@ -12,4 +12,10 @@ terraform {
       version = "~> 7.0"
     }
   }
+}
+
+# Configure the Google Provider using the project ID variable
+provider "google" {
+  project = var.project_id
+  region  = var.region
 }
