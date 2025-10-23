@@ -61,7 +61,7 @@ def update_active_users_okr(login_info):
 
     # Find the issues we need to update
     # We will use tags to see which Stories we need to update
-    jql = f'project = "TECHFREN" AND issuetype = Story AND labels = "R{r_window}_ActiveUsers"' 
+    jql = f'project = "TECHFREN" AND labels = "Website_R{r_window}_ActiveUsers"' 
     issues = jira_search_issues(jql, login_info)
     print("Issues to update:", issues)
 
@@ -76,11 +76,15 @@ def main():
         google_cloud_cred = os.environ.get("TECHFREN_GOOGLE_CLOUD_CRED")
         # This is from the Google Analytics Admin -> Property page (upper right hand corner)
         ga4_property_id = os.environ.get("TECHFREN_GA4_PROPERTY_ID")
+
         jira_base = os.environ.get("TECHFREN_JIRA_BASE")
         # TODO:  Make a new robot account for this
         jira_user = os.environ.get("TECHFREN_JIRA_USER")
         # https://id.atlassian.com -> security -> create and manage API tokens
         jira_api_token = os.environ.get("TECHFREN_JIRA_API_TOKEN")  # secret
+        
+        oboard_base = os.environ.get("TECHFREN_OBOARD_BASE")
+        oboard_api_token = os.environ.get("TECHFREN_OBOARD_API_TOKEN")
     
     login_info = LoginInfo()
     # Basic validation
