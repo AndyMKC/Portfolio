@@ -70,10 +70,11 @@ jobs:
     #     echo "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" | jq -r .client_email
     #   shell: bash
 
-    - name: Dump out json
-      run: |
-        printf '%s' "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" | sed 's/\r$//' | sed -n '1,1p' | fold -w500 | sed -n '1p'
+    - name: Show first 32 bytes of SA secret (console)
       shell: bash
+      run: |
+        # normalize CRLF and take first 32 bytes
+        printf '%s' "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" | sed 's/\r$//' | head -c1024
     
     - name: Show effective identity
       run: |
