@@ -67,7 +67,7 @@ jobs:
 
         # print client_email from the JSON secret directly (no gcloud required)
         echo "SERVICE ACCOUNT FROM SECRET:"
-        echo "${{ secrets.GCP_SA_KEY }}" | jq -r .client_email
+        echo "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" | jq -r .client_email
       shell: bash
 
     - name: Show effective identity
@@ -81,7 +81,7 @@ jobs:
       
     - name: Print SA email from secret
       run: |
-        echo "${{ secrets.GCP_SA_KEY }}" | jq -r .client_email
+        echo "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" | jq -r .client_email
       shell: bash
     # END DEBUG TODO:
 
