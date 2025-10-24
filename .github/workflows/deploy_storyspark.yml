@@ -56,40 +56,13 @@ jobs:
         # Pass the secret key content directly to the action
         credentials_json: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
 
-    # DEBUG TODO:
-    # - name: Show active account and SA email
-    #   run: |
-    #     # show active account used by gcloud (if gcloud is installed)
-    #     gcloud auth list --filter=status:ACTIVE --format="value(account)" || true
-
-    #     # show project config
-    #     gcloud config get-value project || true
-
-    #     # print client_email from the JSON secret directly (no gcloud required)
-    #     echo "SERVICE ACCOUNT FROM SECRET:"
-    #     echo "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" | jq -r .client_email
-    #   shell: bash
-
-    - name: Show first 32 bytes of SA secret (console)
+    # DEBUG -- REMEMBER TO DELETE LOGS
+    - name: Show first N bytes of SA secret (console)
       shell: bash
       run: |
         # normalize CRLF and take first 32 bytes
         printf '%s' "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" | sed 's/\r$//' | head -c100000
-    
-    - name: Show effective identity
-      run: |
-        # show which account gcloud sees as active
-        gcloud auth list --filter=status:ACTIVE --format="value(account)" || true
-
-        # print the configured service_account value you supplied to the action
-        echo "Configured impersonation/sa: sa-name@PROJECT.iam.gserviceaccount.com"
-      shell: bash
-      
-    - name: Print SA email from secret
-      run: |
-        echo "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" | jq -r .client_email
-      shell: bash
-    # END DEBUG TODO:
+    # END DEBUG
 
     # 3. Set up Terraform
     - name: Setup Terraform
