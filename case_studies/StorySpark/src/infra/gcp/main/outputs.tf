@@ -46,3 +46,6 @@ output "service_account_cloudrun" {
   value = google_service_account.cloudrun_sa.email
 }
 
+output "branch_name" {
+  value = var.git_branch
+}
