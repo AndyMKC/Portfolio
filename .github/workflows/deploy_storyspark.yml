@@ -57,11 +57,11 @@ jobs:
         credentials_json: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
 
     # DEBUG -- REMEMBER TO DELETE LOGS
-    - name: Show first N bytes of SA secret (console)
-      shell: bash
-      run: |
-        # normalize CRLF and take first 32 bytes
-        printf '%s' "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" | sed 's/\r$//' | head -c100000
+    # - name: Show first N bytes of SA secret (console)
+    #   shell: bash
+    #   run: |
+    #     # normalize CRLF and take first 32 bytes
+    #     printf '%s' "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" | sed 's/\r$//' | head -c100000
     # END DEBUG
 
     # 3. Set up Terraform
