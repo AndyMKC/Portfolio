@@ -83,7 +83,7 @@ jobs:
       working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
       run: |
         # Initialize Terraform and configure the GCS backend for state locking and persistence
-        terraform init \
+        terraform init -reconfigure \
           -backend-config="bucket=${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}" \
           -backend-config="prefix=${{ steps.prefix.outputs.tf_prefix }}"
 
@@ -96,7 +96,8 @@ jobs:
         terraform plan -out=tfplan \
           -var="project_id=${{ vars.STORYSPARK_GCP_PROJECT_ID }}" \
           -var="region=${{ vars.STORYSPARK_GCP_REGION }}" \
-          -var="zone=${{ vars.STORYSPARK_GCP_ZONE }}"
+          -var="zone=${{ vars.STORYSPARK_GCP_ZONE }}" \
+          -lock-timeout=10m
     
     # 7. Upload the generated plan file for the next job (Apply)
     - name: Upload Terraform Plan Artifact
@@ -172,5 +173,5 @@ jobs:
       working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
       run: |
         # Execute the apply using the downloaded plan file
-        terraform apply -auto-approve tfplan
+        terraform apply -auto-approve tfplan -lock-timeout=10m
 
