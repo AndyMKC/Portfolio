@@ -21,9 +21,30 @@ variable "zone" {
 }
 
 # The name of the GCS bucket to store the Terraform state (e.g., storyspark-555555-terraform-state)
-variable "bucket_name" {
+variable "tfstate_bucket_name" {
   description = "The globally unique name for the GCS bucket used for Terraform state storage."
   type        = string
 }
 
-# Note: The zone variable is not used for GCS buckets, so we omit it here.
+variable "create_dev" {
+  description = "Create dev service accounts"
+  type        = bool
+  default     = true
+}
+
+variable "create_prod" {
+  description = "Create prod service accounts"
+  type        = bool
+  default     = true
+}
+
+variable "dev_suffix" {
+  type    = string
+  default = "dev"
+}
+
+variable "prod_suffix" {
+  type    = string
+  default = "prod"
+}
+
