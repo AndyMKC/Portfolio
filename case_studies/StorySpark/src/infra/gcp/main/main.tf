@@ -135,13 +135,6 @@ resource "google_bigquery_table" "embeddings_table" {
   description   = "Stores text and embedding vectors for StorySpark ${local.env_suffix}"
 }
 
-# Service account for BigQuery -> Vertex access (env-specific)
-resource "google_service_account" "bq_vertex_sa" {
-  account_id   = local.sa_bq_vertex
-  display_name = "StorySpark BigQuery-Vertex SA ${local.env_suffix}"
-  project      = var.project_id
-}
-
 # Grant dataset access to service account
 resource "google_bigquery_dataset_iam_member" "sa_dataset_access" {
   dataset_id = google_bigquery_dataset.embeddings.dataset_id
@@ -155,13 +148,6 @@ resource "google_project_iam_member" "sa_vertex_use" {
   project = var.project_id
   role    = "roles/aiplatform.user"
   member  = "serviceAccount:${google_service_account.bq_vertex_sa.email}"
-}
-
-# Cloud Run service account (env-specific)
-resource "google_service_account" "cloudrun_sa" {
-  account_id   = local.sa_cloudrun
-  display_name = "StorySpark Cloud Run SA ${local.env_suffix}"
-  project      = var.project_id
 }
 
 # Grant Cloud Run service account permission to access BigQuery
