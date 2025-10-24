@@ -99,7 +99,7 @@ jobs:
           -var="location=${{ vars.STORYSPARK_GCP_LOCATION }}" \
           -var="region=${{ vars.STORYSPARK_GCP_REGION }}" \
           -var="zone=${{ vars.STORYSPARK_GCP_ZONE }}" \
-          -var="tfstate_bucket_name=${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}"
+          -var="tfstate_bucket_name=${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}" \
           -lock-timeout=5m \
           -out=tfplan          
     
@@ -177,5 +177,5 @@ jobs:
       working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
       run: |
         # Execute the apply using the downloaded plan file
-        terraform apply -auto-approve tfplan -lock-timeout=10m
+        terraform apply -auto-approve tfplan -lock-timeout=5m
 
