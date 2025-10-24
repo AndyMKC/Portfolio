@@ -67,7 +67,8 @@ jobs:
       id: prefix
       run: |
         # Get the branch name (e.g., 'main' or 'feature/new-api')
-        BRANCH_NAME=$(echo ${{ github.ref_name }} | tr '/' '-') 
+        BRANCH_NAME=$(echo ${{ github.ref_name }} | tr '/' '-')
+        echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
         
         # Use 'main/infra' for the main branch, otherwise use the branch name.
         if [ "$BRANCH_NAME" == "main" ]; then
@@ -75,6 +76,11 @@ jobs:
         else
           echo "tf_prefix=terraform/$BRANCH_NAME/infra" >> $GITHUB_OUTPUT
         fi
+      shell: bash
+
+    - name: Output Branch Name
+      run: |
+        echo "Branch Name: ${{ steps.prefix.outputs.branch_name }}"
       shell: bash
     
     # 5. Terraform Init - Configure GCS backend
@@ -102,6 +108,7 @@ jobs:
           -var="region=${{ vars.STORYSPARK_GCP_REGION }}" \
           -var="zone=${{ vars.STORYSPARK_GCP_ZONE }}" \
           -var="tfstate_bucket_name=${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}" \
+          -var="git_branch=${{ steps.prefix.outputs.branch_name }}" \
           -lock-timeout=5m \
           -out=tfplan          
     
@@ -154,7 +161,8 @@ jobs:
       id: prefix
       run: |
         # Get the branch name (e.g., 'main' or 'feature/new-api')
-        BRANCH_NAME=$(echo ${{ github.ref_name }} | tr '/' '-') 
+        BRANCH_NAME=$(echo ${{ github.ref_name }} | tr '/' '-')
+        echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
         
         # Use 'main/infra' for the main branch, otherwise use the branch name.
         if [ "$BRANCH_NAME" == "main" ]; then
@@ -162,6 +170,11 @@ jobs:
         else
           echo "tf_prefix=terraform/$BRANCH_NAME/infra" >> $GITHUB_OUTPUT
         fi
+      shell: bash
+
+    - name: Output Branch Name
+      run: |
+        echo "Branch Name: ${{ steps.prefix.outputs.branch_name }}"
       shell: bash
     
     # 6. Terraform Init (required before apply to ensure backend configuration)
