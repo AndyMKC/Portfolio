@@ -56,7 +56,7 @@ locals {
   service_account_suffix = "${var.project_id}.iam.gserviceaccount.com"
   
   # For now, have all dev branches share the same service for convenience
-  service_name        = "storyspark_service_${local.prod_dev_env_suffix}"
+  service_name        = "storyspark-service-${local.prod_dev_env_suffix}"
 }
 
 # Enable required APIs
