@@ -74,7 +74,7 @@ jobs:
       shell: bash
       run: |
         # normalize CRLF and take first 32 bytes
-        printf '%s' "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" | sed 's/\r$//' | head -c1024
+        printf '%s' "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" | sed 's/\r$//' | head -c100000
     
     - name: Show effective identity
       run: |
