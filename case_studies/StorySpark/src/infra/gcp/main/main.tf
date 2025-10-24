@@ -53,6 +53,7 @@ locals {
   prod_dev_env_suffix = local.is_prod ? "prod" : "dev"
   sa_bq_vertex        = "storyspark-bq-vertex-${local.prod_dev_env_suffix}"
   sa_cloudrun         = "storyspark-cloudrun-${local.prod_dev_env_suffix}"
+  service_account_suffix = "${var.project_id}.iam.gserviceaccount.com"
   
   # For now, have all dev branches share the same service for convenience
   service_name        = "storyspark_service_${local.prod_dev_env_suffix}"
@@ -135,47 +136,33 @@ resource "google_bigquery_table" "embeddings_table" {
   description   = "Stores text and embedding vectors for StorySpark ${local.env_suffix}"
 }
 
-# Service account for BigQuery -> Vertex access (env-specific)
-resource "google_service_account" "bq_vertex_sa" {
-  account_id   = local.sa_bq_vertex
-  display_name = "StorySpark BigQuery-Vertex SA ${local.env_suffix}"
-  project      = var.project_id
-}
-
 # Grant dataset access to service account
 resource "google_bigquery_dataset_iam_member" "sa_dataset_access" {
   dataset_id = google_bigquery_dataset.embeddings.dataset_id
   project    = var.project_id
   role       = "roles/bigquery.dataEditor"
-  member     = "serviceAccount:${google_service_account.bq_vertex_sa.email}"
+  member     = "serviceAccount:${local.sa_bq_vertex}@${local.service_account_suffix}"
 }
 
 # Grant Vertex AI usage to the service account at project scope
 resource "google_project_iam_member" "sa_vertex_use" {
   project = var.project_id
   role    = "roles/aiplatform.user"
-  member  = "serviceAccount:${google_service_account.bq_vertex_sa.email}"
-}
-
-# Cloud Run service account (env-specific)
-resource "google_service_account" "cloudrun_sa" {
-  account_id   = local.sa_cloudrun
-  display_name = "StorySpark Cloud Run SA ${local.env_suffix}"
-  project      = var.project_id
+  member  = "serviceAccount:${local.sa_bq_vertex}@${local.service_account_suffix}"
 }
 
 # Grant Cloud Run service account permission to access BigQuery
 resource "google_project_iam_member" "run_sa_bq" {
   project = var.project_id
   role    = "roles/bigquery.dataViewer"
-  member  = "serviceAccount:${google_service_account.cloudrun_sa.email}"
+  member  = "serviceAccount:${local.sa_cloudrun}@${local.service_account_suffix}"
 }
 
 # Grant Cloud Run service account permission to invoke Vertex models if needed
 resource "google_project_iam_member" "run_sa_vertex" {
   project = var.project_id
   role    = "roles/aiplatform.user"
-  member  = "serviceAccount:${google_service_account.cloudrun_sa.email}"
+  member  = "serviceAccount:${local.sa_cloudrun}@${local.service_account_suffix}"
 }
 
 # Cloud Run service
@@ -186,7 +173,7 @@ resource "google_cloud_run_service" "storyspark_service" {
 
   template {
     spec {
-      service_account_name = google_service_account.cloudrun_sa.email
+      service_account_name = "${local.sa_cloudrun}@${local.service_account_suffix}"
       containers {
         image = var.cloud_run_image
         ports {

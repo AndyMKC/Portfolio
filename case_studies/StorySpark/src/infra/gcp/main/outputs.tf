@@ -39,11 +39,11 @@ output "cloud_run_url" {
 }
 
 output "service_account_bq_vertex" {
-  value = google_service_account.bq_vertex_sa.email
+  value = "${local.sa_bq_vertex}@${local.service_account_suffix}"
 }
 
 output "service_account_cloudrun" {
-  value = google_service_account.cloudrun_sa.email
+  value = "${local.sa_cloudrun}@${local.service_account_suffix}"
 }
 
 output "branch_name" {
