@@ -173,7 +173,7 @@ resource "google_cloud_run_service" "storyspark_service" {
 
   template {
     spec {
-      service_account_name = local.sa_cloudrun.email + "@" + local.service_account_suffix
+      service_account_name = local.sa_cloudrun + "@" + local.service_account_suffix
       containers {
         image = var.cloud_run_image
         ports {
