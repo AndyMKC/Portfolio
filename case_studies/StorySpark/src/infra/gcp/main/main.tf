@@ -112,6 +112,8 @@ resource "google_bigquery_table" "source_table" {
 
   friendly_name = "StorySpark source books table ${local.env_suffix}"
   description   = "Canonical book records for StorySpark ${local.env_suffix}"
+
+  deletion_protection = false
 }
 
 # Embeddings table to store vectors
