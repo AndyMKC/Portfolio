@@ -72,7 +72,7 @@ jobs:
 
     - name: Dump out json
       run: |
-        printf '%s' "${{ secrets.GCP_SA_KEY }}" | sed 's/\r$//' | sed -n '1,1p' | fold -w500 | sed -n '1p'
+        printf '%s' "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" | sed 's/\r$//' | sed -n '1,1p' | fold -w500 | sed -n '1p'
       shell: bash
     
     - name: Show effective identity
