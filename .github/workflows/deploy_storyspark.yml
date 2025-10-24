@@ -136,6 +136,36 @@ jobs:
       with:
         credentials_json: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
 
+    # DEBUG TODO:
+    - name: Show active account and SA email
+      run: |
+        # show active account used by gcloud (if gcloud is installed)
+        gcloud auth list --filter=status:ACTIVE --format="value(account)" || true
+
+        # show project config
+        gcloud config get-value project || true
+
+        # print client_email from the JSON secret directly (no gcloud required)
+        echo "SERVICE ACCOUNT FROM SECRET:"
+        echo "${{ secrets.GCP_SA_KEY }}" | jq -r .client_email
+      shell: bash
+
+    - name: Show effective identity
+      run: |
+        # show which account gcloud sees as active
+        gcloud auth list --filter=status:ACTIVE --format="value(account)" || true
+
+        # print the configured service_account value you supplied to the action
+        echo "Configured impersonation/sa: sa-name@PROJECT.iam.gserviceaccount.com"
+      shell: bash
+      
+    - name: Print SA email from secret
+      run: |
+        echo "${{ secrets.GCP_SA_KEY }}" | jq -r .client_email
+      shell: bash
+
+    # END DEBUG TODO:
+
     # 3. Set up Terraform
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
