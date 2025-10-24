@@ -23,7 +23,7 @@ jobs:
       GCP_BUCKET_NAME: ${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}
       
       # GitHub Repository Secret (Set this in Settings > Secrets and variables > Actions > Secrets)
-      GCP_SA_KEY: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
+      GCP_SA_KEY: ${{ secrets.STORYSPARK_GCP_TERRAFORM_BOOTSTRAP_SA_KEY }}
 
     steps:
       - name: Checkout Repository
