@@ -32,7 +32,7 @@ variable "zone" {
 variable "tfstate_bucket_name" {
   description = "The GCS bucket created by the bootstrap job to store the remote state."
   type        = string
-  default     = "storyspark-555555-terraform-state"
+  default     = "storyspark-5555555-terraform-state"
 }
 
 # variable "dataset_id" {

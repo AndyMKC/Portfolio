@@ -2,7 +2,7 @@
 # Terraform Variables for the Bootstrap Backend
 #
 
-# The Google Cloud Project ID (e.g., storyspark-555555)
+# The Google Cloud Project ID (e.g., storyspark-5555555)
 variable "project_id" {
   description = "The ID of the GCP project where resources will be created."
   type        = string
@@ -20,7 +20,7 @@ variable "zone" {
   type        = string
 }
 
-# The name of the GCS bucket to store the Terraform state (e.g., storyspark-555555-terraform-state)
+# The name of the GCS bucket to store the Terraform state (e.g., storyspark-5555555-terraform-state)
 variable "tfstate_bucket_name" {
   description = "The globally unique name for the GCS bucket used for Terraform state storage."
   type        = string
