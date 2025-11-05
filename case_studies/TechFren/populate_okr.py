@@ -49,7 +49,7 @@ def main():
     if missing:
         raise SystemExit(f"Missing required environment variables: {', '.join(missing)}")
     
-    #update_unique_website_visitors_okr(external_info)
+    update_unique_website_visitors_okr(external_info)
     update_newsletter_subscribers_okr(external_info)
 
 if __name__ == "__main__":
