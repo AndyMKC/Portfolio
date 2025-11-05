@@ -6,7 +6,7 @@ from external_info import ExternalInfo
 
 class MondayComClient:
     @staticmethod
-    def add_datapoint(external_info: ExternalInfo, update_key: str, metric: int):
+    def add_datapoint(external_info: ExternalInfo, update_key: str, metric: int, group_id: str):
         # Find the issues we need to update
         # We will need to rely on an existing entry with this field for this item due to this lacking a "work item" and groups having to have the same schema if they are in the same board
         # TODO:  Technically, we should be doing pagination via cursor but to get this online quickly, we can do this later.  We use limit:1 to get the single item.  It should be fine since we are filtering to the UpdateKey which *should* only be mapped to one metric.  Essentially, the UpdateKey should represent what we get from our data source (such as Google Analytics)
@@ -44,7 +44,12 @@ items_page_by_column_values(
 
         print(f"KeyResult to update: {kr_name}")
 
-        MondayComClient.create_okr_entry(kr_name=kr_name, current_value=metric, target_value=target_value, update_key=update_key, external_info=external_info)
+        MondayComClient.create_okr_entry(kr_name=kr_name,
+                                         current_value=metric,
+                                         target_value=target_value,
+                                         update_key=update_key,
+                                         external_info=external_info,
+                                         group_id=group_id)
 
     @staticmethod
     def search_issues(query, external_info):
@@ -61,7 +66,7 @@ items_page_by_column_values(
         return resp_json
     
     @staticmethod
-    def create_okr_entry(kr_name: str, current_value: int, target_value: int, update_key: str, external_info):
+    def create_okr_entry(kr_name: str, current_value: int, target_value: int, update_key: str, external_info: ExternalInfo, group_id: str):
         headers = \
         {
             "Authorization": external_info.monday_com_api_token,
@@ -83,7 +88,7 @@ items_page_by_column_values(
     mutation{{
         create_item(
             board_id:{external_info.monday_com_okr_items_board_id},
-            group_id:"{external_info.monday_com_okr_items_group_id}",
+            group_id:"{group_id}",
             item_name:"{kr_name}",
             column_values:"{json.dumps(new_column_values).replace('"', '\\"')}"
         )
