@@ -10,7 +10,8 @@ class ExternalInfo:
     monday_com_api_url = os.environ.get("TECHFREN_MONDAY_COM_API_URL")
     # Board id you can get from the url.  To get the group id, click on your profile and go to monday labs.  From there, enable developer mode.  Once that is done, you can get the ids from the three dot menu.
     monday_com_okr_items_board_id = os.environ.get("TECHFREN_MONDAY_COM_OKR_ITEMS_BOARD_ID")
-    monday_com_okr_items_group_id =os.environ.get("TECHFREN_MONDAY_COM_OKR_ITEMS_GROUP_ID")
+    monday_com_okr_items_newsletter_subscribers_group_id =os.environ.get("TECHFREN_MONDAY_COM_OKR_ITEMS_NEWSLETTER_SUBSCRIBERS_GROUP_ID")
+    monday_com_okr_items_unique_website_visitors_group_id =os.environ.get("TECHFREN_MONDAY_COM_OKR_ITEMS_UNIQUE_WEBSITE_VISITORS_GROUP_ID")
     monday_com_okr_items_date_column_id = os.environ.get("TECHFREN_MONDAY_COM_OKR_ITEMS_DATE_COLUMN_ID")
     monday_com_okr_items_currentvalue_column_id = os.environ.get("TECHFREN_MONDAY_COM_OKR_ITEMS_CURRENTVALUE_COLUMN_ID")
     monday_com_okr_items_targetvalue_column_id = os.environ.get("TECHFREN_MONDAY_COM_OKR_ITEMS_TARGETVALUE_COLUMN_ID")

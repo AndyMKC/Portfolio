@@ -13,7 +13,10 @@ def update_unique_website_visitors_okr(external_info):
 
     # Update the OKR
     update_key = "R7_Unique_Website_Visitors"
-    MondayComClient.add_datapoint(external_info=external_info, update_key=update_key, metric=metric)
+    MondayComClient.add_datapoint(external_info=external_info,
+                                  update_key=update_key,
+                                  metric=metric,
+                                  group_id=external_info.monday_com_okr_items_unique_website_visitors_group_id)
     print("************ End:  Updating Unique Website Visitors OKR ************")
 
 def update_newsletter_subscribers_okr(external_info):
@@ -24,7 +27,10 @@ def update_newsletter_subscribers_okr(external_info):
 
     # Update the OKR
     update_key = "Newsletter_Subscribers"
-    MondayComClient.add_datapoint(external_info=external_info, update_key=update_key, metric=metric)
+    MondayComClient.add_datapoint(external_info=external_info,
+                                  update_key=update_key,
+                                  metric=metric,
+                                  group_id=external_info.monday_com_okr_items_newsletter_subscribers_group_id)
     print("************ End:  Updating Newsletter Subscribers OKR ************")
 
 def main():       
@@ -37,7 +43,8 @@ def main():
         ("TECHFREN_MONDAY_COM_API_TOKEN", external_info.monday_com_api_token),
         ("TECHFREN_MONDAY_COM_API_URL", external_info.monday_com_api_url),
         ("TECHFREN_MONDAY_COM_OKR_ITEMS_BOARD_ID", external_info.monday_com_okr_items_board_id),
-        ("TECHFREN_MONDAY_COM_OKR_ITEMS_GROUP_ID", external_info.monday_com_okr_items_group_id),
+        ("TECHFREN_MONDAY_COM_OKR_ITEMS_NEWSLETTER_SUBSCRIBERS_GROUP_ID", external_info.monday_com_okr_items_newsletter_subscribers_group_id),
+        ("TECHFREN_MONDAY_COM_OKR_ITEMS_UNIQUE_WEBSITE_VISITORS_GROUP_ID", external_info.monday_com_okr_items_unique_website_visitors_group_id),
         ("TECHFREN_MONDAY_COM_OKR_ITEMS_DATE_COLUMN_ID", external_info.monday_com_okr_items_date_column_id),
         ("TECHFREN_MONDAY_COM_OKR_ITEMS_CURRENTVALUE_COLUMN_ID", external_info.monday_com_okr_items_currentvalue_column_id),
         ("TECHFREN_MONDAY_COM_OKR_ITEMS_TARGETVALUE_COLUMN_ID", external_info.monday_com_okr_items_targetvalue_column_id),
