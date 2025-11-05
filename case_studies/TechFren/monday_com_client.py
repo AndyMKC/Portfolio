@@ -88,7 +88,7 @@ items_page_by_column_values(
     mutation{{
         create_item(
             board_id:{external_info.monday_com_okr_items_board_id},
-            group_id:"{external_info.group_id}",
+            group_id:"{group_id}",
             item_name:"{kr_name}",
             column_values:"{json.dumps(new_column_values).replace('"', '\\"')}"
         )
