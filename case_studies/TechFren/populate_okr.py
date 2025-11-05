@@ -4,23 +4,28 @@ from mailerlite_client import MailerLiteClient
 from monday_com_client import MondayComClient
 
 def update_unique_website_visitors_okr(external_info):
+    print("************ Start:  Updating Unique Website Visitors OKR ************")
     # Get the metric value
     r_window = 7
     metric_name = "activeUsers"
     metric = GoogleAnalyticsClient.fetch_ga4_metric(external_info, r_window, metric_name)
-    print("GA4 metric:", metric)
+    print("Metric:", metric)
 
     # Update the OKR
     update_key = "R7_Unique_Website_Visitors"
     MondayComClient.add_datapoint(external_info=external_info, update_key=update_key, metric=metric)
+    print("************ End:  Updating Unique Website Visitors OKR ************")
 
 def update_newsletter_subscribers_okr(external_info):
+    print("************ Start:  Updating Newsletter Subscribers OKR ************")
     # Get the metric value
     metric = MailerLiteClient.get_subscriber_count(external_info)
+    print("Metric:", metric)
 
     # Update the OKR
     update_key = "Newsletter_Subscribers"
     MondayComClient.add_datapoint(external_info=external_info, update_key=update_key, metric=metric)
+    print("************ End:  Updating Newsletter Subscribers OKR ************")
 
 def main():       
     external_info = ExternalInfo()
