@@ -1,5 +1,3 @@
-import os
-
 from external_info import ExternalInfo
 from google_analytics_client import GoogleAnalyticsClient
 from monday_com_client import MondayComClient
