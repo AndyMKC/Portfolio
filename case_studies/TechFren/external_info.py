@@ -17,3 +17,4 @@ class ExternalInfo:
     monday_com_okr_items_updatekey_column_id = os.environ.get("TECHFREN_MONDAY_COM_OKR_ITEMS_UPDATEKEY_COLUMN_ID")
 
     mailerlite_api_token = os.environ.get("TECHFREN_MAILERLITE_API_TOKEN")
+    mailerlite_api_url = os.environ.get("TECHFREN_MAILERLITE_API_URL")
