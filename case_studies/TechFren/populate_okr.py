@@ -21,9 +21,14 @@ def update_unique_website_visitors_okr(external_info):
 
 def update_newsletter_subscribers_okr(external_info):
     print("************ Start:  Updating Newsletter Subscribers OKR ************")
-    # Get the metric value
-    metric = MailerLiteClient.get_subscriber_count(external_info)
-    print("Metric:", metric)
+    # Get the list of all subscribers
+    subscribers = MailerLiteClient.fetch_all_subscribers_as_list(external_info)
+    
+    # Not all subscribers are active.  On the website, this includes people that are unsubscribed, bounced, complained about this being spam, and unconfirmed.
+    # For this, let's count only the Active people
+    active_subscribers = list(filter(lambda x: x['status'].lower() == 'active', subscribers))
+    metric = len(active_subscribers)
+    print("Metric:", metric)    
 
     # Update the OKR
     update_key = "Newsletter_Subscribers"
