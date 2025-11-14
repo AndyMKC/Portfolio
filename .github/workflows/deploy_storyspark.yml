@@ -19,6 +19,7 @@ env:
   PROJECT_ID: storyspark-5555555
   GCS_BUCKET: storyspark-5555555-terraform-state
   TF_PLAN_FILE: storyspark.tfplan
+  ARTIFACT_REPO: containers
 
   # --- GitHub Variables (used via 'vars.') ---
   GCP_PROJECT_ID: ${{ vars.STORYSPARK_GCP_PROJECT_ID }}
@@ -93,11 +94,22 @@ jobs:
 
     - name: Set IMAGE variables
       id: docker_image_vars
+      env:
+        REGION: ${{ vars.STORYSPARK_GCP_REGION }}
+        PROJECT_ID: ${{ vars.STORYSPARK_GCP_PROJECT_ID }}
       run: |
         SHORT_SHA="${GITHUB_SHA::12}"
-        IMAGE_NAME="${{ steps.branch_info.outputs.repo_name_lower }}/${{ steps.branch_info.outputs.prodOrDev }}/${{ steps.branch_info.outputs.branch_name_lower }}/${{ vars.STORYSPARK_GCP_PROJECT_ID }}:${SHORT_SHA}"
-        echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
-        echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
+        REPO_NAME="${{ steps.branch_info.outputs.repo_name_lower }}"
+        ENV_SEG="${{ steps.branch_info.outputs.prodOrDev }}"
+        BRANCH="${{ steps.branch_info.outputs.branch_name_lower }}"
+        ARTIFACT_HOST="${REGION}-docker.pkg.dev"
+        ARTIFACT_REPO="containers"
+        IMAGE_PATH="${ARTIFACT_HOST}/${PROJECT_ID}/${ARTIFACT_REPO}/${REPO_NAME}/${ENV_SEG}/${BRANCH}"
+        IMAGE_NAME="${IMAGE_PATH}:${SHORT_SHA}"
+        echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
+        echo "image_name=${IMAGE_NAME}" >> $GITHUB_OUTPUT
+        echo "image_repo_path=${IMAGE_PATH}" >> $GITHUB_OUTPUT
+
 
     - name: Build the Docker image
       working-directory: ${{ github.workspace }}/${{ env.SRC_DIR }}
@@ -107,6 +119,15 @@ jobs:
     - name: Push the Docker image
       run: |
         docker push ${{ steps.docker_image_vars.outputs.image_name }}
+
+    - name: Get pushed image digest
+      id: get_digest
+      run: |
+        IMAGE_TAG=${{ steps.docker_image_vars.outputs.short_sha }}
+        REPO_PATH=${{ steps.docker_image_vars.outputs.image_repo_path }}
+        DIGEST=$(gcloud artifacts docker images describe "${REPO_PATH}:${IMAGE_TAG}" \
+          --project="${{ vars.STORYSPARK_GCP_PROJECT_ID }}" --format='get(image_summary.digest)')
+        echo "image_ref=${REPO_PATH}@${DIGEST}" >> $GITHUB_OUTPUT
 
     - name: Terraform Init
       id: init
@@ -118,7 +139,7 @@ jobs:
           -backend-config="bucket=${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}" \
           -backend-config="prefix=${{ steps.branch_info.outputs.tf_prefix }}"
 
-    - name: Terraform Plan and Save
+    - name: Terraform Plan
       id: plan
       working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
       run: |
@@ -130,7 +151,8 @@ jobs:
           -var="zone=${{ vars.STORYSPARK_GCP_ZONE }}" \
           -var="tfstate_bucket_name=${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}" \
           -var="git_branch=${{ steps.branch_info.outputs.branch_name }}" \
-          -var="cloud_run_image=${{ steps.docker_image_vars.outputs.image_name }}" \
+          -var="cloud_run_image=${{ steps.get_digest.outputs.image_ref }}" \
+          -var="artifact_repo_id=${{ env.ARTIFACT_REPO }}"
           -lock-timeout=5m \
           -out=tfplan
 

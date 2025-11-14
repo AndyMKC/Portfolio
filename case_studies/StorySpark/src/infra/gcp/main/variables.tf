@@ -67,9 +67,13 @@ variable "base_embeddings_table_id" {
 
 variable "cloud_run_image" {
   type        = string
-  description = "Container image for Cloud Run service (public or from Artifact Registry). Example: gcr.io/cloudrun/hello"
-  default     = "gcr.io/cloudrun/hello"
+  description = "Container image reference for Cloud Run. Must be the immutable digest form: REGION-docker.pkg.dev/PROJECT/REPO/IMAGE@sha256:..."
+  validation {
+    condition     = can(regex("^[a-z0-9-]+-docker\\.pkg\\.dev/.+@sha256:[0-9a-f]{64}$", var.cloud_run_image))
+    error_message = "cloud_run_image must be an Artifact Registry digest reference (e.g. us-west1-docker.pkg.dev/project/repo/image@sha256:...)."
+  }
 }
+
 
 variable "api_key" {
   type        = string
