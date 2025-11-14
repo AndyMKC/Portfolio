@@ -99,7 +99,7 @@ jobs:
 
     - name: Build the Docker image
       run: |
-        docker build -t ${{ steps.docker_image_vars.outputs.image_tag }} .
+        docker build -file Dockerfile -t ${{ steps.docker_image_vars.outputs.image_tag }} .
 
     - name: Push the Docker image
       run: |
