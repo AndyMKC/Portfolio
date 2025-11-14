@@ -13,12 +13,11 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  #ACR_NAME: storysparkacr
-  #ACR_LOGIN_SERVER: storysparkacr.azurecr.io
   KEEP: 2
+  SRC_DIR: case_studies/StorySpark/src
   TF_GOOGLE_DIR: case_studies/StorySpark/src/infra/gcp/main
-  PROJECT_ID: storyspark-555555
-  GCS_BUCKET: storyspark-555555-terraform-state
+  PROJECT_ID: storyspark-5555555
+  GCS_BUCKET: storyspark-5555555-terraform-state
   TF_PLAN_FILE: storyspark.tfplan
 
   # --- GitHub Variables (used via 'vars.') ---
@@ -34,12 +33,10 @@ env:
 jobs:
   terraform-plan: # This job will run on PRs and main branch pushes to generate the plan
     runs-on: ubuntu-latest
-    
     permissions:
       contents: read # Need read permission for checkout
-      
+
     steps:
-    # 1. Checkout the code
     - name: Checkout repository
       uses: actions/checkout@v4
 
@@ -48,59 +45,83 @@ jobs:
         echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
         ls -R $GITHUB_WORKSPACE
 
-    # 2. Authenticate to GCP using the Service Account Key Secret
     - id: 'auth'
       name: 'Authenticate to Google Cloud via SA Key'
       uses: 'google-github-actions/auth@v2'
       with:
-        # Pass the secret key content directly to the action
         credentials_json: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
 
-    # 3. Set up Terraform
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
       with:
         terraform_version: 1.4.6
 
-    # 4. Calculate the State Prefix based on the branch name
-    - name: Calculate State Prefix
-      id: prefix
+    - name: Calculate Branch info
+      id: branch_info
       run: |
-        # Get the branch name (e.g., 'main' or 'feature/new-api')
         BRANCH_NAME=$(echo ${{ github.ref_name }} | tr '/' '-')
         echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
-        
+        echo "branch_name_lower=$BRANCH_NAME" | tr '[:upper:]' '[:lower:]' >> $GITHUB_OUTPUT
+        echo "repo_name_lower=$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]' >> $GITHUB_OUTPUT
+
         # Use 'main/infra' for the main branch, otherwise use the branch name.
         if [ "$BRANCH_NAME" == "main" ]; then
           echo "tf_prefix=terraform/main/infra" >> $GITHUB_OUTPUT
+          echo "prodOrDev=prod" >> $GITHUB_OUTPUT
         else
           echo "tf_prefix=terraform/$BRANCH_NAME/infra" >> $GITHUB_OUTPUT
+          echo "prodOrDev=dev" >> $GITHUB_OUTPUT
         fi
       shell: bash
 
     - name: Output Branch Name
       run: |
-        echo "Branch Name: ${{ steps.prefix.outputs.branch_name }}"
+        echo "Branch Name: ${{ steps.branch_info.outputs.branch_name }}"
       shell: bash
-    
-    # 5. Terraform Init - Configure GCS backend
+
+    # Set up Docker image
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: ${{ vars.STORYSPARK_GCP_PROJECT_ID }}
+
+    - name: Configure Docker auth for Artifact Registry
+      env:
+        REGION: ${{ vars.STORYSPARK_GCP_REGION }}
+      run: |
+        gcloud auth configure-docker ${REGION}-docker.pkg.dev
+
+    - name: Set IMAGE variables
+      id: docker_image_vars
+      run: |
+        SHORT_SHA="${GITHUB_SHA::12}"
+        IMAGE_NAME="${{ steps.branch_info.outputs.repo_name_lower }}/${{ steps.branch_info.outputs.prodOrDev }}/${{ steps.branch_info.outputs.branch_name_lower }}/${{ vars.STORYSPARK_GCP_PROJECT_ID }}:${SHORT_SHA}"
+        echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+        echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
+
+    - name: Build the Docker image
+      working-directory: ${{ github.workspace }}/${{ env.SRC_DIR }}
+      run: |
+        docker build --file Dockerfile --tag ${{ steps.docker_image_vars.outputs.image_name }} .
+
+    # - name: Push the Docker image
+    #   run: |
+    #     docker push ${{ steps.docker_image_vars.outputs.image_name }}
+
     - name: Terraform Init
       id: init
       working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
       run: |
-        # Initialize Terraform and configure the GCS backend for state locking and persistence
         terraform init \
           -input=false \
           -reconfigure \
           -backend-config="bucket=${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}" \
-          -backend-config="prefix=${{ steps.prefix.outputs.tf_prefix }}"
+          -backend-config="prefix=${{ steps.branch_info.outputs.tf_prefix }}"
 
-    # 6. Terraform Plan & Save Artifact
     - name: Terraform Plan and Save
       id: plan
       working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
       run: |
-        # Generate the plan and save it to a file (tfplan) for the next job
         terraform plan \
           -input=false \
           -var="project_id=${{ vars.STORYSPARK_GCP_PROJECT_ID }}" \
@@ -108,62 +129,50 @@ jobs:
           -var="region=${{ vars.STORYSPARK_GCP_REGION }}" \
           -var="zone=${{ vars.STORYSPARK_GCP_ZONE }}" \
           -var="tfstate_bucket_name=${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}" \
-          -var="git_branch=${{ steps.prefix.outputs.branch_name }}" \
+          -var="git_branch=${{ steps.branch_info.outputs.branch_name }}" \
+          -var="cloud_run_image=${{ steps.docker_image_vars.outputs.image_name }}" \
           -lock-timeout=5m \
-          -out=tfplan          
-    
-    # 7. Upload the generated plan file for the next job (Apply)
+          -out=tfplan
+
     - name: Upload Terraform Plan Artifact
       uses: actions/upload-artifact@v4
       with:
         name: tfplan-artifact
         path: ${{ env.TF_GOOGLE_DIR }}
 
-  terraform-apply: # New job: Runs only on push to 'main' and requires 'plan' to succeed
+  terraform-apply:
     runs-on: ubuntu-latest
-    
-    # 1. Dependency: This job runs only after the 'plan' job successfully completes.
     needs: [terraform-plan]
-    
-    # 2. Condition: This job must only run the 'main' branch.
-    if: github.ref == 'refs/heads/main' 
-    
+    if: github.ref == 'refs/heads/main'
     permissions:
-      contents: read # Need read permission for artifact download
-      
+      contents: read
+
     steps:
-    # 1. Checkout the code (Needed for environment consistency/context, though plan artifact has the changes)
     - name: Checkout repository
       uses: actions/checkout@v4
-      
-    # 2. Authenticate to GCP using the Service Account Key Secret
-    - id: 'auth'
-      name: 'Authenticate to Google Cloud via SA Key'
-      uses: 'google-github-actions/auth@v2'
+
+    - name: Authenticate to Google Cloud via SA Key
+      uses: google-github-actions/auth@v2
       with:
         credentials_json: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
 
-    # 3. Set up Terraform
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
       with:
         terraform_version: 1.4.6
-        
-    # 4. Download the generated plan file
+
     - name: Download Terraform Plan Artifact
       uses: actions/download-artifact@v4
       with:
         name: tfplan-artifact
         path: ${{ env.TF_GOOGLE_DIR }}
-        
-    # 5. Calculate the State Prefix based on the branch name
+
     - name: Calculate State Prefix
       id: prefix
       run: |
-        # Get the branch name (e.g., 'main' or 'feature/new-api')
         BRANCH_NAME=$(echo ${{ github.ref_name }} | tr '/' '-')
         echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
-        
+
         # Use 'main/infra' for the main branch, otherwise use the branch name.
         if [ "$BRANCH_NAME" == "main" ]; then
           echo "tf_prefix=terraform/main/infra" >> $GITHUB_OUTPUT
@@ -174,29 +183,24 @@ jobs:
 
     - name: Output Branch Name
       run: |
-        echo "Branch Name: ${{ steps.prefix.outputs.branch_name }}"
+        echo "Branch Name: ${{ steps.branch_info.outputs.branch_name }}"
       shell: bash
-    
-    # 6. Terraform Init (required before apply to ensure backend configuration)
+
     - name: Terraform Init
       id: init
       working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
       run: |
-        # Re-initialize to configure the GCS backend (state is needed for apply)
         terraform init \
           -input=false \
           -reconfigure \
           -backend-config="bucket=${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}" \
-          -backend-config="prefix=${{ steps.prefix.outputs.tf_prefix }}"
-          
-    # 7. Terraform Apply the saved plan
+          -backend-config="prefix=${{ steps.branch_info.outputs.tf_prefix }}"
+
     - name: Terraform Apply
       working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
       run: |
-        # Execute the apply using the downloaded plan file
         terraform apply \
           -input=false \
           -auto-approve \
           -lock-timeout=5m \
-          tfplan 
-
+          tfplan

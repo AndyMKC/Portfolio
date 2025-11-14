@@ -34,9 +34,9 @@ output "embeddings_table_fqn" {
   value = "${var.project_id}.${google_bigquery_dataset.embeddings.dataset_id}.${google_bigquery_table.embeddings_table.table_id}"
 }
 
-output "cloud_run_url" {
-  value = google_cloud_run_service.storyspark_service.status[0].url
-}
+# output "cloud_run_url" {
+#   value = google_cloud_run_service.storyspark_service.status[0].url
+# }
 
 output "service_account_bq_vertex" {
   value = "${local.sa_bq_vertex}@${local.service_account_suffix}"
@@ -48,4 +48,16 @@ output "service_account_cloudrun" {
 
 output "branch_name" {
   value = var.git_branch
+}
+
+output "artifact_repository_id" {
+  value = google_artifact_registry_repository.docker_repo.repository_id
+}
+
+output "artifact_repository_host" {
+  value = "${var.region}-docker.pkg.dev"
+}
+
+output "artifact_repository_path" {
+  value = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.docker_repo.repository_id}"
 }

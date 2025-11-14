@@ -80,6 +80,15 @@ resource "google_project_service" "artifactregistry" {
   service = "artifactregistry.googleapis.com"
 }
 
+# Artifact Registry Docker repository
+resource "google_artifact_registry_repository" "docker_repo" {
+  project       = var.project_id
+  location      = var.region
+  repository_id = var.artifact_repo_id
+  format        = "DOCKER"
+  description   = "Docker repo for StorySpark images"
+}
+
 resource "google_project_service" "iam" {
   project = var.project_id
   service = "iam.googleapis.com"
@@ -166,57 +175,57 @@ resource "google_project_iam_member" "run_sa_vertex" {
 }
 
 # Cloud Run service
-resource "google_cloud_run_service" "storyspark_service" {
-  name     = local.service_name
-  location = var.region
-  project  = var.project_id
+# resource "google_cloud_run_service" "storyspark_service" {
+#   name     = local.service_name
+#   location = var.region
+#   project  = var.project_id
 
-  template {
-    spec {
-      service_account_name = "${local.sa_cloudrun}@${local.service_account_suffix}"
-      containers {
-        image = var.cloud_run_image
-        ports {
-          container_port = 8080
-        }
-        env {
-          name  = "BQ_DATASET"
-          value = google_bigquery_dataset.embeddings.dataset_id
-        }
-        env {
-          name  = "SOURCE_TABLE"
-          value = google_bigquery_table.source_table.table_id
-        }
-        env {
-          name  = "EMBED_TABLE"
-          value = google_bigquery_table.embeddings_table.table_id
-        }
-        env {
-          name  = "API_KEY"
-          value = var.api_key
-        }
-        env {
-          name  = "ENV"
-          value = local.env_suffix
-        }
-      }
-    }
-  }
+#   template {
+#     spec {
+#       service_account_name = "${local.sa_cloudrun}@${local.service_account_suffix}"
+#       containers {
+#         image = var.cloud_run_image
+#         ports {
+#           container_port = 8080
+#         }
+#         env {
+#           name  = "BQ_DATASET"
+#           value = google_bigquery_dataset.embeddings.dataset_id
+#         }
+#         env {
+#           name  = "SOURCE_TABLE"
+#           value = google_bigquery_table.source_table.table_id
+#         }
+#         env {
+#           name  = "EMBED_TABLE"
+#           value = google_bigquery_table.embeddings_table.table_id
+#         }
+#         env {
+#           name  = "API_KEY"
+#           value = var.api_key
+#         }
+#         env {
+#           name  = "ENV"
+#           value = local.env_suffix
+#         }
+#       }
+#     }
+#   }
 
-  traffic {
-    percent         = 100
-    latest_revision = true
-  }
-}
+#   traffic {
+#     percent         = 100
+#     latest_revision = true
+#   }
+# }
 
 # Allow unauthenticated access to Cloud Run (public endpoint)
-resource "google_cloud_run_service_iam_member" "allow_unauth" {
-  location = google_cloud_run_service.storyspark_service.location
-  project  = var.project_id
-  service  = google_cloud_run_service.storyspark_service.name
-  role     = "roles/run.invoker"
-  member   = "allUsers"
-}
+# resource "google_cloud_run_service_iam_member" "allow_unauth" {
+#   location = google_cloud_run_service.storyspark_service.location
+#   project  = var.project_id
+#   service  = google_cloud_run_service.storyspark_service.name
+#   role     = "roles/run.invoker"
+#   member   = "allUsers"
+# }
 
 #
 # API Gateway and Compute (Cloud Run)

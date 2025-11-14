@@ -1,15 +1,45 @@
 {
-    "version": "0.2.0",
-    "configurations": [
+  "version": "0.2.0",
+  "configurations": [
+
+    {
+      "name": "Uvicorn: module (debug)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": ["app.main:app", "--host", "127.0.0.1", "--port", "8000"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": false
+    },
+    {
+      "name": "Python: Run app/main.py (debug)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/app/main.py",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "env": {
+        "HOST": "127.0.0.1",
+        "PORT": "8000"
+      },
+      "justMyCode": false
+    },
+    {
+      "name": "Attach to Docker (debugpy)",
+      "type": "debugpy",
+      "request": "attach",
+      "connect": {
+        "host": "localhost",
+        "port": 5678
+      },
+      "pathMappings": [
         {
-            "name": "Attach to Python Functions",
-            "type": "debugpy",
-            "request": "attach",
-            "connect": {
-                "host": "localhost",
-                "port": 9091
-            },
-            "preLaunchTask": "func: host start"
+          "localRoot": "${workspaceFolder}",
+          "remoteRoot": "/app"
         }
-    ]
+      ],
+      "justMyCode": false
+    }
+  ]
 }
