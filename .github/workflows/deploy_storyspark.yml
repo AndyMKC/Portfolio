@@ -55,23 +55,27 @@ jobs:
       with:
         terraform_version: 1.4.6
 
-    - name: Calculate State Prefix
-      id: prefix
+    - name: Calculate Branch info
+      id: branch_info
       run: |
         BRANCH_NAME=$(echo ${{ github.ref_name }} | tr '/' '-')
         echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+        echo "branch_name_lower=$BRANCH_NAME" | tr '[:upper:]' '[:lower:]' >> $GITHUB_OUTPUT
+        echo "repo_name_lower=$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]' >> $GITHUB_OUTPUT
 
         # Use 'main/infra' for the main branch, otherwise use the branch name.
         if [ "$BRANCH_NAME" == "main" ]; then
           echo "tf_prefix=terraform/main/infra" >> $GITHUB_OUTPUT
+          echo "prodOrDev=prod" >> $GITHUB_OUTPUT
         else
           echo "tf_prefix=terraform/$BRANCH_NAME/infra" >> $GITHUB_OUTPUT
+          echo "prodOrDev=dev" >> $GITHUB_OUTPUT
         fi
       shell: bash
 
     - name: Output Branch Name
       run: |
-        echo "Branch Name: ${{ steps.prefix.outputs.branch_name }}"
+        echo "Branch Name: ${{ steps.branch_info.outputs.branch_name }}"
       shell: bash
 
     # Set up Docker image
@@ -90,7 +94,7 @@ jobs:
       id: docker_image_vars
       run: |
         SHORT_SHA="${GITHUB_SHA::12}"
-        IMAGE_NAME="${GITHUB_REPOSITORY}/${{ steps.prefix.outputs.branch_name }}/${{ vars.STORYSPARK_GCP_PROJECT_ID }}:${SHORT_SHA}"
+        IMAGE_NAME="${{ steps.branch_info.outputs.repo_name_lower }}/${{ steps.branch_info.outputs.prodOrDev }}/${{ steps.branch_info.outputs.branch_name_lower }}/${{ vars.STORYSPARK_GCP_PROJECT_ID }}:${SHORT_SHA}"
         echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
         echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
 
@@ -110,7 +114,7 @@ jobs:
           -input=false \
           -reconfigure \
           -backend-config="bucket=${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}" \
-          -backend-config="prefix=${{ steps.prefix.outputs.tf_prefix }}"
+          -backend-config="prefix=${{ steps.branch_info.outputs.tf_prefix }}"
 
     - name: Terraform Plan and Save
       id: plan
@@ -123,7 +127,7 @@ jobs:
           -var="region=${{ vars.STORYSPARK_GCP_REGION }}" \
           -var="zone=${{ vars.STORYSPARK_GCP_ZONE }}" \
           -var="tfstate_bucket_name=${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}" \
-          -var="git_branch=${{ steps.prefix.outputs.branch_name }}" \
+          -var="git_branch=${{ steps.branch_info.outputs.branch_name }}" \
           -var="cloud_run_image=${{ steps.docker_image_vars.outputs.image_name }}" \
           -lock-timeout=5m \
           -out=tfplan
@@ -177,7 +181,7 @@ jobs:
 
     - name: Output Branch Name
       run: |
-        echo "Branch Name: ${{ steps.prefix.outputs.branch_name }}"
+        echo "Branch Name: ${{ steps.branch_info.outputs.branch_name }}"
       shell: bash
 
     - name: Terraform Init
@@ -188,7 +192,7 @@ jobs:
           -input=false \
           -reconfigure \
           -backend-config="bucket=${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}" \
-          -backend-config="prefix=${{ steps.prefix.outputs.tf_prefix }}"
+          -backend-config="prefix=${{ steps.branch_info.outputs.tf_prefix }}"
 
     - name: Terraform Apply
       working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
