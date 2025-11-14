@@ -152,7 +152,7 @@ jobs:
           -var="tfstate_bucket_name=${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}" \
           -var="git_branch=${{ steps.branch_info.outputs.branch_name }}" \
           -var="cloud_run_image=${{ steps.get_digest.outputs.image_ref }}" \
-          -var="artifact_repo_id=${{ env.ARTIFACT_REPO }}"
+          -var="artifact_repo_id=${{ env.ARTIFACT_REPO }}" \
           -lock-timeout=5m \
           -out=tfplan
 
