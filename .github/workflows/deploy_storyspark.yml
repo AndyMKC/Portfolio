@@ -127,7 +127,7 @@ jobs:
           -var="zone=${{ vars.STORYSPARK_GCP_ZONE }}" \
           -var="tfstate_bucket_name=${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}" \
           -var="git_branch=${{ steps.prefix.outputs.branch_name }}" \
-          -var="docker_image_path=${{ steps.docker_image_vars.outputs.image_path }}" \
+          -var="cloud_run_image=${{ steps.docker_image_vars.outputs.image_tag }}" \
           -lock-timeout=5m \
           -out=tfplan
 
