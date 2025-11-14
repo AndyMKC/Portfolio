@@ -105,9 +105,9 @@ jobs:
         ls -la
         docker build --file Dockerfile --tag ${{ steps.docker_image_vars.outputs.image_name }} .
 
-    - name: Push the Docker image
-      run: |
-        docker push ${{ steps.docker_image_vars.outputs.image_name }}
+    # - name: Push the Docker image
+    #   run: |
+    #     docker push ${{ steps.docker_image_vars.outputs.image_name }}
 
     - name: Terraform Init
       id: init

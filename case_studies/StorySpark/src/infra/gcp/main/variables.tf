@@ -80,7 +80,7 @@ variable "api_key" {
 variable "artifact_repo_id" {
   type        = string
   description = "Artifact Registry repository id (name)"
-  default     = ""
+  default     = "containers"
 }
 
 variable "ci_service_account_email" {
