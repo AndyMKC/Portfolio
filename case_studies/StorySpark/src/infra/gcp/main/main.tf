@@ -80,6 +80,15 @@ resource "google_project_service" "artifactregistry" {
   service = "artifactregistry.googleapis.com"
 }
 
+# Artifact Registry Docker repository
+resource "google_artifact_registry_repository" "docker_repo" {
+  project       = var.project_id
+  location      = var.region
+  repository_id = var.artifact_repo_id
+  format        = "DOCKER"
+  description   = "Docker repo for StorySpark images"
+}
+
 resource "google_project_service" "iam" {
   project = var.project_id
   service = "iam.googleapis.com"

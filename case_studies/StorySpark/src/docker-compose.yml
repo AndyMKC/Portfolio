@@ -1,0 +1,15 @@
+services:
+  storyspark:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: storyspark:prod
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - PYTHONUNBUFFERED=1
+    # production: no source mounts, use the image's copied code
+    command: ["uvicorn", "app.main:app", "--host","0.0.0.0", "--port", "8080", "--ws", "auto"]
+
+    restart: unless-stopped

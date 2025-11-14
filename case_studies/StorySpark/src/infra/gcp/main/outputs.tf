@@ -49,3 +49,15 @@ output "service_account_cloudrun" {
 output "branch_name" {
   value = var.git_branch
 }
+
+output "artifact_repository_id" {
+  value = google_artifact_registry_repository.docker_repo.repository_id
+}
+
+output "artifact_repository_host" {
+  value = "${var.region}-docker.pkg.dev"
+}
+
+output "artifact_repository_path" {
+  value = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.docker_repo.repository_id}"
+}
