@@ -219,13 +219,13 @@ resource "google_project_iam_member" "run_sa_vertex" {
 # }
 
 # Allow unauthenticated access to Cloud Run (public endpoint)
-resource "google_cloud_run_service_iam_member" "allow_unauth" {
-  location = google_cloud_run_service.storyspark_service.location
-  project  = var.project_id
-  service  = google_cloud_run_service.storyspark_service.name
-  role     = "roles/run.invoker"
-  member   = "allUsers"
-}
+# resource "google_cloud_run_service_iam_member" "allow_unauth" {
+#   location = google_cloud_run_service.storyspark_service.location
+#   project  = var.project_id
+#   service  = google_cloud_run_service.storyspark_service.name
+#   role     = "roles/run.invoker"
+#   member   = "allUsers"
+# }
 
 #
 # API Gateway and Compute (Cloud Run)
