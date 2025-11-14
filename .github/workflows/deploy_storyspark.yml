@@ -32,7 +32,7 @@ env:
   GCP_TERRAFORM_SA_KEY_JSON: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
 
 jobs:
-  terraform-plan: # This job will run on PRs and main branch pushes to generate the plan
+  setup:
     runs-on: ubuntu-latest
     permissions:
       contents: read # Need read permission for checkout
@@ -42,20 +42,9 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Debug repo structure
+      working-directory: ${{ github.workspace }}/${{ env.SRC_DIR }}
       run: |
-        echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
-        ls -R $GITHUB_WORKSPACE
-
-    - id: 'auth'
-      name: 'Authenticate to Google Cloud via SA Key'
-      uses: 'google-github-actions/auth@v2'
-      with:
-        credentials_json: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
-
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
-      with:
-        terraform_version: 1.4.6
+        ls -la
 
     - name: Calculate Branch info
       id: branch_info
@@ -67,10 +56,8 @@ jobs:
 
         # Use 'main/infra' for the main branch, otherwise use the branch name.
         if [ "$BRANCH_NAME" == "main" ]; then
-          echo "tf_prefix=terraform/main/infra" >> $GITHUB_OUTPUT
           echo "prodOrDev=prod" >> $GITHUB_OUTPUT
         else
-          echo "tf_prefix=terraform/$BRANCH_NAME/infra" >> $GITHUB_OUTPUT
           echo "prodOrDev=dev" >> $GITHUB_OUTPUT
         fi
       shell: bash
@@ -79,8 +66,25 @@ jobs:
       run: |
         echo "Branch Name: ${{ steps.branch_info.outputs.branch_name }}"
       shell: bash
+  
+#-------------------------------------------------------------------------------------------------------------------------
+      
+  docker-build-push:
+    runs-on: ubuntu-latest
+    needs: [setup]
+    permissions:
+      contents: read # Need read permission for checkout
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - id: 'auth'
+      name: 'Authenticate to Google Cloud via SA Key'
+      uses: 'google-github-actions/auth@v2'
+      with:
+        credentials_json: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
 
-    # Set up Docker image
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
       with:
@@ -99,17 +103,17 @@ jobs:
         PROJECT_ID: ${{ vars.STORYSPARK_GCP_PROJECT_ID }}
       run: |
         SHORT_SHA="${GITHUB_SHA::12}"
-        REPO_NAME="${{ steps.branch_info.outputs.repo_name_lower }}"
-        ENV_SEG="${{ steps.branch_info.outputs.prodOrDev }}"
-        BRANCH="${{ steps.branch_info.outputs.branch_name_lower }}"
+        REPO_NAME="${{ needs.setup.outputs.repo_name_lower }}"
+        ENV_SEG="${{ needs.setup.outputs.prodOrDev }}"
+        BRANCH="${{ needs.setup.outputs.branch_name_lower }}"
         ARTIFACT_HOST="${REGION}-docker.pkg.dev"
-        ARTIFACT_REPO="containers"
+        ARTIFACT_REPO=${{ env.ARTIFACT_REPO }}
+        
         IMAGE_PATH="${ARTIFACT_HOST}/${PROJECT_ID}/${ARTIFACT_REPO}/${REPO_NAME}/${ENV_SEG}/${BRANCH}"
         IMAGE_NAME="${IMAGE_PATH}:${SHORT_SHA}"
         echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
         echo "image_name=${IMAGE_NAME}" >> $GITHUB_OUTPUT
         echo "image_repo_path=${IMAGE_PATH}" >> $GITHUB_OUTPUT
-
 
     - name: Build the Docker image
       working-directory: ${{ github.workspace }}/${{ env.SRC_DIR }}
@@ -129,6 +133,42 @@ jobs:
           --project="${{ vars.STORYSPARK_GCP_PROJECT_ID }}" --format='get(image_summary.digest)')
         echo "image_ref=${REPO_PATH}@${DIGEST}" >> $GITHUB_OUTPUT
 
+#-------------------------------------------------------------------------------------------------------------------------
+
+  terraform-plan: # This job will run on PRs and main branch pushes to generate the plan
+    runs-on: ubuntu-latest
+    needs: [setup, docker-build-push]
+    permissions:
+      contents: read # Need read permission for checkout
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - id: 'auth'
+      name: 'Authenticate to Google Cloud via SA Key'
+      uses: 'google-github-actions/auth@v2'
+      with:
+        credentials_json: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.4.6
+
+    - name: Calculate Branch info
+      id: tf_prefixes
+      run: |
+        PROD_OR_DEV="${{ needs.setup.outputs.prodOrDev }}"
+        BRANCH_NAME="${{ needs.setup.outputs.branch_name }}"
+
+        if [ "${PROD_OR_DEV}" = "prod" ]; then
+            echo "tf_prefix=terraform/main/infra" >> $GITHUB_OUTPUT
+          else
+            echo "tf_prefix=terraform/${BRANCH_NAME}/infra" >> $GITHUB_OUTPUT
+        fi
+      shell: bash
+
     - name: Terraform Init
       id: init
       working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
@@ -137,7 +177,7 @@ jobs:
           -input=false \
           -reconfigure \
           -backend-config="bucket=${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}" \
-          -backend-config="prefix=${{ steps.branch_info.outputs.tf_prefix }}"
+          -backend-config="prefix=${{ steps.tf_prefixes.outputs.tf_prefix }}"
 
     - name: Terraform Plan
       id: plan
@@ -150,8 +190,8 @@ jobs:
           -var="region=${{ vars.STORYSPARK_GCP_REGION }}" \
           -var="zone=${{ vars.STORYSPARK_GCP_ZONE }}" \
           -var="tfstate_bucket_name=${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}" \
-          -var="git_branch=${{ steps.branch_info.outputs.branch_name }}" \
-          -var="cloud_run_image=${{ steps.get_digest.outputs.image_ref }}" \
+          -var="git_branch=${{ needs.setup.outputs.branch_name }}" \
+          -var="cloud_run_image=${{ needs.docker-build-push.outputs.image_ref }}" \
           -var="artifact_repo_id=${{ env.ARTIFACT_REPO }}" \
           -lock-timeout=5m \
           -out=tfplan
@@ -162,9 +202,11 @@ jobs:
         name: tfplan-artifact
         path: ${{ env.TF_GOOGLE_DIR }}
 
+#-------------------------------------------------------------------------------------------------------------------------
+
   terraform-apply:
     runs-on: ubuntu-latest
-    needs: [terraform-plan]
+    needs: [terraform-plan, setup]
     if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
@@ -189,23 +231,9 @@ jobs:
         name: tfplan-artifact
         path: ${{ env.TF_GOOGLE_DIR }}
 
-    - name: Calculate State Prefix
-      id: prefix
-      run: |
-        BRANCH_NAME=$(echo ${{ github.ref_name }} | tr '/' '-')
-        echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
-
-        # Use 'main/infra' for the main branch, otherwise use the branch name.
-        if [ "$BRANCH_NAME" == "main" ]; then
-          echo "tf_prefix=terraform/main/infra" >> $GITHUB_OUTPUT
-        else
-          echo "tf_prefix=terraform/$BRANCH_NAME/infra" >> $GITHUB_OUTPUT
-        fi
-      shell: bash
-
     - name: Output Branch Name
       run: |
-        echo "Branch Name: ${{ steps.branch_info.outputs.branch_name }}"
+        echo "Branch Name: ${{ needs.setup.outputs.branch_name }}"
       shell: bash
 
     - name: Terraform Init
@@ -216,7 +244,7 @@ jobs:
           -input=false \
           -reconfigure \
           -backend-config="bucket=${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}" \
-          -backend-config="prefix=${{ steps.branch_info.outputs.tf_prefix }}"
+          -backend-config="prefix=${{ needs.terraform-plan.outputs.tf_prefix }}"
 
     - name: Terraform Apply
       working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
