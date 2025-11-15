@@ -19,6 +19,7 @@ env:
   PROJECT_ID: storyspark-5555555
   GCS_BUCKET: storyspark-5555555-terraform-state
   TF_PLAN_FILE: storyspark.tfplan
+  ARTIFACT_REPO: containers
 
   # --- GitHub Variables (used via 'vars.') ---
   GCP_PROJECT_ID: ${{ vars.STORYSPARK_GCP_PROJECT_ID }}
@@ -31,8 +32,14 @@ env:
   GCP_TERRAFORM_SA_KEY_JSON: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
 
 jobs:
-  terraform-plan: # This job will run on PRs and main branch pushes to generate the plan
+  setup:
     runs-on: ubuntu-latest
+    outputs:
+      short_sha: ${{ steps.branch_info.outputs.short_sha }}
+      branch_name: ${{ steps.branch_info.outputs.branch_name }}
+      branch_name_lower: ${{ steps.branch_info.outputs.branch_name_lower }}
+      repo_name_lower: ${{ steps.branch_info.outputs.repo_name_lower }}
+      prodOrDev: ${{ steps.branch_info.outputs.prodOrDev }}
     permissions:
       contents: read # Need read permission for checkout
 
@@ -41,35 +48,28 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Debug repo structure
+      working-directory: ${{ github.workspace }}/${{ env.SRC_DIR }}
       run: |
-        echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
-        ls -R $GITHUB_WORKSPACE
-
-    - id: 'auth'
-      name: 'Authenticate to Google Cloud via SA Key'
-      uses: 'google-github-actions/auth@v2'
-      with:
-        credentials_json: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
-
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
-      with:
-        terraform_version: 1.4.6
+        ls -la
 
     - name: Calculate Branch info
       id: branch_info
       run: |
+        SHORT_SHA="${GITHUB_SHA::12}"
+        echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+
         BRANCH_NAME=$(echo ${{ github.ref_name }} | tr '/' '-')
-        echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
-        echo "branch_name_lower=$BRANCH_NAME" | tr '[:upper:]' '[:lower:]' >> $GITHUB_OUTPUT
-        echo "repo_name_lower=$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]' >> $GITHUB_OUTPUT
+        BRANCH_NAME_LOWER=$(echo "${BRANCH_NAME}" | tr '[:upper:]' '[:lower:]')
+        REPO_LOWER=$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')
+
+        echo "branch_name=${BRANCH_NAME}" >> $GITHUB_OUTPUT
+        echo "branch_name_lower=${BRANCH_NAME_LOWER}" >> $GITHUB_OUTPUT
+        echo "repo_name_lower=${REPO_LOWER}" >> $GITHUB_OUTPUT
 
         # Use 'main/infra' for the main branch, otherwise use the branch name.
         if [ "$BRANCH_NAME" == "main" ]; then
-          echo "tf_prefix=terraform/main/infra" >> $GITHUB_OUTPUT
           echo "prodOrDev=prod" >> $GITHUB_OUTPUT
         else
-          echo "tf_prefix=terraform/$BRANCH_NAME/infra" >> $GITHUB_OUTPUT
           echo "prodOrDev=dev" >> $GITHUB_OUTPUT
         fi
       shell: bash
@@ -78,8 +78,27 @@ jobs:
       run: |
         echo "Branch Name: ${{ steps.branch_info.outputs.branch_name }}"
       shell: bash
+  
+#-------------------------------------------------------------------------------------------------------------------------
+      
+  docker-build-push:
+    runs-on: ubuntu-latest
+    needs: [setup]
+    outputs:
+      image_ref: ${{ steps.get_digest.outputs.image_ref}}
+    permissions:
+      contents: read # Need read permission for checkout
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - id: 'auth'
+      name: 'Authenticate to Google Cloud via SA Key'
+      uses: 'google-github-actions/auth@v2'
+      with:
+        credentials_json: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
 
-    # Set up Docker image
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
       with:
@@ -93,20 +112,85 @@ jobs:
 
     - name: Set IMAGE variables
       id: docker_image_vars
+      env:
+        REGION: ${{ vars.STORYSPARK_GCP_REGION }}
+        PROJECT_ID: ${{ vars.STORYSPARK_GCP_PROJECT_ID }}
       run: |
-        SHORT_SHA="${GITHUB_SHA::12}"
-        IMAGE_NAME="${{ steps.branch_info.outputs.repo_name_lower }}/${{ steps.branch_info.outputs.prodOrDev }}/${{ steps.branch_info.outputs.branch_name_lower }}/${{ vars.STORYSPARK_GCP_PROJECT_ID }}:${SHORT_SHA}"
-        echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
-        echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
+        SHORT_SHA="${{ needs.setup.outputs.short_sha }}"
+        REPO_NAME="${{ needs.setup.outputs.repo_name_lower }}"
+        ENV_SEG="${{ needs.setup.outputs.prodOrDev }}"
+        BRANCH="${{ needs.setup.outputs.branch_name_lower }}"
+        ARTIFACT_HOST="${REGION}-docker.pkg.dev"
+        ARTIFACT_REPO=${{ env.ARTIFACT_REPO }}
+
+        echo "-----------------------------------"
+        echo "SHORT_SHA -- ${SHORT_SHA}"
+        echo "REPO_NAME -- ${REPO_NAME}"
+        echo "ENV_SEG - ${ENV_SEG}"
+        echo "BRANCH -- ${BRANCH}"
+        echo "-----------------------------------"
+        
+        IMAGE_PATH="${ARTIFACT_HOST}/${PROJECT_ID}/${ARTIFACT_REPO}/${REPO_NAME}/${ENV_SEG}/${BRANCH}"
+        IMAGE_NAME="${IMAGE_PATH}:${SHORT_SHA}"
+        echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
+        echo "image_name=${IMAGE_NAME}" >> $GITHUB_OUTPUT
+        echo "image_repo_path=${IMAGE_PATH}" >> $GITHUB_OUTPUT
 
     - name: Build the Docker image
       working-directory: ${{ github.workspace }}/${{ env.SRC_DIR }}
       run: |
         docker build --file Dockerfile --tag ${{ steps.docker_image_vars.outputs.image_name }} .
 
-    # - name: Push the Docker image
-    #   run: |
-    #     docker push ${{ steps.docker_image_vars.outputs.image_name }}
+    - name: Push the Docker image
+      run: |
+        docker push ${{ steps.docker_image_vars.outputs.image_name }}
+
+    - name: Get pushed image digest
+      id: get_digest
+      run: |
+        IMAGE_TAG=${{ steps.docker_image_vars.outputs.short_sha }}
+        REPO_PATH=${{ steps.docker_image_vars.outputs.image_repo_path }}
+        DIGEST=$(gcloud artifacts docker images describe "${REPO_PATH}:${IMAGE_TAG}" \
+          --project="${{ vars.STORYSPARK_GCP_PROJECT_ID }}" --format='get(image_summary.digest)')
+        echo "image_ref=${REPO_PATH}@${DIGEST}" >> $GITHUB_OUTPUT
+
+#-------------------------------------------------------------------------------------------------------------------------
+
+  terraform-plan: # This job will run on PRs and main branch pushes to generate the plan
+    runs-on: ubuntu-latest
+    needs: [setup, docker-build-push]
+    outputs:
+      tf_prefix: ${{ steps.tf_prefixes.outputs.tf_prefix }}
+    permissions:
+      contents: read # Need read permission for checkout
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - id: 'auth'
+      name: 'Authenticate to Google Cloud via SA Key'
+      uses: 'google-github-actions/auth@v2'
+      with:
+        credentials_json: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.4.6
+
+    - name: Calculate Branch info
+      id: tf_prefixes
+      run: |
+        PROD_OR_DEV="${{ needs.setup.outputs.prodOrDev }}"
+        BRANCH_NAME="${{ needs.setup.outputs.branch_name }}"
+
+        if [ "${PROD_OR_DEV}" = "prod" ]; then
+            echo "tf_prefix=terraform/main/infra" >> $GITHUB_OUTPUT
+          else
+            echo "tf_prefix=terraform/${BRANCH_NAME}/infra" >> $GITHUB_OUTPUT
+        fi
+      shell: bash
 
     - name: Terraform Init
       id: init
@@ -116,9 +200,9 @@ jobs:
           -input=false \
           -reconfigure \
           -backend-config="bucket=${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}" \
-          -backend-config="prefix=${{ steps.branch_info.outputs.tf_prefix }}"
+          -backend-config="prefix=${{ steps.tf_prefixes.outputs.tf_prefix }}"
 
-    - name: Terraform Plan and Save
+    - name: Terraform Plan
       id: plan
       working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
       run: |
@@ -129,8 +213,9 @@ jobs:
           -var="region=${{ vars.STORYSPARK_GCP_REGION }}" \
           -var="zone=${{ vars.STORYSPARK_GCP_ZONE }}" \
           -var="tfstate_bucket_name=${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}" \
-          -var="git_branch=${{ steps.branch_info.outputs.branch_name }}" \
-          -var="cloud_run_image=${{ steps.docker_image_vars.outputs.image_name }}" \
+          -var="git_branch=${{ needs.setup.outputs.branch_name }}" \
+          -var="cloud_run_image=${{ needs.docker-build-push.outputs.image_ref }}" \
+          -var="artifact_repo_id=${{ env.ARTIFACT_REPO }}" \
           -lock-timeout=5m \
           -out=tfplan
 
@@ -140,9 +225,11 @@ jobs:
         name: tfplan-artifact
         path: ${{ env.TF_GOOGLE_DIR }}
 
+#-------------------------------------------------------------------------------------------------------------------------
+
   terraform-apply:
     runs-on: ubuntu-latest
-    needs: [terraform-plan]
+    needs: [terraform-plan, setup]
     if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
@@ -167,23 +254,9 @@ jobs:
         name: tfplan-artifact
         path: ${{ env.TF_GOOGLE_DIR }}
 
-    - name: Calculate State Prefix
-      id: prefix
-      run: |
-        BRANCH_NAME=$(echo ${{ github.ref_name }} | tr '/' '-')
-        echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
-
-        # Use 'main/infra' for the main branch, otherwise use the branch name.
-        if [ "$BRANCH_NAME" == "main" ]; then
-          echo "tf_prefix=terraform/main/infra" >> $GITHUB_OUTPUT
-        else
-          echo "tf_prefix=terraform/$BRANCH_NAME/infra" >> $GITHUB_OUTPUT
-        fi
-      shell: bash
-
     - name: Output Branch Name
       run: |
-        echo "Branch Name: ${{ steps.branch_info.outputs.branch_name }}"
+        echo "Branch Name: ${{ needs.setup.outputs.branch_name }}"
       shell: bash
 
     - name: Terraform Init
@@ -194,7 +267,7 @@ jobs:
           -input=false \
           -reconfigure \
           -backend-config="bucket=${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}" \
-          -backend-config="prefix=${{ steps.branch_info.outputs.tf_prefix }}"
+          -backend-config="prefix=${{ needs.terraform-plan.outputs.tf_prefix }}"
 
     - name: Terraform Apply
       working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
