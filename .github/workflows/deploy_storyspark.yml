@@ -49,9 +49,13 @@ jobs:
     - name: Calculate Branch info
       id: branch_info
       run: |
+        SHORT_SHA="${GITHUB_SHA::12}"
+        echo "branch_name=$SHORT_SHA" >> $GITHUB_OUTPUT
+
         BRANCH_NAME=$(echo ${{ github.ref_name }} | tr '/' '-')
         echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
         echo "branch_name_lower=$BRANCH_NAME" | tr '[:upper:]' '[:lower:]' >> $GITHUB_OUTPUT
+
         echo "repo_name_lower=$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]' >> $GITHUB_OUTPUT
 
         # Use 'main/infra' for the main branch, otherwise use the branch name.
@@ -102,12 +106,20 @@ jobs:
         REGION: ${{ vars.STORYSPARK_GCP_REGION }}
         PROJECT_ID: ${{ vars.STORYSPARK_GCP_PROJECT_ID }}
       run: |
-        SHORT_SHA="${GITHUB_SHA::12}"
+        SHORT_SHA="${{ needs.setup.outputs.short_sha }}"
         REPO_NAME="${{ needs.setup.outputs.repo_name_lower }}"
         ENV_SEG="${{ needs.setup.outputs.prodOrDev }}"
         BRANCH="${{ needs.setup.outputs.branch_name_lower }}"
         ARTIFACT_HOST="${REGION}-docker.pkg.dev"
         ARTIFACT_REPO=${{ env.ARTIFACT_REPO }}
+
+        echo "-----------------------------------"
+        echo "SHORT_SHA -- ${SHORT_SHA}"
+        echo "REPO_NAME -- ${REPO_NAME}"
+        echo "ENV_SEG - ${ENV_SEG}"
+        echo "BRANCH -- ${BRANCH}"
+        echo "ARTIFACT_REPO -- ${ARTIFACT_REPO}"
+        echo "-----------------------------------"
         
         IMAGE_PATH="${ARTIFACT_HOST}/${PROJECT_ID}/${ARTIFACT_REPO}/${REPO_NAME}/${ENV_SEG}/${BRANCH}"
         IMAGE_NAME="${IMAGE_PATH}:${SHORT_SHA}"
