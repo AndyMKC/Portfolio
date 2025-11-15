@@ -3,7 +3,7 @@ FROM python:3.11-slim AS base
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-WORKDIR /app
+WORKDIR /src
 
 # system deps needed for some wheels; keep minimal
 RUN apt-get update \
@@ -12,20 +12,20 @@ RUN apt-get update \
 
 # install dependencies (cacheable layer)
 FROM base AS deps
-COPY requirements.txt /app/requirements.txt
+COPY requirements.txt .
 RUN python -m pip install --upgrade pip setuptools wheel \
-  && pip install --no-cache-dir -r /app/requirements.txt
+  && pip install --no-cache-dir -r ./requirements.txt
 
 # copy application code
 FROM base AS runtime
 COPY --from=deps /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=deps /usr/local/bin /usr/local/bin
-COPY app /app
+COPY app .
 # ensure non-root runtime user
-RUN groupadd --gid 1000 appuser \
-  && useradd --uid 1000 --gid 1000 --shell /bin/false --create-home appuser \
-  && chown -R appuser:appuser /app
-USER appuser
+# RUN groupadd --gid 1000 appuser \
+#   && useradd --uid 1000 --gid 1000 --shell /bin/false --create-home appuser \
+#   && chown -R appuser:appuser /app
+USER nobody
 
 # recommended production command: bind 0.0.0.0 and use port from env
 ENV PORT=8080
