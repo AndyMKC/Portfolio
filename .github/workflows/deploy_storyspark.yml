@@ -122,12 +122,20 @@ jobs:
         BRANCH="${{ needs.setup.outputs.branch_name_lower }}"
         ARTIFACT_HOST="${REGION}-docker.pkg.dev"
         ARTIFACT_REPO=${{ env.ARTIFACT_REPO }}
-       
+
+        # Choose tag: static for prod (main), short sha for others
+        if [ "${ENV_SEG}" = "prod" ]; then
+          IMAGE_TAG="release"
+        else
+          IMAGE_TAG="${SHORT_SHA}"
+        fi
+
         IMAGE_PATH="${ARTIFACT_HOST}/${PROJECT_ID}/${ARTIFACT_REPO}/${REPO_NAME}/${ENV_SEG}/${BRANCH}"
-        IMAGE_NAME="${IMAGE_PATH}:${SHORT_SHA}"
+        IMAGE_NAME="${IMAGE_PATH}:${IMAGE_TAG}"
 
         echo "image_name=${IMAGE_NAME}" >> $GITHUB_OUTPUT
         echo "image_repo_path=${IMAGE_PATH}" >> $GITHUB_OUTPUT
+        echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
 
     - name: Build the Docker image
       working-directory: ${{ github.workspace }}/${{ env.SRC_DIR }}
@@ -141,10 +149,14 @@ jobs:
     - name: Get pushed image digest
       id: get_digest
       run: |
-        IMAGE_TAG="${{ needs.setup.outputs.short_sha }}"
+        IMAGE_TAG="${{ steps.docker_image_vars.outputs.image_tag }}"
         REPO_PATH=${{ steps.docker_image_vars.outputs.image_repo_path }}
         DIGEST=$(gcloud artifacts docker images describe "${REPO_PATH}:${IMAGE_TAG}" \
           --project="${{ vars.STORYSPARK_GCP_PROJECT_ID }}" --format='get(image_summary.digest)')
+        if [ -z "${DIGEST}" ]; then
+          echo "Failed to find digest for ${REPO_PATH}:${IMAGE_TAG}" >&2
+          exit 1
+        fi
         echo "image_ref=${REPO_PATH}@${DIGEST}" >> $GITHUB_OUTPUT
 
 #-------------------------------------------------------------------------------------------------------------------------
