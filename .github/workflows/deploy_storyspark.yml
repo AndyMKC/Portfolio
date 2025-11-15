@@ -34,6 +34,12 @@ env:
 jobs:
   setup:
     runs-on: ubuntu-latest
+    outputs:
+      short_sha: ${{ steps.branch_info.outputs.short_sha }}
+      branch_name: ${{ steps.branch_info.outputs.branch_name }}
+      branch_name_lower: ${{ steps.branch_info.outputs.branch_name_lower }}
+      repo_name_lower: ${{ steps.branch_info.outputs.repo_name_lower }}
+      prodOrDev: ${{ steps.branch_info.outputs.prodOrDev }}
     permissions:
       contents: read # Need read permission for checkout
 
@@ -50,13 +56,15 @@ jobs:
       id: branch_info
       run: |
         SHORT_SHA="${GITHUB_SHA::12}"
-        echo "branch_name=$SHORT_SHA" >> $GITHUB_OUTPUT
+        echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
 
         BRANCH_NAME=$(echo ${{ github.ref_name }} | tr '/' '-')
-        echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
-        echo "branch_name_lower=$BRANCH_NAME" | tr '[:upper:]' '[:lower:]' >> $GITHUB_OUTPUT
+        BRANCH_NAME_LOWER=$(echo "${BRANCH_NAME}" | tr '[:upper:]' '[:lower:]')
+        REPO_LOWER=$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')
 
-        echo "repo_name_lower=$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]' >> $GITHUB_OUTPUT
+        echo "branch_name=${BRANCH_NAME}" >> $GITHUB_OUTPUT
+        echo "branch_name_lower=${BRANCH_NAME_LOWER}" >> $GITHUB_OUTPUT
+        echo "repo_name_lower=${REPO_LOWER}" >> $GITHUB_OUTPUT
 
         # Use 'main/infra' for the main branch, otherwise use the branch name.
         if [ "$BRANCH_NAME" == "main" ]; then
@@ -76,6 +84,8 @@ jobs:
   docker-build-push:
     runs-on: ubuntu-latest
     needs: [setup]
+    outputs:
+      image_ref: ${{ steps.get_digest.outputs.image_ref}}
     permissions:
       contents: read # Need read permission for checkout
     
@@ -118,7 +128,6 @@ jobs:
         echo "REPO_NAME -- ${REPO_NAME}"
         echo "ENV_SEG - ${ENV_SEG}"
         echo "BRANCH -- ${BRANCH}"
-        echo "ARTIFACT_REPO -- ${ARTIFACT_REPO}"
         echo "-----------------------------------"
         
         IMAGE_PATH="${ARTIFACT_HOST}/${PROJECT_ID}/${ARTIFACT_REPO}/${REPO_NAME}/${ENV_SEG}/${BRANCH}"
@@ -150,6 +159,8 @@ jobs:
   terraform-plan: # This job will run on PRs and main branch pushes to generate the plan
     runs-on: ubuntu-latest
     needs: [setup, docker-build-push]
+    outputs:
+      tf_prefix: ${{ steps.tf_prefixes.outputs.tf_prefix }}
     permissions:
       contents: read # Need read permission for checkout
 
