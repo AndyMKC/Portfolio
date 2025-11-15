@@ -22,10 +22,10 @@ COPY --from=deps /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.
 COPY --from=deps /usr/local/bin /usr/local/bin
 COPY app .
 # ensure non-root runtime user
-RUN groupadd --gid 1000 appuser \
-  && useradd --uid 1000 --gid 1000 --shell /bin/false --create-home appuser \
-  && chown -R appuser:appuser /app
-USER appuser
+# RUN groupadd --gid 1000 appuser \
+#   && useradd --uid 1000 --gid 1000 --shell /bin/false --create-home appuser \
+#   && chown -R appuser:appuser /app
+USER nobody
 
 # recommended production command: bind 0.0.0.0 and use port from env
 ENV PORT=8080
