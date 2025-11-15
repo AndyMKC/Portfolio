@@ -8,7 +8,7 @@ on:
         required: false
         default: ''
   schedule:
-    - cron: '0 8 * * *'  # daily at 00:00 UTC
+    - cron: '0 0 * * *'  # daily at 00:00 UTC
 
 
 jobs:

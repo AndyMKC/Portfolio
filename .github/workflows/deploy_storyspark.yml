@@ -122,17 +122,10 @@ jobs:
         BRANCH="${{ needs.setup.outputs.branch_name_lower }}"
         ARTIFACT_HOST="${REGION}-docker.pkg.dev"
         ARTIFACT_REPO=${{ env.ARTIFACT_REPO }}
-
-        echo "-----------------------------------"
-        echo "SHORT_SHA -- ${SHORT_SHA}"
-        echo "REPO_NAME -- ${REPO_NAME}"
-        echo "ENV_SEG - ${ENV_SEG}"
-        echo "BRANCH -- ${BRANCH}"
-        echo "-----------------------------------"
-        
+       
         IMAGE_PATH="${ARTIFACT_HOST}/${PROJECT_ID}/${ARTIFACT_REPO}/${REPO_NAME}/${ENV_SEG}/${BRANCH}"
         IMAGE_NAME="${IMAGE_PATH}:${SHORT_SHA}"
-        echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
+
         echo "image_name=${IMAGE_NAME}" >> $GITHUB_OUTPUT
         echo "image_repo_path=${IMAGE_PATH}" >> $GITHUB_OUTPUT
 
@@ -148,7 +141,7 @@ jobs:
     - name: Get pushed image digest
       id: get_digest
       run: |
-        IMAGE_TAG=${{ steps.docker_image_vars.outputs.short_sha }}
+        IMAGE_TAG="${{ needs.setup.outputs.short_sha }}"
         REPO_PATH=${{ steps.docker_image_vars.outputs.image_repo_path }}
         DIGEST=$(gcloud artifacts docker images describe "${REPO_PATH}:${IMAGE_TAG}" \
           --project="${{ vars.STORYSPARK_GCP_PROJECT_ID }}" --format='get(image_summary.digest)')
