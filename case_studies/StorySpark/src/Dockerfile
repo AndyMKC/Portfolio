@@ -23,12 +23,6 @@ COPY --from=deps /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.
 COPY --from=deps /usr/local/bin /usr/local/bin
 COPY app ./app
 
-# ensure non-root runtime user
-# RUN groupadd --gid 1000 appuser \
-#   && useradd --uid 1000 --gid 1000 --shell /bin/false --create-home appuser \
-#   && chown -R appuser:appuser /app
-
-
 # recommended production command: bind 0.0.0.0 and use port from env
 ENV PORT=8080
 EXPOSE 8080
@@ -39,6 +33,10 @@ EXPOSE 8080
 FROM runtime AS dev
 RUN pip install debugpy
 # Start with debugpy waiting for the VS Code attach; keep --reload for hot reload
+# To debug locally:
+# 1.  docker build --target dev --file Dockerfile --tag <your_tag_value> .
+# 2.  docker run --rm -p 8000:8080 -p 5678:5678 <your_tag_value>
+# 3.  Set up the VS Code launch.json to attach to remote debug port 5678
 USER nobody
 CMD ["sh", "-c", "python -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080} --ws auto --reload"]
 
