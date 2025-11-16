@@ -87,6 +87,18 @@ resource "google_artifact_registry_repository" "docker_repo" {
   repository_id = var.artifact_repo_id
   format        = "DOCKER"
   description   = "Docker repo for StorySpark images"
+
+  cleanup_policy_dry_run = false
+
+  # Policy 1: Delete images older than 5 days with a specific package prefix
+  cleanup_policies {
+    id     = "delete-old-alpha"
+    action = "DELETE"
+    condition {
+      older_than   = "5d"
+      package_name_prefixes = ["andymkc/portfolio/dev/"]
+    }
+  }
 }
 
 resource "google_project_service" "iam" {
