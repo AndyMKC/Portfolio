@@ -41,4 +41,6 @@ CMD ["sh", "-c", "python -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m u
 # Prod stage: minimal runtime command for Cloud Run
 FROM runtime AS prod
 USER nobody
+# https://storyspark-service-prod-453336860824.us-west1.run.app/docs
+# 453336860824 is the Google generated unique project number
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080", "--ws", "auto"]
