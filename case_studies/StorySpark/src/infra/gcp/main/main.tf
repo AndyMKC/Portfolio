@@ -126,13 +126,8 @@ resource "google_artifact_registry_repository" "docker_repo" {
     id     = "keep-recent-webapp"
     action = "KEEP"
     most_recent_versions {
-      keep_count          = 3
+      keep_count            = 3
       package_name_prefixes = ["andymkc/portfolio/prod/"]
-    }
-    # condition must still be defined for the policy to be valid, 
-    # but the most_recent_versions takes precedence for the 'KEEP' action
-    condition {
-        older_than = "1h" # placeholder duration
     }
   }
   
@@ -178,7 +173,7 @@ resource "google_bigquery_table" "source_table_dev" {
   friendly_name = "StorySpark source books table ${local.dev_suffix}"
   description   = "Canonical book records for StorySpark ${local.dev_suffix}"
 
-  deletion_protection = true
+  deletion_protection = false
 }
 
 resource "google_bigquery_table" "source_table_prod" {
@@ -191,7 +186,7 @@ resource "google_bigquery_table" "source_table_prod" {
   friendly_name = "StorySpark source books table ${local.prod_suffix}"
   description   = "Canonical book records for StorySpark ${local.prod_suffix}"
 
-  deletion_protection = true
+  deletion_protection = false
 }
 
 # Embeddings table to store vectors
