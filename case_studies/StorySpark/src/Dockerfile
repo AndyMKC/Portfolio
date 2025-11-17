@@ -32,9 +32,12 @@ FROM runtime AS dev
 RUN pip install debugpy
 # Start with debugpy waiting for the VS Code attach; keep --reload for hot reload
 # To debug locally:
-# 1.  docker build --target dev --file Dockerfile --tag <your_tag_value> .
-# 2.  docker run --rm -p 8000:8080 -p 5678:5678 <your_tag_value>
+# "qq" is my tag that I am using
+# 1.  docker build --target dev --file Dockerfile --tag qq .
+# On Windows, we need to run gcloud auth application-default login which will launch the browser and you have to select the credentials to run as.  Then on Windows, it has issues mapping out the file path to the local credentials so we need to do a volume mount.
+# 2.  docker run --rm -p 8000:8080 -p 5678:5678 -v "C:\Users\AndyM\AppData\Roaming\gcloud\application_default_credentials.json":/app/adc.json:ro -e GOOGLE_APPLICATION_CREDENTIALS="/app/adc.json" qq
 # 3.  Set up the VS Code launch.json to attach to remote debug port 5678
+# 4.  Launch swagger at http://localhost:8000/docs
 USER nobody
 CMD ["sh", "-c", "python -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080} --ws auto --reload"]
 
