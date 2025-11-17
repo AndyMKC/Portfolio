@@ -218,7 +218,7 @@ resource "google_bigquery_table" "embeddings_table_prod" {
 
 # Grant dataset access to service account
 resource "google_bigquery_dataset_iam_member" "sa_dataset_access" {
-  dataset_id = google_bigquery_dataset.embeddings.dataset_id
+  dataset_id = google_bigquery_dataset.embeddings_prod.dataset_id
   project    = var.project_id
   role       = "roles/bigquery.dataEditor"
   member     = "serviceAccount:${local.sa_bq_vertex_prod}@${local.service_account_suffix}"
@@ -261,15 +261,15 @@ resource "google_cloud_run_service" "storyspark_service" {
         }
         env {
           name  = "BQ_DATASET"
-          value = google_bigquery_dataset.embeddings.dataset_id
+          value = google_bigquery_dataset.embeddings_prod.dataset_id
         }
         env {
           name  = "SOURCE_TABLE"
-          value = google_bigquery_table.source_table.table_id
+          value = google_bigquery_table.source_table_prod.table_id
         }
         env {
           name  = "EMBED_TABLE"
-          value = google_bigquery_table.embeddings_table.table_id
+          value = google_bigquery_table.embeddings_table_prod.table_id
         }
         env {
           name  = "API_KEY"
