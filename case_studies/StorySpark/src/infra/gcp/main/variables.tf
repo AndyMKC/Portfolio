@@ -50,8 +50,7 @@ variable "git_branch" {
 variable "base_dataset_id" {
   type        = string
   description = "Base dataset id (will be suffixed with env)"
-  #default     = "storyspark_dataset"
-  default     = "storyspark_embeddings_ds"
+  default     = "storyspark_dataset"
 }
 
 variable "base_source_table_id" {
