@@ -199,6 +199,8 @@ resource "google_bigquery_table" "embeddings_table_dev" {
 
   friendly_name = "StorySpark text embeddings ${local.dev_suffix}"
   description   = "Stores text and embedding vectors for StorySpark ${local.dev_suffix}"
+
+  deletion_protection = false
 }
 resource "google_bigquery_table" "embeddings_table_prod" {
   project    = var.project_id
@@ -209,6 +211,8 @@ resource "google_bigquery_table" "embeddings_table_prod" {
 
   friendly_name = "StorySpark text embeddings ${local.prod_suffix}"
   description   = "Stores text and embedding vectors for StorySpark ${local.prod_suffix}"
+
+  deletion_protection = false
 }
 
 # Grant dataset access to service account
