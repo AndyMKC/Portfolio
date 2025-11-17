@@ -22,16 +22,25 @@ output "env" {
   value = local.env_suffix
 }
 
-output "dataset_id" {
-  value = google_bigquery_dataset.embeddings.dataset_id
+output "dataset_id_dev" {
+  value = google_bigquery_dataset.embeddings_dev
+}
+output "dataset_id_prod" {
+  value = google_bigquery_dataset.embeddings_prod
 }
 
-output "source_table_fqn" {
-  value = "${var.project_id}.${google_bigquery_dataset.embeddings.dataset_id}.${google_bigquery_table.source_table.table_id}"
+output "source_table_fqn_dev" {
+  value = "${var.project_id}.${google_bigquery_dataset.embeddings_dev.dataset_id}.${google_bigquery_table.source_table_dev.table_id}"
+}
+output "source_table_fqn_prod" {
+  value = "${var.project_id}.${google_bigquery_dataset.embeddings_prod.dataset_id}.${google_bigquery_table.source_table_prod.table_id}"
 }
 
-output "embeddings_table_fqn" {
-  value = "${var.project_id}.${google_bigquery_dataset.embeddings.dataset_id}.${google_bigquery_table.embeddings_table.table_id}"
+output "embeddings_table_fqn_dev" {
+  value = "${var.project_id}.${google_bigquery_dataset.embeddings_dev.dataset_id}.${google_bigquery_table.embeddings_table_dev.table_id}"
+}
+output "embeddings_table_fqn_prod" {
+  value = "${var.project_id}.${google_bigquery_dataset.embeddings_prod.dataset_id}.${google_bigquery_table.embeddings_table_prod.table_id}"
 }
 
 output "cloud_run_url" {
@@ -39,7 +48,7 @@ output "cloud_run_url" {
 }
 
 output "service_account_bq_vertex" {
-  value = "${local.sa_bq_vertex}@${local.service_account_suffix}"
+  value = "${local.sa_bq_vertex_prod}@${local.service_account_suffix}"
 }
 
 output "service_account_cloudrun" {

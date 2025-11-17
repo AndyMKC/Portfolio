@@ -58,6 +58,9 @@ resource "google_storage_bucket" "tfstate_bucket" {
   }
 }
 
+# NOTE:  On further reflection, we may not need the dev accounts because the plan never gets applied except in main
+# and the only people that need to interact with the dev environment are humans using their own accounts.
+# For now, we'll keep it here but we can remove it later if desired.
 # Dev service accounts (created only when create_dev = true)
 resource "google_service_account" "bq_vertex_dev" {
   count        = var.create_dev ? 1 : 0
