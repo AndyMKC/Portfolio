@@ -57,7 +57,7 @@ def id_exists(bigquery_client_helper: BigQueryClientHelper, table: TableReferenc
         SELECT
             COUNT(*) as row_count
         FROM
-            '{table_ref}'
+            `{table_ref}`
         WHERE
             id = @id_param
     """

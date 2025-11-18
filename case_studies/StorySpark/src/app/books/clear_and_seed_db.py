@@ -1,20 +1,26 @@
 from fastapi import APIRouter, HTTPException
+from google.cloud import bigquery
+
+from app.books.bigquery_client_helper import get_bigquery_client, BigQueryClientHelper
+from app.books.add_book import add_book
 
 router = APIRouter()
 
 @router.get("/books", response_model=None, operation_id="ClearAndSeedDB")
-async def clear_and_seed_db():
-    from datetime import datetime, timezone
-    utc_now = datetime.now(timezone.utc)
-    book = Book(
-        id="internal_id",
-        title="req.title",
-        author="req.author",
-        owner_id="req.owner_id",
-        book_id="req.book_id",
-        relevant_text="req.relevant_text",
-        created_at=utc_now,
-        updated_at=utc_now,
+async def clear_and_seed_db(owner: str):
+    # Delete all Rows
+    bigquery_client_helper = get_bigquery_client()
+    table_ref = f"{bigquery_client_helper.project_id}.{bigquery_client_helper.dataset_id}.{bigquery_client_helper.source_table_id}"
+    query = f"DELETE FROM `{table_ref}` WHERE owner = @owner_param"
+    
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("owner_param", "STRING", owner)
+        ]
     )
-    return list([book])
-    #return list(_BOOK_STORE.values())
+
+    query_job = bigquery_client_helper.client.query(query, job_config=job_config)
+
+    # Seed with sample data
+
+    # TODO:  Do this for embeddings table too
