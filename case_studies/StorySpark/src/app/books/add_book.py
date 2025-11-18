@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from datetime import datetime, timezone
+from google.cloud import bigquery
 from google.cloud.bigquery import TableReference
 from typing import Dict, Any
 
@@ -17,7 +18,10 @@ async def add_book(req: AddBookRequest):
 
         # TODO:  This may cause the same book to be considered two different entries since one can be ISBN-13 and one can be ISBN-10
         key = f"{req.owner_id}:{req.book_id}"
+        if id_exists(bigquery_client_helper=bigquery_client_helper, table=source_table_ref, id=key):
+            raise Exception(f"Book with id {req.book_id} already exists for owner {req.owner_id}")
     
+        # TODO:  add code to fetch title and author
         utc_now = datetime.now(timezone.utc).isoformat()
         entry = {
             "id": key,
@@ -29,13 +33,10 @@ async def add_book(req: AddBookRequest):
             "created_at": utc_now,
             "updated_at": utc_now
         }
-        
-        # TODO:  Check to see if this owner already has this book_id added
-        source_rows_to_insert = [entry]
 
         errors_source = bigquery_client_helper.client.insert_rows_json(
             source_table_ref,
-            source_rows_to_insert
+            [entry]
         )
 
         if errors_source:
@@ -50,4 +51,27 @@ async def add_book(req: AddBookRequest):
 
     return entry
 
-def book_id_exists(bigquery_client_helper: BigQueryClientHelper, table: TableReference, book_id: str) -> bool:
+def id_exists(bigquery_client_helper: BigQueryClientHelper, table: TableReference, id: str) -> bool:
+    table_ref = f"{bigquery_client_helper.project_id}.{bigquery_client_helper.dataset_id}.{bigquery_client_helper.source_table_id}"
+    query = f"""
+        SELECT
+            COUNT(*) as row_count
+        FROM
+            '{table_ref}'
+        WHERE
+            id = @id_param
+    """
+
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("id_param", "STRING", id)
+        ]
+    )
+
+    query_job = bigquery_client_helper.client.query(query, job_config=job_config)
+
+    # We should only get a single row with one column
+    row = next(query_job.results())
+    row_count =row["row_count"]
+
+    return row_count > 0
