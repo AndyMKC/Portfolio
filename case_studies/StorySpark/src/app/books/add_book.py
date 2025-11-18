@@ -1,50 +1,77 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from datetime import datetime, timezone
-import uuid
+from google.cloud import bigquery
+from google.cloud.bigquery import TableReference
+from typing import Dict, Any
 
 from app.models import AddBookRequest, Book
+from app.books.bigquery_client_helper import get_bigquery_client, BigQueryClientHelper
 
 router = APIRouter()
-# # in-memory store for dev; replace with persistent DB later
-# _BOOK_STORE: dict[str, Book] = {}
 
-# Placeholder for embedding + vector DB upsert.
-# Implement actual embedding generation and BigQuery vector upsert later.
-def _enqueue_vector_upsert(book: Book) -> None:
-    """
-    Placeholder: generate embedding from book.relevant_text and upsert into vector index.
-    Implement async background task, Pub/Sub, or direct API call in production.
-    """
-    # Example:
-    # embedding = embed_text(book.relevant_text)
-    # bigquery_vector_upsert(namespace=book.owner_id, id=book.book_id, vector=embedding, metadata=...)
-    return
-
-@router.post("/books", response_model=Book, status_code=201, operation_id="AddBook")
+@router.post("/books", response_model=Dict[str, Any], status_code=201, operation_id="AddBook")
 async def add_book(req: AddBookRequest):
-    # Use provided ISBN as canonical book_id; generate internal UUID id for this record
-    # Enforce uniqueness per owner + book_id (ISBN)
-    key = f"{req.owner_id}:{req.book_id}"
-    # TODO:  Check to see if this owner already has this book_id added
+    bigquery_client_helper = get_bigquery_client()
 
-    internal_id = str(req.owner_id + req.book_id)
-    utc_now = datetime.now(timezone.utc)
-    book = Book(
-        id=internal_id,
-        title=req.title,
-        author=req.author,
-        owner_id=req.owner_id,
-        book_id=req.book_id,
-        relevant_text=req.relevant_text,
-        created_at=utc_now,
-        updated_at=utc_now,
+    try:
+        source_table_ref = bigquery_client_helper.client.dataset(bigquery_client_helper.dataset_id).table(bigquery_client_helper.source_table_id)
+
+        # TODO:  This may cause the same book to be considered two different entries since one can be ISBN-13 and one can be ISBN-10
+        key = f"{req.owner_id}:{req.book_id}"
+        if id_exists(bigquery_client_helper=bigquery_client_helper, table=source_table_ref, id=key):
+            raise Exception(f"Book with id {req.book_id} already exists for owner {req.owner_id}")
+    
+        # TODO:  add code to fetch title and author
+        utc_now = datetime.now(timezone.utc).isoformat()
+        entry = {
+            "id": key,
+            "title": req.title,
+            "author": req.author,
+            "metadata_text": req.relevant_text,
+            "last_read": None,
+            "owner_id": req.owner_id,
+            "created_at": utc_now,
+            "updated_at": utc_now
+        }
+
+        errors_source = bigquery_client_helper.client.insert_rows_json(
+            source_table_ref,
+            [entry]
+        )
+
+        if errors_source:
+            raise Exception(f"Errors in source table insert: {errors_source}")
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+    return entry
+
+def id_exists(bigquery_client_helper: BigQueryClientHelper, table: TableReference, id: str) -> bool:
+    table_ref = f"{bigquery_client_helper.project_id}.{bigquery_client_helper.dataset_id}.{bigquery_client_helper.source_table_id}"
+    query = f"""
+        SELECT
+            COUNT(*) as row_count
+        FROM
+            `{table_ref}`
+        WHERE
+            id = @id_param
+    """
+
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("id_param", "STRING", id)
+        ]
     )
 
-    # non-blocking background work: enqueue vector upsert (placeholder sync call here)
-    try:
-        _enqueue_vector_upsert(book)
-    except Exception:
-        # do not fail the request if embedding/upsert pipeline is temporarily failing
-        pass
+    query_job = bigquery_client_helper.client.query(query, job_config=job_config)
 
-    return book
+    # We should only get a single row with one column
+    row = next(query_job.results())
+    row_count =row["row_count"]
+
+    return row_count > 0

@@ -10,23 +10,29 @@ CleanedISBN = Annotated[
 ]
 
 class AddBookRequest(BaseModel):
-    title: str = Field(..., example="The Little Engine")
-    author: str = Field(..., example="Anonymous")
-    owner_id: str = Field(..., example="user@gmail.com")
-    book_id: Annotated[
+    owner: str = Field(..., example="user@gmail.com")
+    isbn: Annotated[
         CleanedISBN,
-        Field(description="ISBN-10 or ISBN-13",
-              example="978-0448487311")
+        Field(
+            description="ISBN-10 or ISBN-13",
+            example="978-0448487311"
+            )
     ]
-    relevant_text: Optional[str] = Field(None, example="Excerpt or relevant passage used for embeddings", description="Optional user-provided text for better embedding.  We will also fetch text from public sources to augment this")
+    title: str = Field(..., example="The Little Engine That Could")
+    author: str = Field(..., example="Watty Piper")
+    relevant_text: Optional[str] = Field(
+        None,
+        example="Train gifts toys children determination perseverance joy fun laughter holidays delivery",
+        description="Optional user-provided text for better embedding.  We will also fetch text from public sources to augment this"
+        )
 
 class Book(BaseModel):
-    id: str                     # internal UUID
+    id: str
+    owner: str
+    isbn: str                # ISBN
     title: str
     author: str
-    owner_id: str
-    book_id: str                # ISBN
     relevant_text: str
-    created_at: datetime
-    updated_at: datetime
     last_read: Optional[datetime] = None
+    created_at: datetime
+    
