@@ -4,4 +4,5 @@ from .get_all_books import router as get_all_books_router
 from .get_recommendation import router as get_recommendation_router
 from .mark_read import router as mark_read_router
 from .remove_book import router as remove_book_router
+from .clear_and_seed_db import router as clear_and_seed_db_router
 

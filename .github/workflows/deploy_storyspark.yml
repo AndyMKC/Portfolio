@@ -140,7 +140,15 @@ jobs:
     - name: Build the Docker image
       working-directory: ${{ github.workspace }}/${{ env.SRC_DIR }}
       run: |
-        docker build --target prod --file Dockerfile --tag ${{ steps.docker_image_vars.outputs.image_name }} .
+        docker build \
+        --target prod \
+        --file Dockerfile \
+        --tag ${{ steps.docker_image_vars.outputs.image_name }} \
+        --build-arg STORYSPARK_GCP_BQ_PROJECT_ID=${{ vars.STORYSPARK_GCP_BQ_PROD_PROJECT_ID}} \
+        --build-arg STORYSPARK_GCP_BQ_DATASET_ID=${{ vars.STORYSPARK_GCP_BQ_PROD_DATASET_ID}} \
+        --build-arg STORYSPARK_GCP_BQ_SOURCE_TABLE_ID=${{ vars.STORYSPARK_GCP_BQ_PROD_SOURCE_TABLE_ID}} \
+        --build-arg STORYSPARK_GCP_BQ_EMBEDDINGS_TABLE_ID=${{ vars.STORYSPARK_GCP_BQ_PROD_EMBEDDINGS_TABLE_ID}} \
+        .
 
     - name: Push the Docker image
       run: |

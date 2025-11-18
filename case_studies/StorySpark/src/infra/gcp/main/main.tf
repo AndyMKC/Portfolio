@@ -71,13 +71,13 @@ locals {
   # Both dev and prod should share the same schema
   source_schema = jsonencode([
     { "name": "id",            "type": "STRING",    "mode": "REQUIRED" },
+    { "name": "owner",         "type": "STRING",    "mode": "REQUIRED" },
+    { "name": "isbn",          "type": "STRING",    "mode": "REQUIRED" },
     { "name": "title",         "type": "STRING",    "mode": "REQUIRED" },
     { "name": "author",        "type": "STRING",    "mode": "NULLABLE" },
-    { "name": "metadata_text", "type": "STRING",    "mode": "REQUIRED" },
+    { "name": "relevant_text", "type": "STRING",    "mode": "REQUIRED" },
     { "name": "last_read",     "type": "TIMESTAMP", "mode": "NULLABLE" },
-    { "name": "owner_id",      "type": "STRING",    "mode": "REQUIRED" },
-    { "name": "created_at",    "type": "TIMESTAMP", "mode": "REQUIRED" },
-    { "name": "updated_at",    "type": "TIMESTAMP", "mode": "REQUIRED" }
+    { "name": "created_at",    "type": "TIMESTAMP", "mode": "REQUIRED" }
   ])
 
   embeddings_schema = jsonencode([
