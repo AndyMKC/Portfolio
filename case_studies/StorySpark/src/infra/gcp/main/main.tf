@@ -253,6 +253,11 @@ resource "google_cloud_run_service" "storyspark_service" {
       service_account_name = "${local.sa_cloudrun}@${local.service_account_suffix}"
       containers {
         image = var.cloud_run_image
+        resources {
+          limits= {
+            memory = "1Gi" # Docker image with the embeddings model seems to increase the memory footprint to be 542 which is above the default 512.
+          }
+        }
         ports {
           container_port = 8080
         }
