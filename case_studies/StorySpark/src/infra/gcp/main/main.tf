@@ -75,18 +75,16 @@ locals {
     { "name": "isbn",          "type": "STRING",    "mode": "REQUIRED" },
     { "name": "title",         "type": "STRING",    "mode": "REQUIRED" },
     { "name": "author",        "type": "STRING",    "mode": "NULLABLE" },
-    { "name": "relevant_text", "type": "STRING",    "mode": "REQUIRED" },
     { "name": "last_read",     "type": "TIMESTAMP", "mode": "NULLABLE" },
     { "name": "created_at",    "type": "TIMESTAMP", "mode": "REQUIRED" }
   ])
 
   embeddings_schema = jsonencode([
-    { "name": "id",                   "type": "STRING",    "mode": "REQUIRED" },
+    { "name": "isbn",                   "type": "STRING",    "mode": "REQUIRED" },
     { "name": "content",              "type": "STRING",    "mode": "REQUIRED" },
-    { "name": "embedding",            "type": "FLOAT64",   "mode": "REPEATED" },
-    { "name": "model_id",             "type": "STRING",    "mode": "REQUIRED" },
-    { "name": "embedding_created_at", "type": "TIMESTAMP", "mode": "REQUIRED" },
-    { "name": "owner_id",             "type": "STRING",    "mode": "REQUIRED" }
+    { "name": "embeddings",            "type": "FLOAT64",   "mode": "REPEATED" },
+    { "name": "model_name",             "type": "STRING",    "mode": "REQUIRED" },
+    { "name": "embeddings_created_at", "type": "TIMESTAMP", "mode": "REQUIRED" },
   ])
 }
 

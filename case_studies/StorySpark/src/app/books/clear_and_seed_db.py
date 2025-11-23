@@ -6,7 +6,7 @@ from app.books.add_book import add_book
 
 router = APIRouter()
 
-@router.get("/books", response_model=None, operation_id="ClearAndSeedDB")
+@router.post("/reset", response_model=None, operation_id="ClearAndSeedDB")
 async def clear_and_seed_db(owner: str):
     # Delete all Rows
     bigquery_client_helper = get_bigquery_client()
