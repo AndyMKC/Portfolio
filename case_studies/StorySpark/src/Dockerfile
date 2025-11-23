@@ -23,8 +23,12 @@ RUN apt-get update \
 FROM base AS deps
 COPY requirements.txt .
 
+
 RUN python -m pip install --upgrade pip setuptools wheel \
   && pip install --no-cache-dir -r ./requirements.txt
+
+# Pre-download the Hugging Face model into the image.  This should run after installing requirements.txt
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
 
 # copy application code
 FROM base AS runtime
