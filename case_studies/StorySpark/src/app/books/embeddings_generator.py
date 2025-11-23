@@ -2,6 +2,7 @@ from sentence_transformers import SentenceTransformer
 from typing import Final
 
 class EmbeddingsGenerator:
+    # TODO: Fetch this from Environment Variables and enforce some type of check for the same dimensions
     MODEL_NAME: Final[str] = "all-MiniLM-L6-v2"
 
     @staticmethod
