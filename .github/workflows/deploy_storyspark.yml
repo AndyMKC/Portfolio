@@ -149,7 +149,7 @@ jobs:
         --build-arg STORYSPARK_GCP_BQ_DATASET_ID=${{ vars.STORYSPARK_GCP_BQ_PROD_DATASET_ID}} \
         --build-arg STORYSPARK_GCP_BQ_SOURCE_TABLE_ID=${{ vars.STORYSPARK_GCP_BQ_PROD_SOURCE_TABLE_ID}} \
         --build-arg STORYSPARK_GCP_BQ_EMBEDDINGS_TABLE_ID=${{ vars.STORYSPARK_GCP_BQ_PROD_EMBEDDINGS_TABLE_ID}} \
-        --build-arg PIP_CACHE=false
+        --build-arg PIP_CACHE=false \
         .
 
     - name: Push the Docker image
