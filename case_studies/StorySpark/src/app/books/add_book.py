@@ -10,33 +10,25 @@ from app.books.embeddings_generator import EmbeddingsGenerator
 
 router = APIRouter()
 
-@router.post("/books", response_model=Dict[str, Any], status_code=201, operation_id="AddBook")
+@router.post("/books", response_model=None, status_code=201, operation_id="AddBook")
 async def add_book(req: AddBookRequest):
     bigquery_client_helper = get_bigquery_client()
 
-    # TODO:  Figure out what we want to do to have error handling -- try:
-    source_table_ref = bigquery_client_helper.client.dataset(bigquery_client_helper.dataset_id).table(bigquery_client_helper.source_table_id)
-    embddings_table_ref = bigquery_client_helper.client.dataset(bigquery_client_helper.dataset_id).table(bigquery_client_helper.embeddings_table_id)
-    # TODO:  Do I send in the source_table_ref or source_table_id?
     # INSERT INTO `my_dataset.table1` (
-    if source_table_ref:
-        raise Exception("figure out TODO")
     # TODO:  This may cause the same book to be considered two different entries since one can be ISBN-13 and one can be ISBN-10
     id = f"{req.owner}:{req.isbn}"
-    if id_exists(bigquery_client_helper=bigquery_client_helper, table=source_table_ref, id=key):
+    if id_exists(bigquery_client_helper=bigquery_client_helper, table_id=bigquery_client_helper.source_table_id, id_column="id", id=id):
         raise Exception(f"Book with isbn {req.isbn} already exists for owner {req.owner}")
 
-    utc_now = datetime.now(timezone.utc).isoformat()
-    embeddings = EmbeddingsGenerator.generate_embeddings([req.relevant_text])
-    # TODO:  Only add to the embeddings table if it does not exist already
+    utc_now = datetime.now(timezone.utc)
+
     # TODO:  add code to fetch title and author instead of relying on the customer to supply this information
     # TODO:  Fetch more text besides just the user supplied ones
-
-    # Commit both changes at once
-    transaction =f"""
+    # We want to not have any issues where there is an entry in the source table and not something in the embeddings table so commit both changes at once
+    transaction = f"""
 BEGIN TRANSACTION;
 
-INSERT INTO `{source_table_ref}` (
+INSERT INTO `{bigquery_client_helper.project_id}.{bigquery_client_helper.dataset_id}.{bigquery_client_helper.source_table_id}` (
 id,
 owner,
 isbn,
@@ -46,16 +38,20 @@ last_read,
 created_at
 )
 VALUES (
-'{id}',
-'{req.owner}',
-'{req.isbn}',
-'{req.title}',
-'{req.author}',
+@source_id,
+@source_owner,
+@source_isbn,
+@source_title,
+@source_author,
 NULL,
-TIMESTAMP('{utc_now}')
+@source_created_at
 );
+"""
+    if False == id_exists(bigquery_client_helper=bigquery_client_helper, table_id=bigquery_client_helper.embeddings_table_id, id_column="isbn", id=req.isbn):
+        embeddings = EmbeddingsGenerator.generate_embeddings([req.relevant_text])
+        transaction += f"""
 
-INSERT INTO `{embddings_table_ref}` (
+INSERT INTO `{bigquery_client_helper.project_id}.{bigquery_client_helper.dataset_id}.{bigquery_client_helper.embeddings_table_id}` (
 isbn,
 content,
 embeddings,
@@ -63,28 +59,48 @@ model_name,
 embeddings_created_at
 )
 VALUES (
-'{req.isbn}',
-'{req.relevant_text}',
-{embeddings},  -- embeddings as array literal
-'{EmbeddingsGenerator.MODEL_NAME}',
-TIMESTAMP('{utc_now}')
+@embeddings_isbn,
+@embeddings_content,
+@embeddings_embeddings,
+@embeddings_model_name,
+@embeddings_created_at
 );
+        """
 
-COMMIT TRANSACTION;
-"""
-    return {
-        # TODO:  Figure out what we want to return
-    }
+    transaction += "COMMIT TRANSACTION;"
 
-def id_exists(bigquery_client_helper: BigQueryClientHelper, table: TableReference, id: str) -> bool:
-    table_ref = f"{bigquery_client_helper.project_id}.{bigquery_client_helper.dataset_id}.{bigquery_client_helper.source_table_id}"
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("source_id", "STRING", id),
+            bigquery.ScalarQueryParameter("source_owner", "STRING", req.owner),
+            bigquery.ScalarQueryParameter("source_isbn", "STRING", req.isbn),
+            bigquery.ScalarQueryParameter("source_title", "STRING", req.title),
+            bigquery.ScalarQueryParameter("source_author", "STRING", req.author),
+            bigquery.ScalarQueryParameter("source_created_at", "TIMESTAMP", utc_now),
+
+            bigquery.ScalarQueryParameter("embeddings_isbn", "STRING", req.isbn),
+            bigquery.ArrayQueryParameter("embeddings_content", "STRING", [req.relevant_text]),
+            bigquery.ArrayQueryParameter("embeddings_embeddings", "FLOAT64", embeddings),
+            bigquery.ScalarQueryParameter("embeddings_model_name", "STRING", EmbeddingsGenerator.MODEL_NAME),
+            # TODO:  change embeddings_created_a
+            bigquery.ScalarQueryParameter("embeddings_created_at", "TIMESTAMP", utc_now)
+        ]
+    )
+
+    job = bigquery_client_helper.client.query(query=transaction, job_config=job_config)
+    job.result() # Wait for the job to complete
+
+    return
+
+def id_exists(bigquery_client_helper: BigQueryClientHelper, table_id:str, id_column:str, id: str) -> bool:
+    table_ref = f"{bigquery_client_helper.project_id}.{bigquery_client_helper.dataset_id}.{table_id}"
     query = f"""
         SELECT
             COUNT(*) as row_count
         FROM
             `{table_ref}`
         WHERE
-            id = @id_param
+            {id_column} = @id_param
     """
 
     job_config = bigquery.QueryJobConfig(
