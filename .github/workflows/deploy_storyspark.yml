@@ -81,7 +81,7 @@ jobs:
   
 #-------------------------------------------------------------------------------------------------------------------------
       
-  docker-build-push:
+  docker-build:
     runs-on: ubuntu-latest
     needs: [setup]
     outputs:
@@ -152,6 +152,65 @@ jobs:
         --build-arg PIP_CACHE=false \
         .
 
+#-------------------------------------------------------------------------------------------------------------------------
+
+  docker-push:
+    runs-on: ubuntu-latest
+    needs: [setup, docker-build]
+    if: github.ref == 'refs/heads/main'
+    outputs:
+      image_ref: ${{ steps.get_digest.outputs.image_ref}}
+    permissions:
+      contents: read # Need read permission for checkout
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - id: 'auth'
+      name: 'Authenticate to Google Cloud via SA Key'
+      uses: 'google-github-actions/auth@v2'
+      with:
+        credentials_json: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: ${{ vars.STORYSPARK_GCP_PROJECT_ID }}
+
+    - name: Configure Docker auth for Artifact Registry
+      env:
+        REGION: ${{ vars.STORYSPARK_GCP_REGION }}
+      run: |
+        gcloud auth configure-docker ${REGION}-docker.pkg.dev
+
+    - name: Set IMAGE variables
+      id: docker_image_vars
+      env:
+        REGION: ${{ vars.STORYSPARK_GCP_REGION }}
+        PROJECT_ID: ${{ vars.STORYSPARK_GCP_PROJECT_ID }}
+      run: |
+        SHORT_SHA="${{ needs.setup.outputs.short_sha }}"
+        REPO_NAME="${{ needs.setup.outputs.repo_name_lower }}"
+        ENV_SEG="${{ needs.setup.outputs.prodOrDev }}"
+        BRANCH="${{ needs.setup.outputs.branch_name_lower }}"
+        ARTIFACT_HOST="${REGION}-docker.pkg.dev"
+        ARTIFACT_REPO=${{ env.ARTIFACT_REPO }}
+
+        # Choose tag: static for prod (main), short sha for others
+        if [ "${ENV_SEG}" = "prod" ]; then
+          IMAGE_TAG="release"
+        else
+          IMAGE_TAG="${SHORT_SHA}"
+        fi
+
+        IMAGE_PATH="${ARTIFACT_HOST}/${PROJECT_ID}/${ARTIFACT_REPO}/${REPO_NAME}/${ENV_SEG}/${BRANCH}"
+        IMAGE_NAME="${IMAGE_PATH}:${IMAGE_TAG}"
+
+        echo "image_name=${IMAGE_NAME}" >> $GITHUB_OUTPUT
+        echo "image_repo_path=${IMAGE_PATH}" >> $GITHUB_OUTPUT
+        echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+
     - name: Push the Docker image
       run: |
         docker push ${{ steps.docker_image_vars.outputs.image_name }}
@@ -173,7 +232,8 @@ jobs:
 
   terraform-plan: # This job will run on PRs and main branch pushes to generate the plan
     runs-on: ubuntu-latest
-    needs: [setup, docker-build-push]
+    needs: [setup, docker-push]
+    if: github.ref == 'refs/heads/main'
     outputs:
       tf_prefix: ${{ steps.tf_prefixes.outputs.tf_prefix }}
     permissions:
@@ -229,7 +289,7 @@ jobs:
           -var="zone=${{ vars.STORYSPARK_GCP_ZONE }}" \
           -var="tfstate_bucket_name=${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}" \
           -var="git_branch=${{ needs.setup.outputs.branch_name }}" \
-          -var="cloud_run_image=${{ needs.docker-build-push.outputs.image_ref }}" \
+          -var="cloud_run_image=${{ needs.docker-push.outputs.image_ref }}" \
           -var="artifact_repo_id=${{ env.ARTIFACT_REPO }}" \
           -lock-timeout=5m \
           -out=tfplan

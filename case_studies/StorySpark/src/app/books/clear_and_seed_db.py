@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from google.cloud import bigquery
 
-from app.books.bigquery_client_helper import get_bigquery_client, BigQueryClientHelper
+from app.books.bigquery_client_helper import get_bigquery_client
 from app.books.add_book import add_book
 
 router = APIRouter()

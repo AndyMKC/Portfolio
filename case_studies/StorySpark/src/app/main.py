@@ -4,7 +4,7 @@ import atexit
 import asyncio
 from typing import AsyncGenerator
 
-from fastapi import FastAPI, Depends, Request
+from fastapi import FastAPI, Request
 
 from app.books import (
     add_book_router,

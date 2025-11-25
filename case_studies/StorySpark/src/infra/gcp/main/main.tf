@@ -109,22 +109,22 @@ resource "google_project_service" "artifactregistry" {
   service = "artifactregistry.googleapis.com"
 }
 
-# Artifact Registry Docker repository
-resource "google_artifact_registry_repository" "docker_repo" {
+# Artifact Registry for Docker images
+resource "google_artifact_registry_repository" "docker_images_repo" {
   project       = var.project_id
   location      = var.region
-  repository_id = var.artifact_repo_id
+  repository_id = var.artifact_images_repo_id
   format        = "DOCKER"
   description   = "Docker repo for StorySpark images"
 
   cleanup_policy_dry_run = false
 
-  # Policy 1: Keep the 3 most recent versions of specific packages
+  # Policy 1: Keep the 1 most recent versions of specific packages
   cleanup_policies {
     id     = "keep-recent-webapp"
     action = "KEEP"
     most_recent_versions {
-      keep_count            = 3
+      keep_count            = 1
       package_name_prefixes = ["andymkc/portfolio/prod/"]
     }
   }
@@ -134,7 +134,37 @@ resource "google_artifact_registry_repository" "docker_repo" {
     id     = "delete-old-packages"
     action = "DELETE"
     condition {
-      older_than   = "5d"
+      older_than   = "1d"
+    }
+  }  
+}
+
+# Artifact Registry for exported models
+resource "google_artifact_registry_repository" "exported_models_repo" {
+  project       = var.project_id
+  location      = var.region
+  repository_id = var.artifact_models_repo_id
+  format        = "GENERIC"
+  description   = "Docker repo for exported models"
+
+  cleanup_policy_dry_run = false
+
+  # Policy 1: Keep the 1 most recent versions of specific packages
+  cleanup_policies {
+    id     = "keep-recent-webapp"
+    action = "KEEP"
+    most_recent_versions {
+      keep_count            = 1
+      package_name_prefixes = ["andymkc/portfolio/prod/"]
+    }
+  }
+  
+  # Policy 2: Delete images older than 5 days with a specific package prefix (the 3 most recent ones in main should still be kept)
+  cleanup_policies {
+    id     = "delete-old-packages"
+    action = "DELETE"
+    condition {
+      older_than   = "1d"
     }
   }  
 }
