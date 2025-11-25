@@ -1,7 +1,6 @@
 from fastapi import APIRouter
 from datetime import datetime, timezone
 from google.cloud import bigquery
-from google.cloud.bigquery import TableReference
 from typing import Dict, Any
 
 from app.models import AddBookRequest, Book

@@ -9,6 +9,8 @@ ARG STORYSPARK_GCP_BQ_EMBEDDINGS_TABLE_ID
 ARG MODEL_DIR=/models
 ARG MODEL_NAME=all-MiniLM-L6-v2
 ARG MODEL_CACHE_DIR=/root/.cache/huggingface
+# For prod (GitHub Actions), we want to not use cache since we are running out of disk space as the image is keeeping all the downloaded packges.  For local builds, we want to use cache to speed up builds.
+ARG PIP_CACHE=false
 
 ENV MODEL_DIR=${MODEL_DIR}
 ENV MODEL_NAME=${MODEL_NAME}
@@ -31,7 +33,19 @@ RUN apt-get update \
 FROM base AS deps
 COPY requirements.txt .
 
-RUN --mount=type=cache,target=/root/.cache/pip python -m pip install --upgrade pip setuptools wheel && pip install -r ./requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip python -m pip install --upgrade pip setuptools wheel
+RUN --mount=type=cache,target=/root/.cache/pip \
+  if [ "$PIP_CACHE" = "true" ]; then \
+    echo "**********************************************************"; \
+    echo "Omitting --no-cache-dir"; \
+    echo "**********************************************************"; \
+    pip install -r ./requirements.txt; \
+  else \
+    echo "**********************************************************"; \
+    echo "Using --no-cache-dir"; \
+    echo "**********************************************************"; \
+    pip install --no-cache-dir -r ./requirements.txt; \
+  fi
 
 # Pre-download the Hugging Face model into the image.  This should run after installing requirements.txt
 # Rely on snapshot_download -- RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
@@ -96,7 +110,7 @@ RUN --mount=type=cache,target=/root/.cache/pip pip install debugpy
 # To debug locally:
 # "qq" is my tag that I am using
 # 1.  set DOCKER_BUILDKIT=1
-# 2.  docker build --progress=plain --target dev --file Dockerfile --tag qq --build-arg STORYSPARK_GCP_BQ_PROJECT_ID="storyspark-5555555" --build-arg STORYSPARK_GCP_BQ_DATASET_ID="storyspark_dataset_dev" --build-arg STORYSPARK_GCP_BQ_SOURCE_TABLE_ID="source_table_books_dev" --build-arg STORYSPARK_GCP_BQ_EMBEDDINGS_TABLE_ID="text_embeddings_books_dev" .
+# 2.  docker build --progress=plain --target dev --file Dockerfile --tag qq --build-arg STORYSPARK_GCP_BQ_PROJECT_ID="storyspark-5555555" --build-arg STORYSPARK_GCP_BQ_DATASET_ID="storyspark_dataset_dev" --build-arg STORYSPARK_GCP_BQ_SOURCE_TABLE_ID="source_table_books_dev" --build-arg STORYSPARK_GCP_BQ_EMBEDDINGS_TABLE_ID="text_embeddings_books_dev" --build-arg PIP_CACHE=true .
 # On Windows, we need to run gcloud auth application-default login which will launch the browser and you have to select the credentials to run as.  Then on Windows, it has issues mapping out the file path to the local credentials so we need to do a volume mount (which is the -v part below)
 # 3.  docker run --rm -p 8000:8080 -p 5678:5678 -v "C:\Users\AndyM\AppData\Roaming\gcloud\application_default_credentials.json":/app/adc.json:ro -e GOOGLE_APPLICATION_CREDENTIALS="/app/adc.json" qq
 # 4.  Set up the VS Code launch.json to attach to remote debug port 5678

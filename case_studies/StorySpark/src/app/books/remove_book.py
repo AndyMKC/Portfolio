@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 #from app.books.add_book import _BOOK_STORE
 from app.models import Book
 

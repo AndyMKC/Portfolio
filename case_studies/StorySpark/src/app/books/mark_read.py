@@ -1,5 +1,5 @@
-from fastapi import APIRouter, HTTPException
-from datetime import datetime
+from fastapi import APIRouter
+from datetime import datetime, timezone
 #from app.books.add_book import _BOOK_STORE
 from app.models import Book
 
@@ -9,7 +9,6 @@ router = APIRouter()
 async def mark_book_read(owner_id: str,book_id: str):
     # TODO:  Update and return book info from database
     
-    from datetime import datetime, timezone
     utc_now = datetime.now(timezone.utc)
     book = Book(
         id="internal_id",

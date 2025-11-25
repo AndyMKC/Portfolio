@@ -81,10 +81,16 @@ variable "api_key" {
   default     = "replace-with-real-key"
 }
 
-variable "artifact_repo_id" {
+variable "artifact_images_repo_id" {
   type        = string
-  description = "Artifact Registry repository id (name)"
+  description = "Docker images"
   default     = "containers"
+}
+
+variable "artifact_models_repo_id" {
+  type        = string
+  description = "Exported models"
+  default     = "models"
 }
 
 variable "ci_service_account_email" {
