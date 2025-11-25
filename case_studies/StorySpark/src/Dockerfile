@@ -75,8 +75,8 @@ RUN --mount=type=cache,target=/root/.cache/pip python -m pip install --upgrade p
 # print("Model placed at", target)
 # PY
 
-# make sure nobody can access it (65534 is the usual nobody uid)
-RUN chown -R 65534:65534 ${MODEL_DIR} && chmod -R a+rX ${MODEL_DIR}
+# # make sure nobody can access it (65534 is the usual nobody uid)
+# RUN chown -R 65534:65534 ${MODEL_DIR} && chmod -R a+rX ${MODEL_DIR}
 
 # copy application code
 FROM base AS runtime
