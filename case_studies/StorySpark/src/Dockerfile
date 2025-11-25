@@ -33,47 +33,47 @@ COPY requirements.txt .
 
 RUN --mount=type=cache,target=/root/.cache/pip python -m pip install --upgrade pip setuptools wheel && pip install -r ./requirements.txt
 
-# Pre-download the Hugging Face model into the image.  This should run after installing requirements.txt
-# Rely on snapshot_download -- RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
-# create models dir and predownload into it
-# TODO:  Pass this in from environment variables
-RUN --mount=type=cache,target=${MODEL_CACHE_DIR} \
-    python - <<'PY'
-import os, shutil
-from huggingface_hub import snapshot_download
+# # Pre-download the Hugging Face model into the image.  This should run after installing requirements.txt
+# # Rely on snapshot_download -- RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
+# # create models dir and predownload into it
+# # TODO:  Pass this in from environment variables
+# RUN --mount=type=cache,target=${MODEL_CACHE_DIR} \
+#     python - <<'PY'
+# import os, shutil
+# from huggingface_hub import snapshot_download
 
-MODEL_DIR = os.environ.get("MODEL_DIR")
-MODEL_NAME = os.environ.get("MODEL_NAME")
-MODEL_CACHE_DIR = os.environ.get("MODEL_CACHE_DIR")
+# MODEL_DIR = os.environ.get("MODEL_DIR")
+# MODEL_NAME = os.environ.get("MODEL_NAME")
+# MODEL_CACHE_DIR = os.environ.get("MODEL_CACHE_DIR")
 
-# download snapshot; snapshot_download returns the actual snapshot path
-snapshot_path = snapshot_download(f"sentence-transformers/{MODEL_NAME}", cache_dir=MODEL_CACHE_DIR)
-target = os.path.join(MODEL_DIR, MODEL_NAME)
+# # download snapshot; snapshot_download returns the actual snapshot path
+# snapshot_path = snapshot_download(f"sentence-transformers/{MODEL_NAME}", cache_dir=MODEL_CACHE_DIR)
+# target = os.path.join(MODEL_DIR, MODEL_NAME)
 
-# ensure target is clean
-if os.path.exists(target):
-    shutil.rmtree(target)
-os.makedirs(target, exist_ok=True)
+# # ensure target is clean
+# if os.path.exists(target):
+#     shutil.rmtree(target)
+# os.makedirs(target, exist_ok=True)
 
-# copy files, resolving symlinks to actual blob files
-for root, dirs, files in os.walk(snapshot_path):
-    rel_root = os.path.relpath(root, snapshot_path)
-    dst_root = os.path.join(target, rel_root) if rel_root != "." else target
-    os.makedirs(dst_root, exist_ok=True)
-    for name in files:
-        src = os.path.join(root, name)
-        dst = os.path.join(dst_root, name)
-        if os.path.islink(src):
-            real = os.path.realpath(src)  # absolute path to blob in cache
-            if os.path.exists(real):
-                shutil.copy2(real, dst)
-            else:
-                print("Missing blob for", src, "->", real)
-        else:
-            shutil.copy2(src, dst)
+# # copy files, resolving symlinks to actual blob files
+# for root, dirs, files in os.walk(snapshot_path):
+#     rel_root = os.path.relpath(root, snapshot_path)
+#     dst_root = os.path.join(target, rel_root) if rel_root != "." else target
+#     os.makedirs(dst_root, exist_ok=True)
+#     for name in files:
+#         src = os.path.join(root, name)
+#         dst = os.path.join(dst_root, name)
+#         if os.path.islink(src):
+#             real = os.path.realpath(src)  # absolute path to blob in cache
+#             if os.path.exists(real):
+#                 shutil.copy2(real, dst)
+#             else:
+#                 print("Missing blob for", src, "->", real)
+#         else:
+#             shutil.copy2(src, dst)
 
-print("Model placed at", target)
-PY
+# print("Model placed at", target)
+# PY
 
 # make sure nobody can access it (65534 is the usual nobody uid)
 RUN chown -R 65534:65534 ${MODEL_DIR} && chmod -R a+rX ${MODEL_DIR}
@@ -82,7 +82,7 @@ RUN chown -R 65534:65534 ${MODEL_DIR} && chmod -R a+rX ${MODEL_DIR}
 FROM base AS runtime
 COPY --from=deps /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=deps /usr/local/bin /usr/local/bin
-COPY --from=deps ${MODEL_DIR} ${MODEL_DIR}
+# COPY --from=deps ${MODEL_DIR} ${MODEL_DIR}
 COPY app ./app
 
 # recommended production command: bind 0.0.0.0 and use port from env
