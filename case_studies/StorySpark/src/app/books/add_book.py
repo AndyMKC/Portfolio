@@ -81,7 +81,7 @@ VALUES (
             bigquery.ScalarQueryParameter("embeddings_isbn", "STRING", req.isbn),
             bigquery.ArrayQueryParameter("embeddings_content", "STRING", [req.relevant_text]),
             bigquery.ArrayQueryParameter("embeddings_embeddings", "FLOAT64", embeddings),
-            bigquery.ScalarQueryParameter("embeddings_model_name", "STRING", EmbeddingsGenerator.MODEL_NAME),
+            bigquery.ScalarQueryParameter("embeddings_model_name", "STRING", EmbeddingsGenerator.MODEL_FILE),
             # TODO:  change embeddings_created_a
             bigquery.ScalarQueryParameter("embeddings_created_at", "TIMESTAMP", utc_now)
         ]
