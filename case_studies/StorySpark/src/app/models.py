@@ -20,10 +20,15 @@ class AddBookRequest(BaseModel):
     ]
     title: str = Field(..., example="The Little Engine That Could")
     author: str = Field(..., example="Watty Piper")
+    tags: Optional[str] = Field(
+        None,
+        example="Train; Gifts; Toys",
+        description="Semicolon-delimited tags (e.g. Tag1; Tag2; Multi word tag3)"
+    )
     relevant_text: Optional[str] = Field(
         None,
-        example="Train gifts toys children determination perseverance joy fun laughter holidays delivery",
-        description="Optional user-provided text for better embedding.  We will also fetch text from public sources to augment this"
+        example="This is a story about a train who provides the help needed to deliver another train to the next city over the hill.",
+        description="Optional user-provided text for better embedding.  We will also fetch text from public sources to augment this."
         )
 
 class Book(BaseModel):

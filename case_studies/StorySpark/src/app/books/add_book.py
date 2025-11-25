@@ -1,10 +1,9 @@
 from fastapi import APIRouter
 from datetime import datetime, timezone
 from google.cloud import bigquery
-from google.cloud.bigquery import TableReference
-from typing import Dict, Any
+from typing import Any
 
-from app.models import AddBookRequest, Book
+from app.models import AddBookRequest
 from app.books.bigquery_client_helper import get_bigquery_client, BigQueryClientHelper
 from app.books.embeddings_generator import EmbeddingsGenerator
 
@@ -22,73 +21,64 @@ async def add_book(req: AddBookRequest):
 
     utc_now = datetime.now(timezone.utc)
 
-    # TODO:  add code to fetch title and author instead of relying on the customer to supply this information
-    # TODO:  Fetch more text besides just the user supplied ones
     # We want to not have any issues where there is an entry in the source table and not something in the embeddings table so commit both changes at once
-    transaction = f"""
-BEGIN TRANSACTION;
+    source_table = f"{bigquery_client_helper.project_id}.{bigquery_client_helper.dataset_id}.{bigquery_client_helper.source_table_id}"
+    embeddings_table = f"{bigquery_client_helper.project_id}.{bigquery_client_helper.dataset_id}.{bigquery_client_helper.embeddings_table_id}"
 
-INSERT INTO `{bigquery_client_helper.project_id}.{bigquery_client_helper.dataset_id}.{bigquery_client_helper.source_table_id}` (
-id,
-owner,
-isbn,
-title,
-author,
-last_read,
-created_at
-)
-VALUES (
-@source_id,
-@source_owner,
-@source_isbn,
-@source_title,
-@source_author,
-NULL,
-@source_created_at
-);
-"""
-    if False == id_exists(bigquery_client_helper=bigquery_client_helper, table_id=bigquery_client_helper.embeddings_table_id, id_column="isbn", id=req.isbn):
-        embeddings = EmbeddingsGenerator.generate_embeddings([req.relevant_text])
-        transaction += f"""
+    # Prepare the single source row
+    source_row: dict[str, Any] = {
+        "id": id,
+        "owner": req.owner,
+        "isbn": req.isbn,
+        # TODO:  add code to fetch title and author instead of relying on the customer to supply this information
+        "title": req.title,
+        "author": req.author,
+        "last_read": None,
+        "created_at": utc_now,
+    }
 
-INSERT INTO `{bigquery_client_helper.project_id}.{bigquery_client_helper.dataset_id}.{bigquery_client_helper.embeddings_table_id}` (
-isbn,
-content,
-embeddings,
-model_name,
-embeddings_created_at
-)
-VALUES (
-@embeddings_isbn,
-@embeddings_content,
-@embeddings_embeddings,
-@embeddings_model_name,
-@embeddings_created_at
-);
-        """
-
-    transaction += "COMMIT TRANSACTION;"
-
-    job_config = bigquery.QueryJobConfig(
-        query_parameters=[
-            bigquery.ScalarQueryParameter("source_id", "STRING", id),
-            bigquery.ScalarQueryParameter("source_owner", "STRING", req.owner),
-            bigquery.ScalarQueryParameter("source_isbn", "STRING", req.isbn),
-            bigquery.ScalarQueryParameter("source_title", "STRING", req.title),
-            bigquery.ScalarQueryParameter("source_author", "STRING", req.author),
-            bigquery.ScalarQueryParameter("source_created_at", "TIMESTAMP", utc_now),
-
-            bigquery.ScalarQueryParameter("embeddings_isbn", "STRING", req.isbn),
-            bigquery.ArrayQueryParameter("embeddings_content", "STRING", [req.relevant_text]),
-            bigquery.ArrayQueryParameter("embeddings_embeddings", "FLOAT64", embeddings),
-            bigquery.ScalarQueryParameter("embeddings_model_name", "STRING", EmbeddingsGenerator.MODEL_FILE),
-            # TODO:  change embeddings_created_a
-            bigquery.ScalarQueryParameter("embeddings_created_at", "TIMESTAMP", utc_now)
-        ]
+    # Determine whether we need to create embeddings
+    need_embeddings = not id_exists(
+        bigquery_client_helper=bigquery_client_helper,
+        table_id=bigquery_client_helper.embeddings_table_id,
+        id_column="isbn",
+        id=req.isbn,
     )
 
-    job = bigquery_client_helper.client.query(query=transaction, job_config=job_config)
-    job.result() # Wait for the job to complete
+    embeddings_rows: list[dict[str, Any]] = []
+    if need_embeddings:
+        # Generate embeddings (returns list[list[float]])
+        # TODO:  Fetch more text besides just the user supplied ones
+        embeddings = EmbeddingsGenerator.generate_embeddings(tags=req.tags, freeform_texts=[req.relevant_text])
+
+        # Build one row per embedding vector
+        for idx, emb in enumerate(embeddings):
+            embeddings_rows.append({
+                "isbn": req.isbn,
+                "content": req.relevant_text or "",          # store the source content or empty string
+                "embeddings": emb,                           # ARRAY<FLOAT64> column in BigQuery
+                "model_name": EmbeddingsGenerator.MODEL_FILE,
+                "embeddings_created_at": utc_now,
+                "chunk_index": idx,                          # optional: index to identify which vector
+            })
+
+    # Transactional function
+    def transaction_fn(transaction):
+        # Insert the single source row
+        errors_source = transaction.insert_rows_json(source_table, [source_row])
+        if errors_source:
+            raise RuntimeError(f"Failed to insert into {source_table}: {errors_source}")
+
+        # Insert embedding rows (one per vector) if any
+        if embeddings_rows:
+            errors_embeddings = transaction.insert_rows_json(embeddings_table, embeddings_rows)
+            if errors_embeddings:
+                raise RuntimeError(f"Failed to insert into {embeddings_table}: {errors_embeddings}")
+        
+        # If no exception, transaction will be committed by run_in_transaction
+
+        # Run transaction (will retry on transient errors)
+        bigquery_client_helper.client.run_in_transaction(transaction_fn)
 
     return
 
