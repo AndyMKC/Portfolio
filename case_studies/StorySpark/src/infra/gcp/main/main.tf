@@ -113,28 +113,57 @@ resource "google_project_service" "artifactregistry" {
 resource "google_artifact_registry_repository" "docker_repo" {
   project       = var.project_id
   location      = var.region
-  repository_id = var.artifact_repo_id
+  repository_id = var.artifact_docker_images_repo_id
   format        = "DOCKER"
   description   = "Docker repo for StorySpark images"
 
   cleanup_policy_dry_run = false
 
-  # Policy 1: Keep the 3 most recent versions of specific packages
+  # Policy 1: Keep only the most recent versions of specific packages
   cleanup_policies {
     id     = "keep-recent-webapp"
     action = "KEEP"
     most_recent_versions {
-      keep_count            = 3
+      keep_count            = 1
       package_name_prefixes = ["andymkc/portfolio/prod/"]
     }
   }
   
-  # Policy 2: Delete images older than 5 days with a specific package prefix (the 3 most recent ones in main should still be kept)
+  # Policy 2: Delete everything else very quickly to save storage space
   cleanup_policies {
-    id     = "delete-old-packages"
+    id     = "delete-everything-quickly"
     action = "DELETE"
     condition {
-      older_than   = "5d"
+      older_than   = "1s"
+    }
+  }  
+}
+
+# Artifact Registry Docker repository
+resource "google_artifact_registry_repository" "models_repo" {
+  project       = var.project_id
+  location      = var.region
+  repository_id = var.artifact_exported_model_repo_id
+  format        = "GENERIC"
+  description   = "Exported models for StorySpark"
+
+  cleanup_policy_dry_run = false
+
+  # Policy 1: Keep only the most recent versions of the exported model
+  cleanup_policies {
+    id     = "keep-recent-model"
+    action = "KEEP"
+    most_recent_versions {
+      keep_count            = 1
+    }
+  }
+
+  # Policy 2: Delete everything else very quickly to save storage space
+  cleanup_policies {
+    id     = "delete-everything-quickly"
+    action = "DELETE"
+    condition {
+      older_than   = "1s"
     }
   }  
 }
