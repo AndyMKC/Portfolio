@@ -23,7 +23,7 @@ class EncoderWithPooling(torch.nn.Module):
 
 if __name__ == "__main__":
     model_name = "sentence-transformers/all-MiniLM-L6-v2"
-    out_dir = Path("models")
+    out_dir = Path("../models")
     out_dir.mkdir(parents=True, exist_ok=True) 
     export_path = out_dir / "all-MiniLM-L6-v2.onnx"
 
