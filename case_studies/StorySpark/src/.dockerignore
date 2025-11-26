@@ -1,0 +1,29 @@
+# VCS
+.git
+.gitignore
+
+# Sensitive files
+.env
+*.key
+*.pem
+
+# IDE/OS specific files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Dependencies/Build artifacts
+node_modules/
+__pycache__/
+*.pyc
+/target/
+/build/
+
+# Logs and temporary files
+*.log
+npm-debug.log*
+
+# Docker specific files
+docker-compose*.yml
+Dockerfile
