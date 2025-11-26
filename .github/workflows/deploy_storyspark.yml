@@ -145,7 +145,7 @@ jobs:
           --project=${{ vars.STORYSPARK_GCP_PROJECT_ID }} \
           --location=${{ vars.STORYSPARK_GCP_REGION }} \
           --repository=${{ vars.STORYSPARK_MODELS_CONTAINER }} \
-          --package=${{ vars.STORYSPARK_MODELS_CONTAINER }} \
+          --package=${{ vars.STORYSPARK_MODELS_PACKAGE }} \
           --version=${{ vars.STORYSPARK_MODELS_PACKAGE_VERSION }} \
           --destination=.      
 
