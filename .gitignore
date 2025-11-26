@@ -8,3 +8,6 @@ tfplan
 service-account-*.json
 *.tfvars
 *.tfvars.*
+*.onnx
+*.onnx.*
+models/

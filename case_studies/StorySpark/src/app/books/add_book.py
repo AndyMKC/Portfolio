@@ -1,10 +1,9 @@
 from fastapi import APIRouter
 from datetime import datetime, timezone
 from google.cloud import bigquery
-from google.cloud.bigquery import TableReference
-from typing import Dict, Any
+from typing import Any
 
-from app.models import AddBookRequest, Book
+from app.models import AddBookRequest
 from app.books.bigquery_client_helper import get_bigquery_client, BigQueryClientHelper
 from app.books.embeddings_generator import EmbeddingsGenerator
 
@@ -12,83 +11,108 @@ router = APIRouter()
 
 @router.post("/books", response_model=None, status_code=201, operation_id="AddBook")
 async def add_book(req: AddBookRequest):
-    bigquery_client_helper = get_bigquery_client()
-
-    # INSERT INTO `my_dataset.table1` (
-    # TODO:  This may cause the same book to be considered two different entries since one can be ISBN-13 and one can be ISBN-10
-    id = f"{req.owner}:{req.isbn}"
-    if id_exists(bigquery_client_helper=bigquery_client_helper, table_id=bigquery_client_helper.source_table_id, id_column="id", id=id):
-        raise Exception(f"Book with isbn {req.isbn} already exists for owner {req.owner}")
-
-    utc_now = datetime.now(timezone.utc)
-
-    # TODO:  add code to fetch title and author instead of relying on the customer to supply this information
-    # TODO:  Fetch more text besides just the user supplied ones
+    """
+    Inserts data into both tables atomically within a single BigQuery transaction.
+    """
+    bigquery_client_helper = get_bigquery_client()    
+    
     # We want to not have any issues where there is an entry in the source table and not something in the embeddings table so commit both changes at once
-    transaction = f"""
-BEGIN TRANSACTION;
+    id = f"{req.owner}:{req.isbn}"
+    source_table_id = f"{bigquery_client_helper.project_id}.{bigquery_client_helper.dataset_id}.{bigquery_client_helper.source_table_id}"
+    embeddings_table_id = f"{bigquery_client_helper.project_id}.{bigquery_client_helper.dataset_id}.{bigquery_client_helper.embeddings_table_id}"
+    utc_now = datetime.now(timezone.utc)
+    utc_now_str = utc_now.isoformat()
+    
+    # --- 1. Prepare data structures in Python ---
+    
+    # Determine whether we need to create embeddings
+    need_embeddings = not id_exists(
+        bigquery_client_helper=bigquery_client_helper,
+        table_id=bigquery_client_helper.embeddings_table_id,
+        id_column="isbn",
+        id=req.isbn,
+    )
+    embeddings_structs = []
+    if need_embeddings:
+        # Prepare the data for the 'N' rows in the embeddings table
+        # TODO:  Fetch more text besides just the user supplied ones
+        embeddings_info: list[EmbeddingsGenerator.EmbeddingsInfo] = EmbeddingsGenerator.generate_embeddings(tags=req.tags, relevant_text=[req.relevant_text])
+        for info in embeddings_info:
 
-INSERT INTO `{bigquery_client_helper.project_id}.{bigquery_client_helper.dataset_id}.{bigquery_client_helper.source_table_id}` (
-id,
-owner,
-isbn,
-title,
-author,
-last_read,
-created_at
-)
-VALUES (
-@source_id,
-@source_owner,
-@source_isbn,
-@source_title,
-@source_author,
-NULL,
-@source_created_at
-);
-"""
-    if False == id_exists(bigquery_client_helper=bigquery_client_helper, table_id=bigquery_client_helper.embeddings_table_id, id_column="isbn", id=req.isbn):
-        embeddings = EmbeddingsGenerator.generate_embeddings([req.relevant_text])
-        transaction += f"""
+            emb_list = info.embeddings
+            if hasattr(emb_list, "tolist"):
+                emb_list = emb_list.tolist()
+            # if it's a numpy scalar or other, coerce to list
+            emb_list = list(map(float, emb_list))
 
-INSERT INTO `{bigquery_client_helper.project_id}.{bigquery_client_helper.dataset_id}.{bigquery_client_helper.embeddings_table_id}` (
-isbn,
-content,
-embeddings,
-model_name,
-embeddings_created_at
-)
-VALUES (
-@embeddings_isbn,
-@embeddings_content,
-@embeddings_embeddings,
-@embeddings_model_name,
-@embeddings_created_at
-);
-        """
+            # This is intentionally left as a tuple and not a dict for insertion into SQL
+            embeddings_structs.append(
+                (
+                    req.isbn,
+                    info.text,
+                    emb_list, 
+                    EmbeddingsGenerator.MODEL_FILE,
+                    utc_now_str
+                )
+            )
 
-    transaction += "COMMIT TRANSACTION;"
+    # --- 2. Create the unified Multi-Statement SQL Script ---
 
+    # The script uses one set of parameters for the source row, 
+    # and another single ARRAY<STRUCT> parameter for all the embeddings rows.
+    transaction_script = f"""
+    BEGIN TRANSACTION;
+
+    -- Insert the single source row
+    INSERT INTO `{source_table_id}` (id, owner, isbn, title, author, last_read, created_at)
+    VALUES (@id, @owner, @isbn, @title, @author, @last_read, @created_at);
+
+    -- Insert all N embedding rows at once using UNNEST
+    INSERT INTO `{embeddings_table_id}` (isbn, content, embeddings, model_name, embeddings_created_at)
+    SELECT 
+        s.isbn, 
+        s.content, 
+        s.embeddings, 
+        s.model_name, 
+        s.created_at
+    FROM UNNEST(@embeddings_array) AS s;
+
+    COMMIT TRANSACTION;
+    """
+
+    # --- 3. Map all data to QueryJobConfig Parameters ---
     job_config = bigquery.QueryJobConfig(
         query_parameters=[
-            bigquery.ScalarQueryParameter("source_id", "STRING", id),
-            bigquery.ScalarQueryParameter("source_owner", "STRING", req.owner),
-            bigquery.ScalarQueryParameter("source_isbn", "STRING", req.isbn),
-            bigquery.ScalarQueryParameter("source_title", "STRING", req.title),
-            bigquery.ScalarQueryParameter("source_author", "STRING", req.author),
-            bigquery.ScalarQueryParameter("source_created_at", "TIMESTAMP", utc_now),
-
-            bigquery.ScalarQueryParameter("embeddings_isbn", "STRING", req.isbn),
-            bigquery.ArrayQueryParameter("embeddings_content", "STRING", [req.relevant_text]),
-            bigquery.ArrayQueryParameter("embeddings_embeddings", "FLOAT64", embeddings),
-            bigquery.ScalarQueryParameter("embeddings_model_name", "STRING", EmbeddingsGenerator.MODEL_NAME),
-            # TODO:  change embeddings_created_a
-            bigquery.ScalarQueryParameter("embeddings_created_at", "TIMESTAMP", utc_now)
+            # Parameters for the source table (Scalar types)
+            bigquery.ScalarQueryParameter("id", "STRING", id),
+            bigquery.ScalarQueryParameter("owner", "STRING", req.owner),
+            bigquery.ScalarQueryParameter("isbn", "STRING", req.isbn),
+            bigquery.ScalarQueryParameter("title", "STRING", req.title),
+            bigquery.ScalarQueryParameter("author", "STRING", req.author),
+            bigquery.ScalarQueryParameter("last_read", "TIMESTAMP", None),
+            bigquery.ScalarQueryParameter("created_at", "TIMESTAMP", utc_now),
+            
+            # The single parameter for all N embedding rows (ARRAY<STRUCT> type)
+            bigquery.ArrayQueryParameter(
+                "embeddings_array",
+                "STRUCT<isbn STRING, content STRING, embeddings ARRAY<FLOAT64>, model_name STRING, embeddings_created_at TIMESTAMP>",
+                embeddings_structs,
+            ),
         ]
     )
 
-    job = bigquery_client_helper.client.query(query=transaction, job_config=job_config)
-    job.result() # Wait for the job to complete
+    # --- 4. Execute the single atomic job ---
+    try:
+        query_job = bigquery_client_helper.client.query(transaction_script, job_config=job_config)
+        # Waiting on the result means we wait for the COMMIT to finish
+        query_job.result() 
+        print(f"Full non-streaming transaction committed successfully for ISBN: {req.isbn}.")
+        print(f"Inserted {len(embeddings_structs)} embedding rows.")
+
+    except Exception as e:
+        print(f"Transaction failed and was rolled back: {e}")
+        # BigQuery automatically rolls back the entire transaction if an error occurs within the script
+        raise # Re-raise the error for upstream handling
 
     return
 
@@ -117,5 +141,3 @@ def id_exists(bigquery_client_helper: BigQueryClientHelper, table_id:str, id_col
 
     return row_count > 0
 
-def retrieve_relevant_text(isbn: str) -> str:
-    return f"Relevant text for book with ISBN {isbn}."

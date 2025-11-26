@@ -16,10 +16,11 @@ env:
   KEEP: 2
   SRC_DIR: case_studies/StorySpark/src
   TF_GOOGLE_DIR: case_studies/StorySpark/src/infra/gcp/main
-  PROJECT_ID: storyspark-5555555
-  GCS_BUCKET: storyspark-5555555-terraform-state
+  PROJECT_ID: ${{vars.STORYSPARK_GCP_PROJECT_ID }}
+  GCS_BUCKET: ${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}
   TF_PLAN_FILE: storyspark.tfplan
   ARTIFACT_DOCKER_REPO: containers
+  SOURCE_MODEL_DIR: models
 
   # --- GitHub Variables (used via 'vars.') ---
   GCP_PROJECT_ID: ${{ vars.STORYSPARK_GCP_PROJECT_ID }}
@@ -126,6 +127,28 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    - id: 'auth'
+      name: 'Authenticate to Google Cloud via SA Key'
+      uses: 'google-github-actions/auth@v2'
+      with:
+        credentials_json: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: ${{ vars.STORYSPARK_GCP_PROJECT_ID }}
+
+    - name: Download the model artifacts
+      working-directory: ${{ github.workspace }}/${{ env.SRC_DIR }}
+      run: |
+        gcloud artifacts generic download \
+          --project=${{ vars.STORYSPARK_GCP_PROJECT_ID }} \
+          --location=${{ vars.STORYSPARK_GCP_REGION }} \
+          --repository=${{ vars.STORYSPARK_MODELS_CONTAINER }} \
+          --package=${{ vars.STORYSPARK_MODELS_PACKAGE }} \
+          --version=${{ vars.STORYSPARK_MODELS_PACKAGE_VERSION }} \
+          --destination=.      
+
     - name: Build the Docker image
       working-directory: ${{ github.workspace }}/${{ env.SRC_DIR }}
       run: |
@@ -137,6 +160,10 @@ jobs:
         --build-arg STORYSPARK_GCP_BQ_DATASET_ID=${{ vars.STORYSPARK_GCP_BQ_PROD_DATASET_ID}} \
         --build-arg STORYSPARK_GCP_BQ_SOURCE_TABLE_ID=${{ vars.STORYSPARK_GCP_BQ_PROD_SOURCE_TABLE_ID}} \
         --build-arg STORYSPARK_GCP_BQ_EMBEDDINGS_TABLE_ID=${{ vars.STORYSPARK_GCP_BQ_PROD_EMBEDDINGS_TABLE_ID}} \
+        --build-arg SOURCE_MODEL_DIR=./${{ env.SOURCE_MODEL_DIR }} \
+        --build-arg MODEL_FILE=${{ vars.STORYSPARK_MODELS_MODEL_NAME }}.${{ vars.STORYSPARK_MODELS_MODEL_EXTENSION }} \
+        --build-arg MODEL_DATA_FILE=${{ vars.STORYSPARK_MODELS_SOURCE_DIRECTORY }}/${{ vars.STORYSPARK_MODELS_MODEL_NAME }}.${{ vars.STORYSPARK_MODELS_MODEL_EXTENSION }}.data \
+        --build-arg PIP_CACHE=false \
         .
     
     # We are separating the docker build and push into two different steps so we need to persist the image between runs
