@@ -22,13 +22,14 @@ ENV STORYSPARK_MODEL_FILE=${MODEL_FILE}
 ENV STORYSPARK_MODEL_DATA_FILE=${MODEL_DATA_FILE}
 WORKDIR /src
 
+# install dependencies (cacheable layer)
+FROM base AS deps
+
 # system deps needed for some wheels; keep minimal
 RUN apt-get update \
   && apt-get install -y --no-install-recommends build-essential gcc libpq-dev \
   && rm -rf /var/lib/apt/lists/*
 
-# install dependencies (cacheable layer)
-FROM base AS deps
 COPY requirements.txt .
 
 RUN --mount=type=cache,target=/root/.cache/pip python -m pip install --upgrade pip setuptools wheel
@@ -51,8 +52,6 @@ COPY --from=deps /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.
 COPY --from=deps /usr/local/bin /usr/local/bin
 RUN mkdir -p "${STORYSPARK_IMAGE_MODEL_DIR}"
 COPY ${SOURCE_MODEL_DIR} ${STORYSPARK_IMAGE_MODEL_DIR}
-# COPY ${SOURCE_MODEL_DIR}/${MODEL_FILE} ${STORYSPARK_IMAGE_MODEL_DIR}/${STORYSPARK_MODEL_FILE}
-# COPY ${SOURCE_MODEL_DIR}/${MODEL_DATA_FILE} ${STORYSPARK_IMAGE_MODEL_DIR}/${STORYSPARK_MODEL_DATA_FILE}
 
 # make sure nobody can access it (65534 is the usual nobody uid)
 RUN chown -R 65534:65534 ${STORYSPARK_IMAGE_MODEL_DIR} && chmod -R a+rX ${STORYSPARK_IMAGE_MODEL_DIR}
