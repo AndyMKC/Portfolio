@@ -13,5 +13,5 @@ This will upload the artifacts
 gcloud artifacts generic download --project=storyspark-5555555 --location=us-west1 --repository=models --package=exported_models --version=1.0.0 --destination=.
 
 # Individual file
-gcloud artifacts generic download --project=storyspark-5555555 --location=us-west1 --repository=models --package=exported_models --version=1.0.0 --name=models/all-MiniLM-L6-v2.onnx --destination=.
+gcloud artifacts generic download --project=storyspark-5555555 --location=us-west1 --repository=models --package=exported_models --version=1.0.0 --name=models/all-MiniLM-L6-v2.onnx --destination=./models2
 

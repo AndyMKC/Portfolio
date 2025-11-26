@@ -10,3 +10,4 @@ service-account-*.json
 *.tfvars.*
 *.onnx
 *.onnx.*
+models/

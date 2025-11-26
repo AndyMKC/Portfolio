@@ -49,7 +49,7 @@ async def add_book(req: AddBookRequest):
     if need_embeddings:
         # Generate embeddings (returns list[list[float]])
         # TODO:  Fetch more text besides just the user supplied ones
-        embeddings = EmbeddingsGenerator.generate_embeddings(tags=req.tags, freeform_texts=[req.relevant_text])
+        embeddings = EmbeddingsGenerator.generate_embeddings(tags=req.tags, relevant_text=[req.relevant_text])
 
         # Build one row per embedding vector
         for idx, emb in enumerate(embeddings):

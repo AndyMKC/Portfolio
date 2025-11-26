@@ -11,7 +11,7 @@ from transformers import AutoTokenizer
 class EmbeddingsGenerator:
     # keep the user's requested constants; resolve MODEL_PATH at runtime
     MODEL_FILE: Final[str] = os.environ.get("STORYSPARK_MODEL_FILE")
-    MODEL_PATH: Final[str] = f"${os.environ.get('STORYSPARK_IMAGE_MODEL_DIR')}/${MODEL_FILE}"
+    MODEL_PATH: Final[str] = f"{os.environ.get('STORYSPARK_IMAGE_MODEL_DIR')}/{MODEL_FILE}"
 
     # class-level caches so we don't reload tokenizer/session on every call
     _tokenizer = None
@@ -21,33 +21,7 @@ class EmbeddingsGenerator:
 
     # ---------- helpers ----------
     @staticmethod
-    def _resolve_model_path() -> str:
-        """
-        Resolve MODEL_PATH which may contain a leading $ENVVAR reference
-        (kept for compatibility with the user's provided constant).
-        Examples:
-          "$/models/model.onnx" -> literal (unlikely)
-          "$/models" not valid
-          "$/models" fallback
-          "${MYDIR}/model.onnx" -> replace with env var MYDIR
-        This function supports patterns like "$ENVVAR/..." or "${ENVVAR}/..."
-        and falls back to the raw string if nothing matches.
-        """
-        raw = EmbeddingsGenerator.MODEL_PATH or ""
-        # pattern ${VAR}/rest or $VAR/rest
-        m = re.match(r"^\$\{?([A-Za-z0-9_]+)\}?/(.*)$", raw)
-        if m:
-            env_var, rest = m.group(1), m.group(2)
-            base = os.environ.get(env_var)
-            if base:
-                return os.path.join(base, rest)
-        # if no match, try replacing a leading $ with nothing and return
-        if raw.startswith("$"):
-            return raw[1:]
-        return raw
-
-    @staticmethod
-    def _ensure_model_loaded(model_path: Optional[str] = None, tokenizer_name: Optional[str] = None, provider: Optional[str] = None):
+    def _ensure_model_loaded(model_path: str, tokenizer_name: Optional[str] = None, provider: Optional[str] = None):
         """
         Lazily load tokenizer and ONNX session. If tokenizer files are colocated
         with the model (same directory), prefer the local tokenizer; otherwise
@@ -56,21 +30,11 @@ class EmbeddingsGenerator:
         if EmbeddingsGenerator._sess is not None and EmbeddingsGenerator._tokenizer is not None:
             return
 
-        model_path = model_path or EmbeddingsGenerator._resolve_model_path()
-        # try to find a local tokenizer dir next to the model file
-        model_dir = None
-        if model_path:
-            model_dir = os.path.dirname(model_path)
-
-        # prefer local tokenizer if it exists
-        tokenizer_source = None
-        if model_dir and os.path.isdir(model_dir):
-            # common tokenizer files: tokenizer.json, vocab.txt, tokenizer_config.json
-            if any(os.path.exists(os.path.join(model_dir, fn)) for fn in ("tokenizer.json", "vocab.txt", "tokenizer_config.json", "config.json")):
-                tokenizer_source = model_dir
-
-        # fallback to provided tokenizer name or the sentence-transformers id
-        tokenizer_source = tokenizer_source or tokenizer_name or "sentence-transformers/all-MiniLM-L6-v2"
+        # Find a local tokenizer dir next to the model file
+        model_dir = os.path.dirname(model_path)
+  
+        # Use pre-exported local tokenizer files
+        tokenizer_source = model_dir
 
         # load tokenizer
         EmbeddingsGenerator._tokenizer = AutoTokenizer.from_pretrained(tokenizer_source, use_fast=True)
@@ -80,34 +44,6 @@ class EmbeddingsGenerator:
         EmbeddingsGenerator._sess = ort.InferenceSession(model_path, providers=providers)
         EmbeddingsGenerator._output_name = EmbeddingsGenerator._sess.get_outputs()[0].name
         EmbeddingsGenerator._model_max_length = getattr(EmbeddingsGenerator._tokenizer, "model_max_length", 512)
-
-    @staticmethod
-    def _parse_tags_field(tag_string: str, lowercase: bool = True) -> List[str]:
-        """
-        Parse a single tag field which may contain semicolons, commas, or spaces.
-        Returns a list of normalized, deduped tags preserving order.
-        """
-        if not tag_string:
-            return []
-        s = tag_string.strip()
-        if ";" in s:
-            raw = [t for t in (p.strip() for p in s.split(";")) if t]
-        elif "," in s:
-            reader = csv.reader([s])
-            raw = [t.strip() for t in next(reader) if t.strip()]
-        else:
-            raw = [t.strip() for t in re.split(r"\s+", s) if t.strip()]
-
-        seen = set()
-        out = []
-        for t in raw:
-            norm = " ".join(t.split())
-            if lowercase:
-                norm = norm.lower()
-            if norm and norm not in seen:
-                seen.add(norm)
-                out.append(norm)
-        return out
 
     @staticmethod
     def _token_lengths(texts: List[str]) -> List[int]:
@@ -134,7 +70,7 @@ class EmbeddingsGenerator:
 
     # ---------- public API ----------
     @staticmethod
-    def generate_embeddings(tags: List[str], relevant_text: List[str]) -> List[List[float]]:
+    def generate_embeddings(tags: List[str], relevant_text: List[str]) -> list[tuple[str, list[float]]]:
         """
         Returns a list of vectors (list of floats).
         Order:
@@ -146,37 +82,27 @@ class EmbeddingsGenerator:
           - The function loads the ONNX model and tokenizer lazily from environment-configured MODEL_PATH.
         """
         # resolve and load model/tokenizer
-        model_path = EmbeddingsGenerator._resolve_model_path()
-        EmbeddingsGenerator._ensure_model_loaded(model_path=model_path)
+        EmbeddingsGenerator._ensure_model_loaded(model_path=EmbeddingsGenerator.MODEL_PATH)
 
         tokenizer = EmbeddingsGenerator._tokenizer
         sess = EmbeddingsGenerator._sess
         model_max_len = EmbeddingsGenerator._model_max_length
 
         # ---------- 1) parse tags into a flat list ----------
-        parsed_tags: List[str] = []
-        for t in tags:
-            parsed_tags.extend(EmbeddingsGenerator._parse_tags_field(t))
-        # dedupe across the whole list while preserving order (already done per field, but ensure global)
-        seen = set()
-        deduped_tags = []
-        for t in parsed_tags:
-            if t not in seen:
-                seen.add(t)
-                deduped_tags.append(t)
+        parsed_tags: list[str] = list(set(tags.split(';')))
 
-        vectors: List[List[float]] = []
+        vectors: list[str, list[float]] = []
 
         # ---------- 2) embed tags (batch them together) ----------
-        if deduped_tags:
+        if parsed_tags:
             # batch all tags in one call (they are short)
-            toks = tokenizer(deduped_tags, padding="longest", truncation=True, max_length=64, return_tensors="np")
+            toks = tokenizer(parsed_tags, padding="longest", truncation=True, max_length=64, return_tensors="np")
             tag_embs = EmbeddingsGenerator._run_onnx_batch(toks["input_ids"], toks["attention_mask"])
             # ensure normalized
             tag_embs = EmbeddingsGenerator._l2_normalize(tag_embs)
             # append each tag vector (as list[float]) preserving order
             for vec in tag_embs:
-                vectors.append(vec.tolist())
+                vectors.append("qq", vec.tolist())
 
         # ---------- 3) embed each freeform_text (chunk + aggregate) ----------
         # helper to chunk a single text into token-level chunks (decoded back to text)
@@ -201,7 +127,7 @@ class EmbeddingsGenerator:
         default_chunk_size = min(256, model_max_len)
         default_stride = min(64, default_chunk_size // 2)
 
-        for text in freeform_texts:
+        for text in relevant_text:
             # compute token length quickly
             token_len = len(tokenizer.encode(text, add_special_tokens=True))
             if token_len <= model_max_len:
@@ -209,7 +135,7 @@ class EmbeddingsGenerator:
                 toks = tokenizer([text], padding="longest", truncation=True, max_length=token_len, return_tensors="np")
                 emb = EmbeddingsGenerator._run_onnx_batch(toks["input_ids"], toks["attention_mask"])[0]
                 emb = EmbeddingsGenerator._l2_normalize(emb)
-                vectors.append(emb.tolist())
+                vectors.append(text, emb.tolist())
             else:
                 # chunk, embed chunks in batches, then average
                 chunks = chunk_text_to_strings(text, chunk_size=default_chunk_size, stride=default_stride)
@@ -228,11 +154,11 @@ class EmbeddingsGenerator:
                     chunk_embs = np.vstack(chunk_embs_list)
                     doc_emb = np.mean(chunk_embs, axis=0)
                     doc_emb = EmbeddingsGenerator._l2_normalize(doc_emb)
-                    vectors.append(doc_emb.tolist())
+                    vectors.append(text, doc_emb.tolist())
                 else:
                     # fallback empty vector
                     dim = EmbeddingsGenerator._sess.get_outputs()[0].shape[-1]
-                    vectors.append(np.zeros((dim,), dtype=np.float32).tolist())
+                    vectors.append("", np.zeros((dim,), dtype=np.float32).tolist())
 
         # free memory if needed
         gc.collect()

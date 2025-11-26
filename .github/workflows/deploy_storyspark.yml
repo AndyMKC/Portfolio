@@ -141,23 +141,13 @@ jobs:
     - name: Download the model artifacts
       working-directory: ${{ github.workspace }}/${{ env.SRC_DIR }}
       run: |
-        mkdir models
         gcloud artifacts generic download \
           --project=${{ vars.STORYSPARK_GCP_PROJECT_ID }} \
           --location=${{ vars.STORYSPARK_GCP_REGION }} \
           --repository=${{ vars.STORYSPARK_MODELS_CONTAINER }} \
           --package=${{ vars.STORYSPARK_MODELS_CONTAINER }} \
           --version=${{ vars.STORYSPARK_MODELS_PACKAGE_VERSION }} \
-          --name=${{ vars.STORYSPARK_MODELS_SOURCE_DIRECTORY }}/${{ vars.STORYSPARK_MODELS_MODEL_NAME }}.${{ vars.STORYSPARK_MODELS_MODEL_EXTENSION }} \
-          --destination=${{ env.SOURCE_MODEL_DIR }}
-        gcloud artifacts generic download \
-          --project=${{ vars.STORYSPARK_GCP_PROJECT_ID }} \
-          --location=${{ vars.STORYSPARK_GCP_REGION }} \
-          --repository=${{ vars.STORYSPARK_MODELS_CONTAINER }} \
-          --package=${{ vars.STORYSPARK_MODELS_CONTAINER }} \
-          --version=${{ vars.STORYSPARK_MODELS_PACKAGE_VERSION }} \
-          --name=${{ vars.STORYSPARK_MODELS_SOURCE_DIRECTORY }}/${{ vars.STORYSPARK_MODELS_MODEL_NAME }}.${{ vars.STORYSPARK_MODELS_MODEL_EXTENSION }}.data \
-          --destination=${{ env.SOURCE_MODEL_DIR }}
+          --destination=.      
 
     - name: Build the Docker image
       working-directory: ${{ github.workspace }}/${{ env.SRC_DIR }}
@@ -173,6 +163,7 @@ jobs:
         --build-arg SOURCE_MODEL_DIR=./${{ env.SOURCE_MODEL_DIR }}
         --build-arg MODEL_FILE=${{ vars.STORYSPARK_MODELS_MODEL_NAME }}.${{ vars.STORYSPARK_MODELS_MODEL_EXTENSION }} \
         --build-arg MODEL_DATA_FILE=${{ vars.STORYSPARK_MODELS_SOURCE_DIRECTORY }}/${{ vars.STORYSPARK_MODELS_MODEL_NAME }}.${{ vars.STORYSPARK_MODELS_MODEL_EXTENSION }}.data \
+        --build-arg PIP_CACHE=false \
         .
     
     # We are separating the docker build and push into two different steps so we need to persist the image between runs
