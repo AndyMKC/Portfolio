@@ -1,12 +1,11 @@
-# embeddings_generator.py
 import os
-import csv
 import re
 import gc
-from typing import Final, List, Optional
+from typing import Final, Optional
 import numpy as np
 import onnxruntime as ort
 from transformers import AutoTokenizer
+from dataclasses import dataclass
 
 class EmbeddingsGenerator:
     # keep the user's requested constants; resolve MODEL_PATH at runtime
@@ -18,6 +17,78 @@ class EmbeddingsGenerator:
     _sess = None
     _output_name = None
     _model_max_length = None
+
+    @dataclass
+    class EmbeddingsInfo:
+        text: str
+        embeddings: list[float]
+
+    # ---------- public API ----------
+    @staticmethod
+    def generate_embeddings(tags: list[str], relevant_text: list[str]) -> list[EmbeddingsInfo]:
+        """
+        Returns a list of (text, embedding) pairs.
+        - For tags: each parsed tag string -> its embedding.
+        - For relevant_text: each input text -> one embedding (chunked and averaged if needed).
+        """
+        # resolve and load model/tokenizer
+        EmbeddingsGenerator._ensure_model_loaded(model_path=EmbeddingsGenerator.MODEL_PATH)
+
+        # ---------- 1) lower-case and dedupe the tags ----------
+        parsed_tags: list[str] = list(set([tag.lower() for tag in tags.split(';')]))
+        vectors: list[EmbeddingsGenerator.EmbeddingsInfo] = []
+
+        # ---------- 2) embed tags (batch them together, preserve mapping) ----------
+        if parsed_tags:
+            max_tag_batch = 128
+            for start in range(0, len(parsed_tags), max_tag_batch):
+                batch_tags = parsed_tags[start : start + max_tag_batch]
+                toks = EmbeddingsGenerator._tokenizer(batch_tags, padding="longest", truncation=True, max_length=64, return_tensors="np")
+                tag_embs = EmbeddingsGenerator._run_onnx_batch(toks["input_ids"], toks["attention_mask"])  # (B, D)
+                tag_embs = EmbeddingsGenerator._l2_normalize(tag_embs)  # (B, D)
+                for i, vec in enumerate(tag_embs):
+                    vectors.append(EmbeddingsGenerator.EmbeddingsInfo(batch_tags[i], vec.tolist()))
+
+        # ---------- 3) embed each freeform_text (chunk + aggregate) ----------
+        default_chunk_size = min(256, EmbeddingsGenerator._model_max_length)
+        default_stride = min(64, default_chunk_size // 2)
+
+        for text in relevant_text:
+            if not text:
+                # keep mapping for empty text
+                dim = EmbeddingsGenerator._sess.get_outputs()[0].shape[-1]
+                vectors.append(EmbeddingsGenerator.EmbeddingsInfo(text, np.zeros((dim,), dtype=np.float32).tolist()))
+                continue
+
+            token_len = len(EmbeddingsGenerator._tokenizer.encode(text, add_special_tokens=True))
+            if token_len <= EmbeddingsGenerator._model_max_length:
+                toks = EmbeddingsGenerator._tokenizer([text], padding="longest", truncation=True, max_length=token_len, return_tensors="np")
+                emb = EmbeddingsGenerator._run_onnx_batch(toks["input_ids"], toks["attention_mask"])[0]  # (D,)
+                emb = EmbeddingsGenerator._l2_normalize(emb)  # (D,)
+                vectors.append(EmbeddingsGenerator.EmbeddingsInfo(text, emb.tolist()))
+            else:
+                chunks = EmbeddingsGenerator._chunk_text_to_strings(text, chunk_size=default_chunk_size, stride=default_stride)
+                chunk_embs_list: list[np.ndarray] = []
+                chunk_batch_size = 8
+                for i in range(0, len(chunks), chunk_batch_size):
+                    batch = chunks[i : i + chunk_batch_size]
+                    lens = [len(EmbeddingsGenerator._tokenizer.encode(c, add_special_tokens=True)) for c in batch]
+                    batch_max_len = min(max(lens), EmbeddingsGenerator._model_max_length)
+                    toks = EmbeddingsGenerator._tokenizer(batch, padding="max_length", truncation=True, max_length=batch_max_len, return_tensors="np")
+                    emb_batch = EmbeddingsGenerator._run_onnx_batch(toks["input_ids"], toks["attention_mask"])  # (b, D)
+                    chunk_embs_list.append(emb_batch)
+                if chunk_embs_list:
+                    chunk_embs = np.vstack(chunk_embs_list)  # (total_chunks, D)
+                    doc_emb = np.mean(chunk_embs, axis=0)     # (D,)
+                    doc_emb = EmbeddingsGenerator._l2_normalize(doc_emb)
+                    vectors.append(EmbeddingsGenerator.EmbeddingsInfo(text, doc_emb.tolist()))
+                else:
+                    dim = EmbeddingsGenerator._sess.get_outputs()[0].shape[-1]
+                    vectors.append(EmbeddingsGenerator.EmbeddingsInfo(text, np.zeros((dim,), dtype=np.float32).tolist()))
+
+        # free memory if needed
+        gc.collect()
+        return vectors
 
     # ---------- helpers ----------
     @staticmethod
@@ -32,12 +103,9 @@ class EmbeddingsGenerator:
 
         # Find a local tokenizer dir next to the model file
         model_dir = os.path.dirname(model_path)
-  
-        # Use pre-exported local tokenizer files
-        tokenizer_source = model_dir
 
-        # load tokenizer
-        EmbeddingsGenerator._tokenizer = AutoTokenizer.from_pretrained(tokenizer_source, use_fast=True)
+        # load tokenizer using the pre-exported local tokenizer files
+        EmbeddingsGenerator._tokenizer = AutoTokenizer.from_pretrained(model_dir, use_fast=True)
 
         # load ONNX session
         providers = [provider] if provider else ["CPUExecutionProvider"]
@@ -46,19 +114,12 @@ class EmbeddingsGenerator:
         EmbeddingsGenerator._model_max_length = getattr(EmbeddingsGenerator._tokenizer, "model_max_length", 512)
 
     @staticmethod
-    def _token_lengths(texts: List[str]) -> List[int]:
-        # fast length estimate using tokenizer.encode without tensors
-        tk = EmbeddingsGenerator._tokenizer
-        return [len(tk.encode(t, add_special_tokens=True)) for t in texts]
-
-    @staticmethod
     def _run_onnx_batch(input_ids: np.ndarray, attention_mask: np.ndarray) -> np.ndarray:
-        sess = EmbeddingsGenerator._sess
         ort_inputs = {
             "input_ids": input_ids.astype(np.int64),
             "attention_mask": attention_mask.astype(np.int64),
         }
-        outputs = sess.run([EmbeddingsGenerator._output_name], ort_inputs)
+        outputs = EmbeddingsGenerator._sess.run([EmbeddingsGenerator._output_name], ort_inputs)
         emb = outputs[0]
         # ensure float32 numpy array
         return np.asarray(emb, dtype=np.float32)
@@ -68,98 +129,26 @@ class EmbeddingsGenerator:
         norm = np.linalg.norm(v, axis=-1, keepdims=True)
         return v / (norm + eps)
 
-    # ---------- public API ----------
     @staticmethod
-    def generate_embeddings(tags: List[str], relevant_text: List[str]) -> list[tuple[str, list[float]]]:
+    def _chunk_text_to_strings(text: str, chunk_size: int, stride: int) -> list[str]:
         """
-        Returns a list of vectors (list of floats).
-        Order:
-          1) All parsed tag vectors (in the order of tags after parsing and deduping).
-          2) One vector per freeform_text (each is chunked if needed, chunk embeddings averaged).
-        Notes:
-          - Each tag string in `tags` may itself contain multiple tags delimited by ';' or ',' or whitespace.
-          - freeform_texts are chunked at token level if they exceed the model's max length.
-          - The function loads the ONNX model and tokenizer lazily from environment-configured MODEL_PATH.
+        Chunk a single text into token-level chunks (decoded back to text).
+        Returns list of chunk strings.
         """
-        # resolve and load model/tokenizer
-        EmbeddingsGenerator._ensure_model_loaded(model_path=EmbeddingsGenerator.MODEL_PATH)
-
-        tokenizer = EmbeddingsGenerator._tokenizer
-        sess = EmbeddingsGenerator._sess
-        model_max_len = EmbeddingsGenerator._model_max_length
-
-        # ---------- 1) parse tags into a flat list ----------
-        parsed_tags: list[str] = list(set(tags.split(';')))
-
-        vectors: list[str, list[float]] = []
-
-        # ---------- 2) embed tags (batch them together) ----------
-        if parsed_tags:
-            # batch all tags in one call (they are short)
-            toks = tokenizer(parsed_tags, padding="longest", truncation=True, max_length=64, return_tensors="np")
-            tag_embs = EmbeddingsGenerator._run_onnx_batch(toks["input_ids"], toks["attention_mask"])
-            # ensure normalized
-            tag_embs = EmbeddingsGenerator._l2_normalize(tag_embs)
-            # append each tag vector (as list[float]) preserving order
-            for vec in tag_embs:
-                vectors.append("qq", vec.tolist())
-
-        # ---------- 3) embed each freeform_text (chunk + aggregate) ----------
-        # helper to chunk a single text into token-level chunks (decoded back to text)
-        def chunk_text_to_strings(text: str, chunk_size: int, stride: int) -> List[str]:
-            if not text:
-                return [""]
-            token_ids = tokenizer.encode(text, add_special_tokens=False)
-            if len(token_ids) <= chunk_size:
-                return [text]
-            chunks = []
-            start = 0
-            while start < len(token_ids):
-                chunk_ids = token_ids[start : start + chunk_size]
-                chunk_text = tokenizer.decode(chunk_ids, skip_special_tokens=True, clean_up_tokenization_spaces=True)
-                chunks.append(chunk_text)
-                if start + chunk_size >= len(token_ids):
-                    break
-                start += chunk_size - stride
-            return chunks
-
-        # parameters for chunking; chunk_size must be <= model_max_len
-        default_chunk_size = min(256, model_max_len)
-        default_stride = min(64, default_chunk_size // 2)
-
-        for text in relevant_text:
-            # compute token length quickly
-            token_len = len(tokenizer.encode(text, add_special_tokens=True))
-            if token_len <= model_max_len:
-                # short enough: embed directly
-                toks = tokenizer([text], padding="longest", truncation=True, max_length=token_len, return_tensors="np")
-                emb = EmbeddingsGenerator._run_onnx_batch(toks["input_ids"], toks["attention_mask"])[0]
-                emb = EmbeddingsGenerator._l2_normalize(emb)
-                vectors.append(text, emb.tolist())
-            else:
-                # chunk, embed chunks in batches, then average
-                chunks = chunk_text_to_strings(text, chunk_size=default_chunk_size, stride=default_stride)
-                # embed chunks in small batches to avoid OOM
-                chunk_embs_list = []
-                chunk_batch_size = 8
-                for i in range(0, len(chunks), chunk_batch_size):
-                    batch = chunks[i : i + chunk_batch_size]
-                    # compute per-batch max token length to reduce padding
-                    lens = [len(tokenizer.encode(c, add_special_tokens=True)) for c in batch]
-                    batch_max_len = min(max(lens), model_max_len)
-                    toks = tokenizer(batch, padding="max_length", truncation=True, max_length=batch_max_len, return_tensors="np")
-                    emb_batch = EmbeddingsGenerator._run_onnx_batch(toks["input_ids"], toks["attention_mask"])
-                    chunk_embs_list.append(emb_batch)
-                if chunk_embs_list:
-                    chunk_embs = np.vstack(chunk_embs_list)
-                    doc_emb = np.mean(chunk_embs, axis=0)
-                    doc_emb = EmbeddingsGenerator._l2_normalize(doc_emb)
-                    vectors.append(text, doc_emb.tolist())
-                else:
-                    # fallback empty vector
-                    dim = EmbeddingsGenerator._sess.get_outputs()[0].shape[-1]
-                    vectors.append("", np.zeros((dim,), dtype=np.float32).tolist())
-
-        # free memory if needed
-        gc.collect()
-        return vectors
+        if not text:
+            return [""]
+        token_ids = EmbeddingsGenerator._tokenizer.encode(text, add_special_tokens=False)
+        if len(token_ids) <= chunk_size:
+            return [text]
+        chunks = []
+        start = 0
+        while start < len(token_ids):
+            chunk_ids = token_ids[start : start + chunk_size]
+            chunk_text = EmbeddingsGenerator._tokenizer.decode(
+                chunk_ids, skip_special_tokens=True, clean_up_tokenization_spaces=True
+            )
+            chunks.append(chunk_text)
+            if start + chunk_size >= len(token_ids):
+                break
+            start += chunk_size - stride
+        return chunks
