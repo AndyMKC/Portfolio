@@ -1,7 +1,6 @@
 from fastapi import APIRouter
 from datetime import datetime, timezone
 from google.cloud import bigquery
-from typing import Any
 import json
 
 from app.models import AddBookRequest
@@ -15,14 +14,23 @@ async def add_book(req: AddBookRequest):
     """
     Inserts data into both tables atomically within a single BigQuery transaction.
     """
-    bigquery_client_helper = get_bigquery_client()    
+    bigquery_client_helper = get_bigquery_client()
     
     # We want to not have any issues where there is an entry in the source table and not something in the embeddings table so commit both changes at once
     id = f"{req.owner}:{req.isbn}"
     source_table_id = f"{bigquery_client_helper.project_id}.{bigquery_client_helper.dataset_id}.{bigquery_client_helper.source_table_id}"
     embeddings_table_id = f"{bigquery_client_helper.project_id}.{bigquery_client_helper.dataset_id}.{bigquery_client_helper.embeddings_table_id}"
     utc_now = datetime.now(timezone.utc)
-    utc_now_str = utc_now.isoformat()
+
+    need_insertion = not id_exists(
+        bigquery_client_helper=bigquery_client_helper,
+        table_id=bigquery_client_helper.source_table_id,
+        id_column="id",
+        id=id,
+    )
+
+    if (not need_insertion):
+        return
     
     # --- 1. Prepare data structures in Python ---
     
@@ -54,30 +62,7 @@ async def add_book(req: AddBookRequest):
                 "created_at": utc_now.isoformat(),   # ISO string
             })
 
-            embeddings_json = json.dumps(embeddings_payload)
-
-            # struct_fields = [
-            #     bigquery.ScalarQueryParameter(None, "STRING", req.isbn),
-            #     bigquery.ScalarQueryParameter(None, "STRING", info.text),
-            #     bigquery.ScalarQueryParameter(None, "ARRAY<FLOAT64>", emb_list),
-            #     bigquery.ScalarQueryParameter(None, "STRING", EmbeddingsGenerator.MODEL_FILE),
-            #     bigquery.ScalarQueryParameter(None, "TIMESTAMP", utc_now),
-            # ]
-
-            # embeddings_struct_params.append(
-            #     bigquery.StructQueryParameter(None, *struct_fields)
-            # )
-
-            # # This is intentionally left as a tuple and not a dict for insertion into SQL
-            # embeddings_structs.append(
-            #     (
-            #         req.isbn,
-            #         info.text,
-            #         emb_list, 
-            #         EmbeddingsGenerator.MODEL_FILE,
-            #         utc_now_str
-            #     )
-            # )
+    embeddings_json = json.dumps(embeddings_payload)
 
     # --- 2. Create the unified Multi-Statement SQL Script ---
 
@@ -118,38 +103,12 @@ async def add_book(req: AddBookRequest):
             bigquery.ScalarQueryParameter("last_read", "TIMESTAMP", None),
             bigquery.ScalarQueryParameter("created_at", "TIMESTAMP", utc_now),
             bigquery.ScalarQueryParameter("embeddings_json", "STRING", embeddings_json)
-            
-            # The single parameter for all N embedding rows (ARRAY<STRUCT> type)
-            # bigquery.ArrayQueryParameter(
-            #     "embeddings_array",
-            #     "STRUCT<isbn STRING, content STRING, embeddings ARRAY<FLOAT64>, model_name STRING, created_at TIMESTAMP>",
-            #     embeddings_struct_params,
-            # ),
         ]
     )
-
-    # query_parameters=[
-    #         # Parameters for the source table (Scalar types)
-    #         bigquery.ScalarQueryParameter("id", "STRING", id),
-    #         bigquery.ScalarQueryParameter("owner", "STRING", req.owner),
-    #         bigquery.ScalarQueryParameter("isbn", "STRING", req.isbn),
-    #         bigquery.ScalarQueryParameter("title", "STRING", req.title),
-    #         bigquery.ScalarQueryParameter("author", "STRING", req.author),
-    #         bigquery.ScalarQueryParameter("last_read", "TIMESTAMP", None),
-    #         bigquery.ScalarQueryParameter("created_at", "TIMESTAMP", utc_now),
-            
-    #         # The single parameter for all N embedding rows (ARRAY<STRUCT> type)
-    #         bigquery.ArrayQueryParameter(
-    #             "embeddings_array",
-    #             "STRUCT<isbn STRING, content STRING, embeddings ARRAY<FLOAT64>, model_name STRING, created_at TIMESTAMP>",
-    #             embeddings_struct_params,
-    #         ),
-    #     ]
 
     # --- 4. Execute the single atomic job ---
     try:
         query_job = bigquery_client_helper.client.query(transaction_script, job_config=job_config)
-        #query_job = bigquery_client_helper.client.query(transaction_script, query_parameters=query_parameters)
         # Waiting on the result means we wait for the COMMIT to finish
         query_job.result() 
         print(f"Full non-streaming transaction committed successfully for ISBN: {req.isbn}.")
