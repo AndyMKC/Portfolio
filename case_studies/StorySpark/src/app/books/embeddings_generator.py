@@ -35,7 +35,7 @@ class EmbeddingsGenerator:
         EmbeddingsGenerator._ensure_model_loaded(model_path=EmbeddingsGenerator.MODEL_PATH)
 
         # ---------- 1) lower-case and dedupe the tags ----------
-        parsed_tags: list[str] = list(set([tag.lower() for tag in tags.split(';')]))
+        parsed_tags: list[str] = list(set([tag.lower().strip() for tag in tags.split(';')]))
         vectors: list[EmbeddingsGenerator.EmbeddingsInfo] = []
 
         # ---------- 2) embed tags (batch them together, preserve mapping) ----------
