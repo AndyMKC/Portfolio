@@ -168,7 +168,14 @@ resource "google_artifact_registry_repository" "models_repo" {
   }  
 }
 
-resource "docker_hub_repository" "dockerhub_repo" {
+# Create an organization group for CI
+resource "dockerhub_group" "dockerhub_organization" {
+  organisation = var.dockerhub_username
+  name         = "ci organisation"
+  description  = "Project CI"
+}
+
+resource "dockerhub_repository" "dockerhub_repo" {
   namespace     = var.dockerhub_username
   name          = var.artifact_docker_images_repo_id
   description   = "Docker Images"

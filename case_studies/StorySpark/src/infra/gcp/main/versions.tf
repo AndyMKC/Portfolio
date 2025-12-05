@@ -11,6 +11,10 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 7.6.0"
     }
+    dockerhub = {
+      source  = "BarnabyShearer/dockerhub"
+      version = ">= 0.0.15"
+    }
     # Using google-beta is necessary for newer Cloud Run features (V2/2nd Gen)
     # google-beta = {
     #   source  = "hashicorp/google-beta"
@@ -33,9 +37,10 @@ provider "google" {
 #   region  = var.region
 # }
 
-provider "docker" {
+provider "dockerhub" {
   # provider configuration that supports Docker Hub PAT authentication
   # see provider docs for exact auth fields
+  # Using the token even though the documentation says to not use the token (https://registry.terraform.io/providers/BarnabyShearer/dockerhub/latest/docs).  Trying to see if this works
   username = var.dockerhub_username
   password = var.dockerhub_token
 }
