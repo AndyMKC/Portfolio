@@ -38,9 +38,7 @@ provider "google" {
 # }
 
 provider "dockerhub" {
-  # provider configuration that supports Docker Hub PAT authentication
-  # see provider docs for exact auth fields
-  # Using the token even though the documentation says to not use the token (https://registry.terraform.io/providers/BarnabyShearer/dockerhub/latest/docs).  Trying to see if this works
+  # Using password instead of token because that's what the documentation demands -- https://registry.terraform.io/providers/BarnabyShearer/dockerhub/latest/docs
   username = var.dockerhub_username
-  password = var.dockerhub_token
+  password = var.dockerhub_password
 }
