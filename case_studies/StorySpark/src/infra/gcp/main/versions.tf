@@ -40,5 +40,6 @@ provider "google" {
 provider "dockerhub" {
   # Using password instead of token because that's what the documentation demands -- https://registry.terraform.io/providers/BarnabyShearer/dockerhub/latest/docs
   username = var.dockerhub_username
-  password = var.dockerhub_password
+  #password = var.dockerhub_password
+  password = var.dockerhub_token
 }
