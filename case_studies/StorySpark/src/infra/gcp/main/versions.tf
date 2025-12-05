@@ -33,3 +33,9 @@ provider "google" {
 #   region  = var.region
 # }
 
+provider "docker" {
+  # provider configuration that supports Docker Hub PAT authentication
+  # see provider docs for exact auth fields
+  username = var.dockerhub_username
+  password = var.dockerhub_token
+}

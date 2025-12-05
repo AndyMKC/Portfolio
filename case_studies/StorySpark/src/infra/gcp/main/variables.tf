@@ -98,3 +98,11 @@ variable "ci_service_account_email" {
   description = "Email of an existing GCP service account used by CI (e.g. github-actions-ci@PROJECT.iam.gserviceaccount.com)"
   default     = "github-terraform-sa@storyspark-5555555.iam.gserviceaccount.com"
 }
+
+variable "dockerhub_username" {
+  type = string
+}
+
+variable "dockerhub_token" {
+  type = string
+}

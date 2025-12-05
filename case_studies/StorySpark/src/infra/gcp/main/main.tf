@@ -168,6 +168,13 @@ resource "google_artifact_registry_repository" "models_repo" {
   }  
 }
 
+resource "docker_hub_repository" "dockerhub_repo" {
+  namespace     = var.dockerhub_username
+  name          = var.artifact_docker_images_repo_id
+  description   = "Docker Images"
+  private       = true
+}
+
 resource "google_project_service" "iam" {
   project = var.project_id
   service = "iam.googleapis.com"
