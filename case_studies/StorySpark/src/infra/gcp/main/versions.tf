@@ -40,6 +40,6 @@ provider "google" {
 provider "docker" {
   # https://registry.terraform.io/providers/docker/docker/latest/docs
   username = var.dockerhub_username
-  #password = var.dockerhub_password
-  password = var.dockerhub_token
+  password = var.dockerhub_password
+  #password = var.dockerhub_token
 }
