@@ -50,9 +50,11 @@ provider "google" {
 #   #password = var.dockerhub_token
 # }
 
-provider "docker" {
-  # https://github.com/docker/terraform-provider-docker
-  username = var.dockerhub_username
-  #password = var.dockerhub_password
-  password = var.dockerhub_token
-}
+# provider "docker" {
+#   # https://github.com/docker/terraform-provider-docker
+#   username = var.dockerhub_username
+#   #password = var.dockerhub_password
+#   password = var.dockerhub_token
+# }
+
+provider "docker" {}
