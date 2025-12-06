@@ -340,7 +340,7 @@ jobs:
       uses: docker/login-action@v2
       with:
         username: ${{ vars.STORYSPARK_DOCKERHUB_USERNAME }}
-        password: ${{ secrets.STORYSPARK_DOCKERHUB_TOKEN }}  
+        password: ${{ secrets.STORYSPARK_DOCKERHUB_PASSWORD }}  
     
     - name: Terraform Plan
       id: plan
@@ -359,7 +359,7 @@ jobs:
           -var="cloud_run_image=${{ needs.docker-push.outputs.image_ref }}" \
           -var="artifact_docker_images_repo_id=${{ env.ARTIFACT_DOCKER_REPO }}" \
           -var="dockerhub_username=${{ vars.STORYSPARK_DOCKERHUB_USERNAME }}" \
-          -var="dockerhub_token"=${{ secrets.STORYSPARK_DOCKERHUB_TOKEN }} \
+          -var="dockerhub_token=${{ secrets.STORYSPARK_DOCKERHUB_TOKEN }}" \
           -var="dockerhub_password=${{ secrets.STORYSPARK_DOCKERHUB_PASSWORD }}"\
           -lock-timeout=5m \
           -out=tfplan
