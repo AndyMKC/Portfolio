@@ -346,6 +346,8 @@ jobs:
       id: plan
       working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
       run: |
+        export DOCKER_USERNAME=${{ vars.STORYSPARK_DOCKERHUB_USERNAME }}
+        export DOCKER_PASSWORD=${{ secrets.STORYSPARK_DOCKERHUB_PASSWORD }}
         terraform plan \
           -input=false \
           -var="project_id=${{ vars.STORYSPARK_GCP_PROJECT_ID }}" \
