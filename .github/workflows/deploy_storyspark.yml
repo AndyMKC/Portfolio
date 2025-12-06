@@ -340,14 +340,16 @@ jobs:
       uses: docker/login-action@v2
       with:
         username: ${{ vars.STORYSPARK_DOCKERHUB_USERNAME }}
-        password: ${{ secrets.STORYSPARK_DOCKERHUB_PASSWORD }}  
+        #password: ${{ secrets.STORYSPARK_DOCKERHUB_PASSWORD }}
+        password: ${{ secrets.STORYSPARK_DOCKERHUB_TOKEN }}
     
     - name: Terraform Plan
       id: plan
       working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
       env:
         DOCKER_USERNAME: ${{ vars.STORYSPARK_DOCKERHUB_USERNAME }}
-        DOCKER_PASSWORD: ${{ secrets.STORYSPARK_DOCKERHUB_PASSWORD }}
+        #DOCKER_PASSWORD: ${{ secrets.STORYSPARK_DOCKERHUB_PASSWORD }}
+        DOCKER_PASSWORD: ${{ secrets.STORYSPARK_DOCKERHUB_TOKEN }}
       run: |
         terraform plan \
           -input=false \
