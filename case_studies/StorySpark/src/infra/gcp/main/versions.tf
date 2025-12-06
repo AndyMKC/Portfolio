@@ -53,6 +53,6 @@ provider "google" {
 provider "docker" {
   # https://github.com/docker/terraform-provider-docker
   username = var.dockerhub_username
-  password = var.dockerhub_password
-  #password = var.dockerhub_token
+  #password = var.dockerhub_password
+  password = var.dockerhub_token
 }
