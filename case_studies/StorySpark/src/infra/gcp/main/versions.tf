@@ -11,9 +11,14 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 7.6.0"
     }
-    dockerhub = {
-      source  = "BarnabyShearer/dockerhub"
-      version = ">= 0.0.15"
+    # # Barnaby
+    # dockerhub = {
+    #   source  = "BarnabyShearer/dockerhub"
+    #   version = ">= 0.0.15"
+    # }
+    docker = {
+      source  = "docker/docker"
+      version = "~> 0.2"
     }
     # Using google-beta is necessary for newer Cloud Run features (V2/2nd Gen)
     # google-beta = {
@@ -37,8 +42,16 @@ provider "google" {
 #   region  = var.region
 # }
 
-provider "dockerhub" {
-  # Using password instead of token because that's what the documentation demands -- https://registry.terraform.io/providers/BarnabyShearer/dockerhub/latest/docs
+# Barnaby
+# provider "dockerhub" {
+#   # Using password instead of token because that's what the documentation demands -- https://registry.terraform.io/providers/BarnabyShearer/dockerhub/latest/docs
+#   username = var.dockerhub_username
+#   password = var.dockerhub_password
+#   #password = var.dockerhub_token
+# }
+
+provider "docker" {
+  # https://github.com/docker/terraform-provider-docker
   username = var.dockerhub_username
   password = var.dockerhub_password
   #password = var.dockerhub_token
