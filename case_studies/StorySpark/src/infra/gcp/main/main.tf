@@ -294,51 +294,86 @@ resource "google_project_iam_member" "run_sa_vertex" {
 }
 
 # Cloud Run service
-resource "google_cloud_run_service" "storyspark_service" {
+resource "google_cloud_run_v2_service" "storyspark_service" {
   name     = local.service_name
   location = var.region
   project  = var.project_id
 
   template {
-    spec {
-      service_account_name = "${local.sa_cloudrun}@${local.service_account_suffix}"
-      containers {
-        image = var.cloud_run_image
-        resources {
-          limits= {
-            memory = "1Gi" # Docker image with the embeddings model seems to increase the memory footprint to be 542 which is above the default 512.
-          }
-        }
-        ports {
-          container_port = 8080
-        }
-        env {
-          name  = "BQ_DATASET"
-          value = google_bigquery_dataset.embeddings_prod.dataset_id
-        }
-        env {
-          name  = "SOURCE_TABLE"
-          value = google_bigquery_table.source_table_prod.table_id
-        }
-        env {
-          name  = "EMBED_TABLE"
-          value = google_bigquery_table.embeddings_table_prod.table_id
-        }
-        env {
-          name  = "API_KEY"
-          value = var.api_key
-        }
-        env {
-          name  = "ENV"
-          value = local.env_suffix
+    # REQUIRED: Enable the Second Generation Execution Environment for future GCS volume mounts
+    execution_environment = "EXECUTION_ENVIRONMENT_GEN_2"
+
+    # Service account is now directly under 'template' in V2
+    service_account = "${local.sa_cloudrun}@${local.service_account_suffix}"
+    
+    containers {
+      image = var.cloud_run_image
+      
+      resources {
+        # Using the simplified V2 resource limits block
+        limits = {
+          memory = "1Gi"
         }
       }
+      
+      ports {
+        container_port = 8080
+      }
+      
+      # --- GCS VOLUME MOUNT CONFIGURATION (Currently Commented Out) ---
+      /*
+      volume_mounts {
+        name       = "model-bucket-volume"
+        mount_path = "/models_gcs"
+      }
+      
+      env {
+        name  = "STORYSPARK_IMAGE_MODEL_DIR"
+        value = "/models_gcs"
+      }
+      */
+      # --- END GCS VOLUME MOUNT CONFIGURATION ---
+
+      # Existing Env Vars (Keep these as they point to your BigQuery setup)
+      env {
+        name  = "BQ_DATASET"
+        value = google_bigquery_dataset.embeddings_prod.dataset_id
+      }
+      env {
+        name  = "SOURCE_TABLE"
+        value = google_bigquery_table.source_table_prod.table_id
+      }
+      env {
+        name  = "EMBED_TABLE"
+        value = google_bigquery_table.embeddings_table_prod.table_id
+      }
+      env {
+        name  = "API_KEY"
+        value = var.api_key
+      }
+      env {
+        name  = "ENV"
+        value = local.env_suffix
+      }
     }
+    
+    # --- V2 VOLUME DEFINITION (Currently Commented Out) ---
+    /*
+    volumes {
+      name = "model-bucket-volume"
+      gcs {
+        bucket    = "YOUR_MODEL_BUCKET_NAME" 
+        read_only = true
+      }
+    }
+    */
+    # --- END V2 VOLUME DEFINITION ---
   }
 
+  # V2 Traffic definition
   traffic {
-    percent         = 100
-    latest_revision = true
+    type    = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
+    percent = 100
   }
 }
 

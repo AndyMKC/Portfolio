@@ -63,11 +63,6 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 FROM base AS runtime
 COPY --from=deps /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=deps /usr/local/bin /usr/local/bin
-RUN mkdir -p "${STORYSPARK_IMAGE_MODEL_DIR}"
-COPY ${SOURCE_MODEL_DIR} ${STORYSPARK_IMAGE_MODEL_DIR}
-
-# make sure nobody can access it (65534 is the usual nobody uid)
-RUN chown -R 65534:65534 ${STORYSPARK_IMAGE_MODEL_DIR} && chmod -R a+rX ${STORYSPARK_IMAGE_MODEL_DIR}
 
 COPY app ./app
 
@@ -77,6 +72,12 @@ EXPOSE 8080
 
 # Dev stage: includes debugpy and reload
 FROM runtime AS dev
+# We only copy the model files in the local dev target but for prod, we mount the bucket as a volume mount.
+# This means we do not have to spend the space to store the model files twice (once in the cloud and once in this image)
+RUN mkdir -p "${STORYSPARK_IMAGE_MODEL_DIR}"
+COPY ${SOURCE_MODEL_DIR} ${STORYSPARK_IMAGE_MODEL_DIR}
+# make sure (the user called) nobody can access it (65534 is the usual nobody uid)
+RUN chown -R 65534:65534 ${STORYSPARK_IMAGE_MODEL_DIR} && chmod -R a+rX ${STORYSPARK_IMAGE_MODEL_DIR}
 RUN --mount=type=cache,target=/root/.cache/pip pip install debugpy
 # Start with debugpy waiting for the VS Code attach; keep --reload for hot reload
 # To debug locally:
@@ -98,6 +99,8 @@ COPY --from=runtime /usr/local /usr/local
 # copy model files and app code
 COPY --from=runtime /src/${STORYSPARK_IMAGE_MODEL_DIR} ${STORYSPARK_IMAGE_MODEL_DIR}
 COPY --from=runtime /src/app /src/app
+# make sure (the user called) nobody can access it (65534 is the usual nobody uid)
+RUN chown -R 65534:65534 ${STORYSPARK_IMAGE_MODEL_DIR} && chmod -R a+rX ${STORYSPARK_IMAGE_MODEL_DIR}
 WORKDIR /src
 USER nobody
 # https://storyspark-service-prod-453336860824.us-west1.run.app/docs
