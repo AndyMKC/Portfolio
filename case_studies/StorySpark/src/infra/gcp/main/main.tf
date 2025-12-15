@@ -279,7 +279,7 @@ resource "google_cloud_run_v2_service" "storyspark_service" {
 
   template {
     # REQUIRED: Enable the Second Generation Execution Environment for future GCS volume mounts
-    execution_environment = "EXECUTION_ENVIRONMENT_GEN_2"
+    execution_environment = "EXECUTION_ENVIRONMENT_GEN2"
 
     # Service account is now directly under 'template' in V2
     service_account = "${local.sa_cloudrun}@${local.service_account_suffix}"
