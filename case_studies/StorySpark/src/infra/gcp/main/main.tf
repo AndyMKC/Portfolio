@@ -139,7 +139,7 @@ resource "google_artifact_registry_repository" "docker_repo" {
   }  
 }
 
-# Artifact Registry Docker repository
+# Artifact Registry models repository
 resource "google_artifact_registry_repository" "models_repo" {
   project       = var.project_id
   location      = var.region
@@ -166,28 +166,6 @@ resource "google_artifact_registry_repository" "models_repo" {
       older_than   = "1s"
     }
   }  
-}
-
-# # Create an organization group for CI
-# resource "dockerhub_group" "dockerhub_org" {
-#   organisation = var.dockerhub_username
-#   name         = "ci organisation"
-#   description  = "Project CI"
-# }
-
-# Barnaby
-# resource "dockerhub_repository" "dockerhub_repo" {
-#   name          = var.artifact_docker_images_repo_id
-#   namespace     = var.dockerhub_username
-#   description   = "Docker Images"
-#   private       = true
-# }
-
-resource "docker_hub_repository" "dockerhub_repo" {
-  name          = var.artifact_docker_images_repo_id
-  namespace     = var.dockerhub_username
-  description   = "Docker Images"
-  private       = true
 }
 
 resource "google_project_service" "iam" {
