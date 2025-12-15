@@ -25,26 +25,31 @@ WORKDIR /src
 # install dependencies (cacheable layer)
 FROM base AS deps
 
-# system deps needed for some wheels; keep minimal
+# install minimal system deps required to build wheels, install packages, then purge them
 RUN apt-get update \
   && apt-get install -y --no-install-recommends build-essential gcc libpq-dev \
+  && python -m pip install --upgrade pip setuptools wheel \
   && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 
-RUN --mount=type=cache,target=/root/.cache/pip python -m pip install --upgrade pip setuptools wheel
+# install python deps using BuildKit cache (do not try to remove the mounted cache here)
 RUN --mount=type=cache,target=/root/.cache/pip \
-  if [ "$PIP_CACHE" = "true" ]; then \
-    echo "**********************************************************"; \
-    echo "Omitting --no-cache-dir"; \
-    echo "**********************************************************"; \
-    pip install -r ./requirements.txt; \
-  else \
-    echo "**********************************************************"; \
-    echo "Using --no-cache-dir"; \
-    echo "**********************************************************"; \
-    pip install --no-cache-dir -r ./requirements.txt; \
-  fi
+    set -eux; \
+    if [ "$PIP_CACHE" = "true" ]; then \
+      echo "Using pip cache"; \
+      pip install -r ./requirements.txt; \
+    else \
+      echo "Using --no-cache-dir"; \
+      pip install --no-cache-dir -r ./requirements.txt; \
+    fi
+
+# purge build deps and clean apt caches in a separate RUN (no cache mount)
+RUN set -eux; \
+    apt-get update; \
+    apt-get purge -y --auto-remove build-essential gcc libpq-dev; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*
 
 # copy application code
 FROM base AS runtime
