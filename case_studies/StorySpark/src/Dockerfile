@@ -42,14 +42,22 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     else \
       echo "Using --no-cache-dir"; \
       pip install --no-cache-dir -r ./requirements.txt; \
-    fi
+    fi && \
+    # Remove compiled bytecode
+    find /usr/local/lib/python3.11/site-packages -name "__pycache__" -type d -exec rm -rf {} + && \
+    # Remove test suites from installed packages (numpy/pandas/etc often have huge test folders)
+    find /usr/local/lib/python3.11/site-packages -name "tests" -type d -exec rm -rf {} + && \
+    # Remove dist-info (risky, but often safe for distroless execution if you don't use pip at runtime)
+    find /usr/local/lib/python3.11/site-packages -name "*.dist-info" -type d -exec rm -rf {} + && \
+    echo "Cleanup done"
 
 # purge build deps and clean apt caches in a separate RUN (no cache mount)
-RUN set -eux; \
-    apt-get update; \
-    apt-get purge -y --auto-remove build-essential gcc libpq-dev; \
-    apt-get clean; \
-    rm -rf /var/lib/apt/lists/*
+# We don't really need this step because from runtime, we only copy specific folders
+# RUN set -eux; \
+#     apt-get update; \
+#     apt-get purge -y --auto-remove build-essential gcc libpq-dev; \
+#     apt-get clean; \
+#     rm -rf /var/lib/apt/lists/*
 
 # copy application code
 FROM base AS runtime
