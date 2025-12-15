@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM python:3.11-slim AS base
+FROM python:3.11-slim-bullseye AS base
 
 ARG STORYSPARK_GCP_BQ_PROJECT_ID
 ARG STORYSPARK_GCP_BQ_DATASET_ID
