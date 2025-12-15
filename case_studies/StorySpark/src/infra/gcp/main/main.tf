@@ -356,10 +356,10 @@ resource "google_cloud_run_v2_service" "storyspark_service" {
 }
 
 # Allow unauthenticated access to Cloud Run (public endpoint)
-resource "google_cloud_run_service_iam_member" "allow_unauth" {
-  location = google_cloud_run_service.storyspark_service.location
+resource "google_cloud_run_v2_service_iam_member" "allow_unauth" {
+  location = google_cloud_run_v2_service.storyspark_service.location
   project  = var.project_id
-  service  = google_cloud_run_service.storyspark_service.name
+  name     = google_cloud_run_v2_service.storyspark_service.name
   role     = "roles/run.invoker"
   member   = "allUsers"
 }
