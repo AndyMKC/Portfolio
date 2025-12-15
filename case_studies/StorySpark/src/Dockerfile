@@ -94,15 +94,12 @@ CMD ["sh", "-c", "python -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m u
 # Prod stage: minimal runtime command for Cloud Run
 # Use a distroless runtime for a much smaller production image.  We copy only the runtime artifacts from the runtime stage.
 FROM gcr.io/distroless/python3-debian11:nonroot AS prod
-ENV STORYSPARK_IMAGE_MODEL_DIR=models
 
 # copy installed python packages and any executables from the runtime stage
 COPY --from=runtime /usr/local /usr/local
-# copy model files and app code
-COPY --from=runtime /src/${STORYSPARK_IMAGE_MODEL_DIR} ${STORYSPARK_IMAGE_MODEL_DIR}
+# copy app code
 COPY --from=runtime /src/app /src/app
-# make sure (the user called) nobody can access it (65534 is the usual nobody uid)
-RUN chown -R 65534:65534 ${STORYSPARK_IMAGE_MODEL_DIR} && chmod -R a+rX ${STORYSPARK_IMAGE_MODEL_DIR}
+# Model files are accessible from the volume mount.  According to Gemini, we do not need to do a chown for this like we do in the dev build
 WORKDIR /src
 USER nobody
 # https://storyspark-service-prod-453336860824.us-west1.run.app/docs
