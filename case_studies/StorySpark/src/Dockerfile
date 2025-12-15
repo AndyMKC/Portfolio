@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM python:3.11-slim AS base
+FROM python:3.11-slim-bullseye AS base
 
 ARG STORYSPARK_GCP_BQ_PROJECT_ID
 ARG STORYSPARK_GCP_BQ_DATASET_ID
@@ -42,24 +42,27 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     else \
       echo "Using --no-cache-dir"; \
       pip install --no-cache-dir -r ./requirements.txt; \
-    fi
+    fi && \
+    # Remove compiled bytecode
+    find /usr/local/lib/python3.11/site-packages -name "__pycache__" -type d -exec rm -rf {} + && \
+    # Remove test suites from installed packages (numpy/pandas/etc often have huge test folders)
+    find /usr/local/lib/python3.11/site-packages -name "tests" -type d -exec rm -rf {} + && \
+    # Remove dist-info (risky, but often safe for distroless execution if you don't use pip at runtime)
+    # find /usr/local/lib/python3.11/site-packages -name "*.dist-info" -type d -exec rm -rf {} + && \
+    echo "Cleanup done"
 
 # purge build deps and clean apt caches in a separate RUN (no cache mount)
-RUN set -eux; \
-    apt-get update; \
-    apt-get purge -y --auto-remove build-essential gcc libpq-dev; \
-    apt-get clean; \
-    rm -rf /var/lib/apt/lists/*
+# We don't really need this step because from runtime, we only copy specific folders
+# RUN set -eux; \
+#     apt-get update; \
+#     apt-get purge -y --auto-remove build-essential gcc libpq-dev; \
+#     apt-get clean; \
+#     rm -rf /var/lib/apt/lists/*
 
 # copy application code
 FROM base AS runtime
 COPY --from=deps /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=deps /usr/local/bin /usr/local/bin
-RUN mkdir -p "${STORYSPARK_IMAGE_MODEL_DIR}"
-COPY ${SOURCE_MODEL_DIR} ${STORYSPARK_IMAGE_MODEL_DIR}
-
-# make sure nobody can access it (65534 is the usual nobody uid)
-RUN chown -R 65534:65534 ${STORYSPARK_IMAGE_MODEL_DIR} && chmod -R a+rX ${STORYSPARK_IMAGE_MODEL_DIR}
 
 COPY app ./app
 
@@ -69,6 +72,12 @@ EXPOSE 8080
 
 # Dev stage: includes debugpy and reload
 FROM runtime AS dev
+# We only copy the model files in the local dev target but for prod, we mount the bucket as a volume mount.
+# This means we do not have to spend the space to store the model files twice (once in the cloud and once in this image)
+RUN mkdir -p "${STORYSPARK_IMAGE_MODEL_DIR}"
+COPY ${SOURCE_MODEL_DIR} ${STORYSPARK_IMAGE_MODEL_DIR}
+# make sure (the user called) nobody can access it (65534 is the usual nobody uid)
+RUN chown -R 65534:65534 ${STORYSPARK_IMAGE_MODEL_DIR} && chmod -R a+rX ${STORYSPARK_IMAGE_MODEL_DIR}
 RUN --mount=type=cache,target=/root/.cache/pip pip install debugpy
 # Start with debugpy waiting for the VS Code attach; keep --reload for hot reload
 # To debug locally:
@@ -83,7 +92,15 @@ USER nobody
 CMD ["sh", "-c", "python -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080} --ws auto --reload"]
 
 # Prod stage: minimal runtime command for Cloud Run
-FROM runtime AS prod
+# Use a distroless runtime for a much smaller production image.  We copy only the runtime artifacts from the runtime stage.
+FROM gcr.io/distroless/python3-debian11:nonroot AS prod
+
+# copy installed python packages and any executables from the runtime stage
+COPY --from=runtime /usr/local /usr/local
+# copy app code
+COPY --from=runtime /src/app /src/app
+# Model files are accessible from the volume mount.  According to Gemini, we do not need to do a chown for this like we do in the dev build
+WORKDIR /src
 USER nobody
 # https://storyspark-service-prod-453336860824.us-west1.run.app/docs
 # 453336860824 is the Google generated unique project number
