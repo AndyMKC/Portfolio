@@ -83,7 +83,14 @@ USER nobody
 CMD ["sh", "-c", "python -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080} --ws auto --reload"]
 
 # Prod stage: minimal runtime command for Cloud Run
-FROM runtime AS prod
+# Use a distroless runtime for a much smaller production image.  We copy only the runtime artifacts from the runtime stage.
+FROM gcr.io/distroless/python3-debian11:nonroot AS prod
+# copy installed python packages and any executables from the runtime stage
+COPY --from=runtime /usr/local /usr/local
+# copy model files and app code
+COPY --from=runtime /src/${STORYSPARK_IMAGE_MODEL_DIR} ${STORYSPARK_IMAGE_MODEL_DIR}
+COPY --from=runtime /src/app /src/app
+WORKDIR /src
 USER nobody
 # https://storyspark-service-prod-453336860824.us-west1.run.app/docs
 # 453336860824 is the Google generated unique project number
