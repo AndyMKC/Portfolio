@@ -48,7 +48,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     # Remove test suites from installed packages (numpy/pandas/etc often have huge test folders)
     find /usr/local/lib/python3.11/site-packages -name "tests" -type d -exec rm -rf {} + && \
     # Remove dist-info (risky, but often safe for distroless execution if you don't use pip at runtime)
-    find /usr/local/lib/python3.11/site-packages -name "*.dist-info" -type d -exec rm -rf {} + && \
+    # find /usr/local/lib/python3.11/site-packages -name "*.dist-info" -type d -exec rm -rf {} + && \
     echo "Cleanup done"
 
 # purge build deps and clean apt caches in a separate RUN (no cache mount)
