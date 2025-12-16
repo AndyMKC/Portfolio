@@ -18,10 +18,10 @@ terraform {
       version = "~> 7.13.0"
     }
 
-    dockerhub = {
-      source  = "barnabyshearer/dockerhub"
-      version = ">= 0.0.1"
-    }
+    # dockerhub = {
+    #   source  = "barnabyshearer/dockerhub"
+    #   version = ">= 0.0.1"
+    # }
   }
 }
 
