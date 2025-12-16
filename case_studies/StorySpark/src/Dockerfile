@@ -95,7 +95,7 @@ CMD ["sh", "-c", "python -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m u
 # Prod stage: minimal runtime command for Cloud Run
 # Use a distroless runtime for a much smaller production image.  We copy only the runtime artifacts from the runtime stage.
 #FROM gcr.io/distroless/python3-debian11:nonroot AS prod
-FROM gcr.io/distroless/python3.12-debian11:nonroot AS prod
+FROM gcr.io/distroless/python3.12-debian12:nonroot AS prod
 
 # copy installed python packages and any executables from the runtime stage
 COPY --from=runtime /usr/local /usr/local
