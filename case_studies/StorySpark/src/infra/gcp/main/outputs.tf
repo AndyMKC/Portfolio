@@ -43,9 +43,9 @@ output "embeddings_table_fqn_prod" {
   value = "${var.project_id}.${google_bigquery_dataset.embeddings_prod.dataset_id}.${google_bigquery_table.embeddings_table_prod.table_id}"
 }
 
-output "cloud_run_url" {
-  value = google_cloud_run_v2_service.storyspark_service.uri
-}
+# output "cloud_run_url" {
+#   value = google_cloud_run_v2_service.storyspark_service.uri
+# }
 
 output "service_account_bq_vertex" {
   value = "${local.sa_bq_vertex_prod}@${local.service_account_suffix}"
