@@ -281,34 +281,16 @@ jobs:
         fi
       shell: bash
 
-    # - name: Configure GOOGLE_APPLICATION_CREDENTIALS for Terraform
-    #   run: |
-    #     echo ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }} > ${HOME}/gcp-key.json
-    #     echo "GOOGLE_APPLICATION_CREDENTIALS=${HOME}/gcp-key.json" >> $GITHUB_ENV
-
-    # - name: Activate service account
-    #   run: |
-    #     gcloud auth activate-service-account \
-    #       github-terraform-sa@storyspark-5555555.iam.gserviceaccount.com \
-    #       --key-file=${HOME}/gcp-key.json
-    #     gcloud auth list
-
-    # - name: Show ADC
-    #   run: |
-    #     echo "GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS"
-    #     gcloud auth list
-
-    # - name: Debug gcloud auth
-    #   run: |
-    #     gcloud auth list
-    #     gcloud run services describe storyspark-service-prod \
-    #       --region us-west1 \
-    #       --project ${{ vars.STORYSPARK_GCP_PROJECT_ID }}
-
+    # WARNING -- THIS DUMPS OUT THE ENTIRE SECRET SO BE CAREFUL AND DELETE THE LOGS AFTERWARDS
     - name: Show ADC path
       run: |
         echo "GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS"
         head -n 5 $GOOGLE_APPLICATION_CREDENTIALS
+
+    - name: Verify Terraform ADC
+      run: |
+        echo "GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS"
+        cat $GOOGLE_APPLICATION_CREDENTIALS | jq .client_email
 
     - name: Terraform Init
       id: init
@@ -320,6 +302,11 @@ jobs:
           -backend-config="bucket=${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}" \
           -backend-config="prefix=${{ steps.tf_prefixes.outputs.tf_prefix }}"
     
+    - name: Terraform providers
+      working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
+      run: |
+        terraform providers
+
     - name: Terraform Plan
       id: plan
       working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
@@ -375,11 +362,6 @@ jobs:
       run: |
         echo "Branch Name: ${{ needs.setup.outputs.branch_name }}"
       shell: bash
-
-    # - name: Configure GOOGLE_APPLICATION_CREDENTIALS for Terraform
-    #   run: |
-    #     echo '${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}' > ${HOME}/gcp-key.json
-    #     echo "GOOGLE_APPLICATION_CREDENTIALS=${HOME}/gcp-key.json" >> $GITHUB_ENV
 
     - name: Terraform Init
       id: init
