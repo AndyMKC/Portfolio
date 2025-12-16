@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 #FROM python:3.11-slim-bullseye AS base
-FROM python:3-slim AS base
+FROM python:3.11-slim-bookworm AS base
 
 ARG STORYSPARK_GCP_BQ_PROJECT_ID
 ARG STORYSPARK_GCP_BQ_DATASET_ID
@@ -95,7 +95,7 @@ CMD ["sh", "-c", "python -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m u
 # Prod stage: minimal runtime command for Cloud Run
 # Use a distroless runtime for a much smaller production image.  We copy only the runtime artifacts from the runtime stage.
 #FROM gcr.io/distroless/python3-debian11:nonroot AS prod
-FROM gcr.io/distroless/python3:nonroot AS prod
+FROM gcr.io/distroless/python3-debian12:nonroot AS prod
 
 # copy installed python packages and any executables from the runtime stage
 COPY --from=runtime /usr/local /usr/local
@@ -103,7 +103,10 @@ COPY --from=runtime /usr/local /usr/local
 COPY --from=runtime /src/app /src/app
 # Model files are accessible from the volume mount.  According to Gemini, we do not need to do a chown for this like we do in the dev build
 WORKDIR /src
+# Ensure Python finds the packages copied to /usr/local
+ENV PYTHONPATH=/usr/local/lib/python3.11/site-packages
 USER nobody
+
 # https://storyspark-service-prod-453336860824.us-west1.run.app/docs
 # 453336860824 is the Google generated unique project number
 # CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080", "--ws", "auto"]
