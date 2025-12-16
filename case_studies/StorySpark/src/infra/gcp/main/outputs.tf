@@ -75,4 +75,5 @@ data "google_client_config" "current" {}
 
 output "whoami" {
   value = data.google_client_config.current
+  sensitive = true
 }
