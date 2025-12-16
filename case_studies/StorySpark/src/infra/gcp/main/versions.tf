@@ -31,11 +31,11 @@ terraform {
 provider "google" {
   project = var.project_id
   region  = var.region
-  credentials = file(env.GOOGLE_APPLICATION_CREDENTIALS)
+  #credentials = file(var.gcp_credentials_file)
 }
 
 provider "google-beta" {
   project = var.project_id
   region  = var.region
-  credentials = file(env.GOOGLE_APPLICATION_CREDENTIALS)
+  #credentials = file(var.gcp_credentials_file)
 }

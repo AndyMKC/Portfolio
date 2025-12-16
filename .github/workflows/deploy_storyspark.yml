@@ -311,6 +311,8 @@ jobs:
     - name: Terraform Plan
       id: plan
       working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
+      env:
+        GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
       run: |
         terraform plan \
           -input=false \
