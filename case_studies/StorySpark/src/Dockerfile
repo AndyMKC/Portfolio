@@ -105,5 +105,6 @@ USER nobody
 # https://storyspark-service-prod-453336860824.us-west1.run.app/docs
 # 453336860824 is the Google generated unique project number
 # CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080", "--ws", "auto"]
-CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["python3", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+
 
