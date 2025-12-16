@@ -364,3 +364,71 @@ resource "google_cloud_run_v2_service_iam_member" "allow_unauth" {
   member   = "allUsers"
 }
 
+# Cloud Run service
+resource "google_cloud_run_service" "storyspark_service" {
+  provider = google-beta
+  name     = local.service_name
+  location = var.region
+  project  = var.project_id
+
+  template {
+    spec {
+      service_account_name = "${local.sa_cloudrun}@${local.service_account_suffix}"
+      containers {
+        image = var.cloud_run_image
+        resources {
+          limits= {
+            memory = "1Gi" # Docker image with the embeddings model seems to increase the memory footprint to be 542 which is above the default 512.
+          }
+        }
+
+        ports {
+          container_port = 8080
+        }
+
+        env {
+          name  = "BQ_DATASET"
+          value = google_bigquery_dataset.embeddings_prod.dataset_id
+        }
+
+        env {
+          name  = "SOURCE_TABLE"
+          value = google_bigquery_table.source_table_prod.table_id
+        }
+
+        env {
+          name  = "EMBED_TABLE"
+          value = google_bigquery_table.embeddings_table_prod.table_id
+        }
+
+        env {
+          name  = "API_KEY"
+          value = var.api_key
+        }
+
+        env {
+          name  = "ENV"
+          value = local.env_suffix
+        }
+      }
+    }
+  }
+
+  traffic {
+    percent         = 100
+    latest_revision = true
+  }
+}
+
+
+
+# Allow unauthenticated access to Cloud Run (public endpoint)
+
+resource "google_cloud_run_service_iam_member" "allow_unauth" {
+  provider = google-beta
+  location = google_cloud_run_service.storyspark_service.location
+  project  = var.project_id
+  service  = google_cloud_run_service.storyspark_service.name
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+}
