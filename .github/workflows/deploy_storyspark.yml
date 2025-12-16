@@ -281,10 +281,17 @@ jobs:
         fi
       shell: bash
 
-    - name: Configure GOOGLE_APPLICATION_CREDENTIALS for Terraform
+    # - name: Configure GOOGLE_APPLICATION_CREDENTIALS for Terraform
+    #   run: |
+    #     echo '${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}' > ${HOME}/gcp-key.json
+    #     echo "GOOGLE_APPLICATION_CREDENTIALS=${HOME}/gcp-key.json" >> $GITHUB_ENV
+
+    - name: Debug gcloud auth
       run: |
-        echo '${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}' > ${HOME}/gcp-key.json
-        echo "GOOGLE_APPLICATION_CREDENTIALS=${HOME}/gcp-key.json" >> $GITHUB_ENV
+        gcloud auth list
+        gcloud run services describe storyspark-service-prod \
+          --region us-west1 \
+          --project ${{ vars.STORYSPARK_GCP_PROJECT_ID }}
 
     - name: Terraform Init
       id: init
