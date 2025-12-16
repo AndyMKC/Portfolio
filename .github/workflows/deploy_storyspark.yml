@@ -301,7 +301,6 @@ jobs:
           -var="location=${{ vars.STORYSPARK_GCP_LOCATION }}" \
           -var="region=${{ vars.STORYSPARK_GCP_REGION }}" \
           -var="zone=${{ vars.STORYSPARK_GCP_ZONE }}" \
-          -var="tfstate_bucket_name=${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}" \
           -var="git_branch=${{ needs.setup.outputs.branch_name }}" \
           -var="cloud_run_image=${{ needs.docker-push.outputs.image_ref }}" \
           -var="artifact_docker_images_repo_id=${{ env.ARTIFACT_DOCKER_REPO }}" \
