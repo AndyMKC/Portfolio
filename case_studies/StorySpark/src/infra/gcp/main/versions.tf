@@ -17,6 +17,11 @@ terraform {
       source  = "hashicorp/google-beta"
       version = "~> 7.6.0"
     }
+
+    dockerhub = {
+      source  = "barnabyshearer/dockerhub"
+      version = ">= 0.0.1"
+    }
   }
 }
 
