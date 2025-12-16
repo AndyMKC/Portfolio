@@ -281,16 +281,16 @@ jobs:
         fi
       shell: bash
 
-    # WARNING -- THIS DUMPS OUT THE ENTIRE SECRET SO BE CAREFUL AND DELETE THE LOGS AFTERWARDS
-    - name: Show ADC path
-      run: |
-        echo "GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS"
-        head -n 5 $GOOGLE_APPLICATION_CREDENTIALS
+    # # WARNING -- THIS DUMPS OUT THE ENTIRE SECRET SO BE CAREFUL AND DELETE THE LOGS AFTERWARDS
+    # - name: Show ADC path
+    #   run: |
+    #     echo "GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS"
+    #     head -n 5 $GOOGLE_APPLICATION_CREDENTIALS
 
-    - name: Verify Terraform ADC
-      run: |
-        echo "GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS"
-        cat $GOOGLE_APPLICATION_CREDENTIALS | jq .client_email
+    # - name: Verify Terraform ADC
+    #   run: |
+    #     echo "GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS"
+    #     cat $GOOGLE_APPLICATION_CREDENTIALS | jq .client_email
 
     - name: Terraform Init
       id: init
