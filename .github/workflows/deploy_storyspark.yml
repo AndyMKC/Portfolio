@@ -19,6 +19,7 @@ env:
   MODEL_EXPORT_DIR: case_studies/StorySpark/src/model_export
   PROJECT_ID: ${{vars.STORYSPARK_GCP_PROJECT_ID }}
   GCS_BUCKET: ${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}
+  MODELS_BUCKET: ${{ vars.STORYSPARK_GCP_MODELS_BUCKET }}
   TF_PLAN_FILE: storyspark.tfplan
   ARTIFACT_DOCKER_REPO: containers
   SOURCE_MODEL_DIR: models
@@ -393,8 +394,8 @@ jobs:
   
   build-deploy-models:
     runs-on: ubuntu-latest
-    #needs: [terraform-apply]
-    #if: github.ref == 'refs/heads/main'
+    needs: [terraform-apply]
+    if: github.ref == 'refs/heads/main'
     
     steps:
     - name: Checkout repository
@@ -404,6 +405,22 @@ jobs:
       uses: google-github-actions/auth@v2
       with:
         credentials_json: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
+
+    - name: Debug expanded values
+      run: |
+        echo "GITHUB_WORKSPACE=${GITHUB_WORKSPACE}"
+        echo "MODEL_EXPORT_DIR='${{ env.MODEL_EXPORT_DIR }}'"
+        echo "BUCKET_VAR='${{ vars.STORYSPARK_GCP_MODELS_BUCKET }}'"
+        echo "BUCKET_ENV='${{ env.MODELS_BUCKET }}'"
+        DEST="gs://${{ vars.STORYSPARK_GCP_MODELS_BUCKET }}/models/"
+        echo "DESTINATION='${DEST}'"
+        ls -la "${{ github.workspace }}/${{ env.MODEL_EXPORT_DIR }}/models" || true
+
+    - name: Upload the model artifacts to Google Cloud Storage
+      uses: google-github-actions/upload-cloud-storage@v3
+      with:
+        path: '${{ env.MODEL_EXPORT_DIR }}/models'
+        destination: 'gs://${{ env.MODELS_BUCKET }}/models/'
     
     # This step will write to the models folder
     - name: Create models
@@ -412,25 +429,11 @@ jobs:
         pip install -r requirements.txt
         python ./main.py
 
-    # - name: Show current workspace and files
-    #   run: |
-    #     echo "GITHUB_WORKSPACE=${GITHUB_WORKSPACE}"
-    #     pwd
-    #     ls -la "${GITHUB_WORKSPACE}"
-    #     ls -la "${GITHUB_WORKSPACE}/${{ env.MODEL_EXPORT_DIR }}"
-    #     ls -la "${GITHUB_WORKSPACE}/${{ env.MODEL_EXPORT_DIR }}/models" || true
-    
-    - name: Debug bucket variable
-      run: |
-        echo "vars.STORYSPARK_GCP_MODELS_BUCKET='${{ vars.STORYSPARK_GCP_MODELS_BUCKET }}'"
-        echo "env.STORYSPARK_GCP_MODELS_BUCKET='${{ env.STORYSPARK_GCP_MODELS_BUCKET }}'"
-        echo "secrets.STORYSPARK_GCP_MODELS_BUCKET='${{ secrets.STORYSPARK_GCP_MODELS_BUCKET && '***' || '' }}'"
-
-    # - name: Upload the model artifacts to Google Cloud Storage
-    #   uses: google-github-actions/upload-cloud-storage@v3
-    #   with:
-    #     path: '${{ env.MODEL_EXPORT_DIR }}/models'
-    #     destination: 'gs://${{ vars.STORYSPARK_GCP_MODELS_BUCKET }}/models/'
+    - name: Upload the model artifacts to Google Cloud Storage
+      uses: google-github-actions/upload-cloud-storage@v3
+      with:
+        path: '${{ env.MODEL_EXPORT_DIR }}/models'
+        destination: 'gs://${{ vars.STORYSPARK_GCP_MODELS_BUCKET }}/models/'
 
 
     
