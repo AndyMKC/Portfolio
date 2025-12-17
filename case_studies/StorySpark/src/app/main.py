@@ -5,6 +5,7 @@ import asyncio
 from typing import AsyncGenerator
 
 from fastapi import FastAPI, Depends, Request
+from app.logging_setup import setup_cloud_logging
 
 from app.books import (
     add_book_router,
@@ -56,6 +57,7 @@ async def get_db(request: Request) -> AsyncGenerator:
 
 def create_app() -> FastAPI:
     app = FastAPI(title="StorySpark API", version="0.1")
+    app.state.cloud_logging_client = setup_cloud_logging()
 
     # include routers (each router can use Depends(get_db) on endpoints)
     app.include_router(add_book_router)
