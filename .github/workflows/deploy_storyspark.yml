@@ -423,7 +423,7 @@ jobs:
     - name: Upload the model artifacts to Google Cloud Storage
       uses: google-github-actions/upload-cloud-storage@v3
       with:
-        path: '${{ env.MODEL_EXPORT_DIR }}/models/**'
+        path: '${{ env.MODEL_EXPORT_DIR }}/models'
         destination: 'gs://${{ vars.STORYSPARK_GCP_MODELS_BUCKET }}/models/'
 
 
