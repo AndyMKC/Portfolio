@@ -139,34 +139,34 @@ resource "google_artifact_registry_repository" "docker_repo" {
   }  
 }
 
-# Artifact Registry models repository
-resource "google_artifact_registry_repository" "models_repo" {
-  project       = var.project_id
-  location      = var.region
-  repository_id = var.artifact_exported_model_repo_id
-  format        = "GENERIC"
-  description   = "Exported models for StorySpark"
+# # Artifact Registry models repository
+# resource "google_artifact_registry_repository" "models_repo" {
+#   project       = var.project_id
+#   location      = var.region
+#   repository_id = var.artifact_exported_model_repo_id
+#   format        = "GENERIC"
+#   description   = "Exported models for StorySpark"
 
-  cleanup_policy_dry_run = false
+#   cleanup_policy_dry_run = false
 
-  # Policy 1: Keep only the most recent versions of the exported model
-  cleanup_policies {
-    id     = "keep-recent-model"
-    action = "KEEP"
-    most_recent_versions {
-      keep_count            = 1
-    }
-  }
+#   # Policy 1: Keep only the most recent versions of the exported model
+#   cleanup_policies {
+#     id     = "keep-recent-model"
+#     action = "KEEP"
+#     most_recent_versions {
+#       keep_count            = 1
+#     }
+#   }
 
-  # Policy 2: Delete everything else very quickly to save storage space
-  cleanup_policies {
-    id     = "delete-everything-quickly"
-    action = "DELETE"
-    condition {
-      older_than   = "1s"
-    }
-  }  
-}
+#   # Policy 2: Delete everything else very quickly to save storage space
+#   cleanup_policies {
+#     id     = "delete-everything-quickly"
+#     action = "DELETE"
+#     condition {
+#       older_than   = "1s"
+#     }
+#   }  
+# }
 
 resource "google_project_service" "iam" {
   project = var.project_id
