@@ -18,7 +18,8 @@ async def add_book(request: Request, add_book_request: AddBookRequest):
 
     log_payload = {
         "add_book_request" : add_book_request.dict(),
-        "bigquery_client_helper": bigquery_client_helper.to_dict()
+        "bigquery_client_helper": bigquery_client_helper.to_dict(),
+        "embeddings_generator": EmbeddingsGenerator.to_dict()
     }
     cloud_logger = request.app.state.cloud_logging_client.logger("app-log")
     cloud_logger.log_struct(log_payload, severity="INFO")
