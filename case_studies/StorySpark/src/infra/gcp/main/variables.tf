@@ -102,3 +102,8 @@ variable "model_export_bucket" {
   type        = string
   description = "GCS bucket to store exported models"
 }
+
+variable "model_export_bucket_volume_name" {
+  type        = string
+  description = "Folder name that we use to denote this volume mount"
+}
