@@ -325,6 +325,7 @@ jobs:
           -var="git_branch=${{ needs.setup.outputs.branch_name }}" \
           -var="cloud_run_image=${{ needs.docker-push.outputs.image_ref }}" \
           -var="artifact_docker_images_repo_id=${{ env.ARTIFACT_DOCKER_REPO }}" \
+          -var="model_export_bucket=${{ vars.STORYSPARK_GCP_MODELS_BUCKET}}" \
           -lock-timeout=5m \
           -out=tfplan
 
