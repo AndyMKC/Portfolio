@@ -390,10 +390,11 @@ jobs:
           tfplan
 
 #-------------------------------------------------------------------------------------------------------------------------
+  
   build-deploy-models:
     runs-on: ubuntu-latest
-    #needs: [terraform-apply]
-    #if: github.ref == 'refs/heads/main'
+    needs: [terraform-apply]
+    if: github.ref == 'refs/heads/main'
     
     steps:
     - name: Checkout repository
@@ -403,18 +404,19 @@ jobs:
       uses: google-github-actions/auth@v2
       with:
         credentials_json: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
-        
+    
+    # This step will write to the models folder
     - name: Create models
       working-directory: ${{ github.workspace }}/${{ env.MODEL_EXPORT_DIR }}
       run: |
         pip install -r requirements.txt
-        echo "********************************************************"
-        cat requirements.txt
-        echo "********************************************************"
-        pip list
-        echo "********************************************************"
         python ./main.py
-        ls -R -la
+    
+    - name: Upload the model artifacts to Google Cloud Storage
+      uses: google-github-actions/upload-cloud-storage@v3
+      with:
+        path: '${{ github.workspace }}/${{ env.MODEL_EXPORT_DIR }}/models/**'
+        destination: 'gs://${{ vars.STORYSPARK_GCP_MODELS_BUCKET }}/models/'
 
 
     
