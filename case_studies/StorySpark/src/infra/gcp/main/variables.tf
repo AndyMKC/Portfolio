@@ -74,7 +74,6 @@ variable "cloud_run_image" {
   }
 }
 
-
 variable "api_key" {
   type        = string
   description = "Shared API key required by the service (Option A: single secret). Set via CI or terraform var injection."
@@ -97,4 +96,9 @@ variable "ci_service_account_email" {
   type        = string
   description = "Email of an existing GCP service account used by CI (e.g. github-actions-ci@PROJECT.iam.gserviceaccount.com)"
   default     = "github-terraform-sa@storyspark-5555555.iam.gserviceaccount.com"
+}
+
+variable "model_export_bucket" {
+  type        = string
+  description = "GCS bucket to store exported models"
 }
