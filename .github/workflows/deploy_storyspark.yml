@@ -408,6 +408,11 @@ jobs:
       working-directory: ${{ github.workspace }}/${{ env.MODEL_EXPORT_DIR }}
       run: |
         pip install -r requirements.txt
+        echo "********************************************************"
+        cat requirements.txt
+        echo "********************************************************"
+        pip list
+        echo "********************************************************"
         python ./main.py
         ls -R -la
 
