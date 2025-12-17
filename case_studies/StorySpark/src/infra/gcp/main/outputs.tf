@@ -44,8 +44,8 @@ output "embeddings_table_fqn_prod" {
 }
 
 output "cloud_run_url" {
-  # value = google_cloud_run_v2_service.storyspark_service.uri
-  value = google_cloud_run_service.storyspark_service.status[0].url
+  value = google_cloud_run_v2_service.storyspark_service.uri
+  # value = google_cloud_run_service.storyspark_service.status[0].url
 }
 
 output "service_account_bq_vertex" {
