@@ -99,6 +99,6 @@ def export_model(model_name: str, out_dir: Path, opset: int = 18):
 
 if __name__ == "__main__":
     model_name = "sentence-transformers/all-MiniLM-L6-v2"
-    out_dir = Path("../models")
+    out_dir = Path("./models")
 
     export_model(model_name=model_name, out_dir=out_dir)
