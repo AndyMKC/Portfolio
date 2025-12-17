@@ -271,6 +271,14 @@ resource "google_project_iam_member" "run_sa_vertex" {
   member  = "serviceAccount:${local.sa_cloudrun}@${local.service_account_suffix}"
 }
 
+# Bucket where the models are stored.  Meant to be mounted by the Cloud Run service
+resource "google_storage_bucket" "model_export_bucket" {
+  name                        = var.model_export_bucket
+  location                    = var.location
+  force_destroy               = true
+  uniform_bucket_level_access = true
+}
+
 # Cloud Run service
 resource "google_cloud_run_v2_service" "storyspark_service" {
   name     = local.service_name
@@ -364,72 +372,4 @@ resource "google_cloud_run_v2_service_iam_member" "allow_unauth" {
   member   = "allUsers"
 }
 
-# # Cloud Run service
-# resource "google_cloud_run_service" "storyspark_service" {
-#   provider = google-beta
-#   name     = local.service_name
-#   location = var.region
-#   project  = var.project_id
 
-#   template {
-#     spec {
-#       service_account_name = "${local.sa_cloudrun}@${local.service_account_suffix}"
-#       containers {
-#         image = var.cloud_run_image
-#         resources {
-#           limits= {
-#             cpu    = "1000m"
-#             memory = "1Gi" # Docker image with the embeddings model seems to increase the memory footprint to be 542 which is above the default 512.
-#           }
-#         }
-
-#         ports {
-#           container_port = 8080
-#         }
-
-#         env {
-#           name  = "BQ_DATASET"
-#           value = google_bigquery_dataset.embeddings_prod.dataset_id
-#         }
-
-#         env {
-#           name  = "SOURCE_TABLE"
-#           value = google_bigquery_table.source_table_prod.table_id
-#         }
-
-#         env {
-#           name  = "EMBED_TABLE"
-#           value = google_bigquery_table.embeddings_table_prod.table_id
-#         }
-
-#         env {
-#           name  = "API_KEY"
-#           value = var.api_key
-#         }
-
-#         env {
-#           name  = "ENV"
-#           value = local.env_suffix
-#         }
-#       }
-#     }
-#   }
-
-#   traffic {
-#     percent         = 100
-#     latest_revision = true
-#   }
-# }
-
-
-
-# # Allow unauthenticated access to Cloud Run (public endpoint)
-
-# resource "google_cloud_run_service_iam_member" "allow_unauth" {
-#   provider = google-beta
-#   location = google_cloud_run_service.storyspark_service.location
-#   project  = var.project_id
-#   service  = google_cloud_run_service.storyspark_service.name
-#   role     = "roles/run.invoker"
-#   member   = "allUsers"
-# }
