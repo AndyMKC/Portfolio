@@ -406,6 +406,13 @@ jobs:
       with:
         credentials_json: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
 
+    # This step will write to the models folder
+    - name: Create models
+      working-directory: ${{ github.workspace }}/${{ env.MODEL_EXPORT_DIR }}
+      run: |
+        pip install -r requirements.txt
+        python ./main.py
+
     - name: Debug expanded values
       run: |
         echo "GITHUB_WORKSPACE=${GITHUB_WORKSPACE}"
@@ -415,19 +422,22 @@ jobs:
         DEST="gs://${{ vars.STORYSPARK_GCP_MODELS_BUCKET }}/models/"
         echo "DESTINATION='${DEST}'"
         ls -la "${{ github.workspace }}/${{ env.MODEL_EXPORT_DIR }}/models" || true
+    
+    - name: Install gcloud SDK (for gsutil)
+      run: sudo apt-get update && sudo apt-get install -y google-cloud-sdk
 
-    # This step will write to the models folder
-    - name: Create models
-      working-directory: ${{ github.workspace }}/${{ env.MODEL_EXPORT_DIR }}
+    - name: Upload models with gsutil
       run: |
-        pip install -r requirements.txt
-        python ./main.py
+        DEST="gs://${{ env.MODELS_BUCKET }}/models/"
+        echo "Uploading to ${DEST}"
+        # Use -m for parallel; use -r and shell globbing for files
+        gsutil -m cp -r "${{ github.workspace }}/${{ env.MODEL_EXPORT_DIR }}/models/"* "${DEST}"
 
-    - name: Upload the model artifacts to Google Cloud Storage
-      uses: google-github-actions/upload-cloud-storage@v3
-      with:
-        path: '${{ env.MODEL_EXPORT_DIR }}/models'
-        destination: 'gs://${{ env.MODELS_BUCKET }}/models/'
+    # - name: Upload the model artifacts to Google Cloud Storage
+    #   uses: google-github-actions/upload-cloud-storage@v3
+    #   with:
+    #     path: '${{ env.MODEL_EXPORT_DIR }}/models'
+    #     destination: 'gs://${{ env.MODELS_BUCKET }}/models/'
 
 
     
