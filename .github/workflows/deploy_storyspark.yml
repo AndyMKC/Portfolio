@@ -420,11 +420,17 @@ jobs:
     #     ls -la "${GITHUB_WORKSPACE}/${{ env.MODEL_EXPORT_DIR }}"
     #     ls -la "${GITHUB_WORKSPACE}/${{ env.MODEL_EXPORT_DIR }}/models" || true
     
-    - name: Upload the model artifacts to Google Cloud Storage
-      uses: google-github-actions/upload-cloud-storage@v3
-      with:
-        path: '${{ env.MODEL_EXPORT_DIR }}/models'
-        destination: 'gs://${{ vars.STORYSPARK_GCP_MODELS_BUCKET }}/models/'
+    - name: Debug bucket variable
+      run: |
+        echo "vars.STORYSPARK_GCP_MODELS_BUCKET='${{ vars.STORYSPARK_GCP_MODELS_BUCKET }}'"
+        echo "env.STORYSPARK_GCP_MODELS_BUCKET='${{ env.STORYSPARK_GCP_MODELS_BUCKET }}'"
+        echo "secrets.STORYSPARK_GCP_MODELS_BUCKET='${{ secrets.STORYSPARK_GCP_MODELS_BUCKET && '***' || '' }}'"
+
+    # - name: Upload the model artifacts to Google Cloud Storage
+    #   uses: google-github-actions/upload-cloud-storage@v3
+    #   with:
+    #     path: '${{ env.MODEL_EXPORT_DIR }}/models'
+    #     destination: 'gs://${{ vars.STORYSPARK_GCP_MODELS_BUCKET }}/models/'
 
 
     
