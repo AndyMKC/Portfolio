@@ -284,9 +284,9 @@ resource "google_cloud_run_v2_service" "storyspark_service" {
       }
       
       volume_mounts {
-        name       = "model-bucket-volume"
+        name       = var.model_export_bucket_volume_name
         # Refer to the docker file for the prod environment to see the WORKDIR
-        mount_path = "/src/models"
+        mount_path = "/src/${var.model_export_bucket_volume_name}"
       }
 
       # Existing Env Vars (Keep these as they point to your BigQuery setup)

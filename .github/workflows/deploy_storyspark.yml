@@ -327,6 +327,7 @@ jobs:
           -var="cloud_run_image=${{ needs.docker-push.outputs.image_ref }}" \
           -var="artifact_docker_images_repo_id=${{ env.ARTIFACT_DOCKER_REPO }}" \
           -var="model_export_bucket=${{ vars.STORYSPARK_GCP_MODELS_BUCKET}}" \
+          -var="model_export_bucket_volume_name=${{ vars.STORYSPARK_GCP_MODEL_EXPORT_BUCKET_VOLUME_NAME }}" \
           -lock-timeout=5m \
           -out=tfplan
 
