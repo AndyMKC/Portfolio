@@ -274,7 +274,7 @@ resource "google_project_iam_member" "run_sa_vertex" {
 # Bucket where the models are stored.  Meant to be mounted by the Cloud Run service
 resource "google_storage_bucket" "model_export_bucket" {
   name                        = var.model_export_bucket
-  location                    = var.location
+  location                    = var.region
   force_destroy               = true
   uniform_bucket_level_access = true
 }
