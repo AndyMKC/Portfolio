@@ -17,11 +17,6 @@ terraform {
       source  = "hashicorp/google-beta"
       version = "~> 7.13.0"
     }
-
-    # dockerhub = {
-    #   source  = "barnabyshearer/dockerhub"
-    #   version = ">= 0.0.1"
-    # }
   }
 }
 
@@ -31,11 +26,9 @@ terraform {
 provider "google" {
   project = var.project_id
   region  = var.region
-  #credentials = file(var.gcp_credentials_file)
 }
 
 provider "google-beta" {
   project = var.project_id
   region  = var.region
-  #credentials = file(var.gcp_credentials_file)
 }
