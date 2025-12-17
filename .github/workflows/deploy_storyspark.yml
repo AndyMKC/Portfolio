@@ -422,22 +422,6 @@ jobs:
         DEST="gs://${{ vars.STORYSPARK_GCP_MODELS_BUCKET }}/models/"
         echo "DESTINATION='${DEST}'"
         ls -la "${{ github.workspace }}/${{ env.MODEL_EXPORT_DIR }}/models" || true
-    
-    # - name: Install gcloud SDK (for gsutil)
-    #   run: sudo apt-get update && sudo apt-get install -y google-cloud-sdk
-
-    # - name: Upload models with gsutil
-    #   run: |
-    #     DEST="gs://${{ env.MODELS_BUCKET }}/models/"
-    #     echo "Uploading to ${DEST}"
-    #     # Use -m for parallel; use -r and shell globbing for files
-    #     gsutil -m cp -r "${{ github.workspace }}/${{ env.MODEL_EXPORT_DIR }}/models/"* "${DEST}"
-
-    # - name: Upload the model artifacts to Google Cloud Storage
-    #   uses: google-github-actions/upload-cloud-storage@v3
-    #   with:
-    #     path: '${{ env.MODEL_EXPORT_DIR }}/models'
-    #     destination: 'gs://${{ env.MODELS_BUCKET }}/models/'
 
     - name: Setup gcloud and gsutil
       uses: google-github-actions/setup-gcloud@v1
