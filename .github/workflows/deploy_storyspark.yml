@@ -165,6 +165,7 @@ jobs:
         --build-arg SOURCE_MODEL_DIR=./${{ env.SOURCE_MODEL_DIR }} \
         --build-arg MODEL_FILE=${{ vars.STORYSPARK_MODELS_MODEL_NAME }}.${{ vars.STORYSPARK_MODELS_MODEL_EXTENSION }} \
         --build-arg MODEL_DATA_FILE=${{ vars.STORYSPARK_MODELS_SOURCE_DIRECTORY }}/${{ vars.STORYSPARK_MODELS_MODEL_NAME }}.${{ vars.STORYSPARK_MODELS_MODEL_EXTENSION }}.data \
+        --build-arg MODEL_EXPORT_BUCKET_NAME=${{ vars.STORYSPARK_GCP_MODEL_EXPORT_BUCKET_VOLUME_NAME }} \
         --build-arg PIP_CACHE=false \
         .
     
