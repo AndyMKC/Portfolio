@@ -415,12 +415,6 @@ jobs:
         DEST="gs://${{ vars.STORYSPARK_GCP_MODELS_BUCKET }}/models/"
         echo "DESTINATION='${DEST}'"
         ls -la "${{ github.workspace }}/${{ env.MODEL_EXPORT_DIR }}/models" || true
-
-    - name: Upload the model artifacts to Google Cloud Storage
-      uses: google-github-actions/upload-cloud-storage@v3
-      with:
-        path: '${{ env.MODEL_EXPORT_DIR }}/models'
-        destination: 'gs://${{ env.MODELS_BUCKET }}/models/'
     
     # This step will write to the models folder
     - name: Create models
