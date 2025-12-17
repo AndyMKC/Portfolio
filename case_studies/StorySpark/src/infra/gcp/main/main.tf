@@ -139,35 +139,6 @@ resource "google_artifact_registry_repository" "docker_repo" {
   }  
 }
 
-# # Artifact Registry models repository
-# resource "google_artifact_registry_repository" "models_repo" {
-#   project       = var.project_id
-#   location      = var.region
-#   repository_id = var.artifact_exported_model_repo_id
-#   format        = "GENERIC"
-#   description   = "Exported models for StorySpark"
-
-#   cleanup_policy_dry_run = false
-
-#   # Policy 1: Keep only the most recent versions of the exported model
-#   cleanup_policies {
-#     id     = "keep-recent-model"
-#     action = "KEEP"
-#     most_recent_versions {
-#       keep_count            = 1
-#     }
-#   }
-
-#   # Policy 2: Delete everything else very quickly to save storage space
-#   cleanup_policies {
-#     id     = "delete-everything-quickly"
-#     action = "DELETE"
-#     condition {
-#       older_than   = "1s"
-#     }
-#   }  
-# }
-
 resource "google_project_service" "iam" {
   project = var.project_id
   service = "iam.googleapis.com"
@@ -315,7 +286,7 @@ resource "google_cloud_run_v2_service" "storyspark_service" {
       volume_mounts {
         name       = "model-bucket-volume"
         # Refer to the docker file for the prod environment to see the WORKDIR
-        mount_path = "/src/models"
+        mount_path = "/src"
       }
 
       # Existing Env Vars (Keep these as they point to your BigQuery setup)
