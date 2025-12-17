@@ -86,11 +86,11 @@ variable "artifact_docker_images_repo_id" {
   default     = "containers"
 }
 
-variable "artifact_exported_model_repo_id" {
-  type        = string
-  description = "For Exported Models"
-  default     = "models"
-}
+# variable "artifact_exported_model_repo_id" {
+#   type        = string
+#   description = "For Exported Models"
+#   default     = "models"
+# }
 
 variable "ci_service_account_email" {
   type        = string

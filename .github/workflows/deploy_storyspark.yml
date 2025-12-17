@@ -140,16 +140,16 @@ jobs:
       with:
         project_id: ${{ vars.STORYSPARK_GCP_PROJECT_ID }}
 
-    - name: Download the model artifacts
-      working-directory: ${{ github.workspace }}/${{ env.SRC_DIR }}
-      run: |
-        gcloud artifacts generic download \
-          --project=${{ vars.STORYSPARK_GCP_PROJECT_ID }} \
-          --location=${{ vars.STORYSPARK_GCP_REGION }} \
-          --repository=${{ vars.STORYSPARK_MODELS_CONTAINER }} \
-          --package=${{ vars.STORYSPARK_MODELS_PACKAGE }} \
-          --version=${{ vars.STORYSPARK_MODELS_PACKAGE_VERSION }} \
-          --destination=.      
+    # - name: Download the model artifacts
+    #   working-directory: ${{ github.workspace }}/${{ env.SRC_DIR }}
+    #   run: |
+    #     gcloud artifacts generic download \
+    #       --project=${{ vars.STORYSPARK_GCP_PROJECT_ID }} \
+    #       --location=${{ vars.STORYSPARK_GCP_REGION }} \
+    #       --repository=${{ vars.STORYSPARK_MODELS_CONTAINER }} \
+    #       --package=${{ vars.STORYSPARK_MODELS_PACKAGE }} \
+    #       --version=${{ vars.STORYSPARK_MODELS_PACKAGE_VERSION }} \
+    #       --destination=.      
 
     - name: Build the Docker image
       working-directory: ${{ github.workspace }}/${{ env.SRC_DIR }}
