@@ -12,6 +12,28 @@ class EmbeddingsGenerator:
     # keep the user's requested constants; resolve MODEL_PATH at runtime
     MODEL_FILE: Final[str] = os.environ.get("STORYSPARK_MODEL_FILE")
     MODEL_PATH: Final[str] = f"{os.environ.get('STORYSPARK_IMAGE_MODEL_DIR')}/{MODEL_FILE}"
+    # TODO:  TEMP
+    MODEL_DIR = os.path.dirname(MODEL_PATH)
+    TOKENIZER_JSON_PATH = os.path.join(MODEL_DIR, "tokenizer.json")
+
+    def to_dict():
+        import json
+        from pathlib import Path
+
+        root = Path.cwd()
+        files = [ {"name": str(p.relative_to(root)), "is_dir": p.is_dir()} for p in root.rglob("*") ]
+        files_json = json.dumps({
+            "root": str(root),
+            "files": files
+        })
+
+        return {
+            "MODEL_FILE": EmbeddingsGenerator.MODEL_FILE,
+            "MODEL_PATH": EmbeddingsGenerator.MODEL_PATH,
+            "MODEL_DIR": EmbeddingsGenerator.MODEL_DIR,
+            "TOKENIZER_JSON_PATH": EmbeddingsGenerator.TOKENIZER_JSON_PATH,
+            "MODEL_DIRECTORY_FILES": files
+        }
 
     # class-level caches so we don't reload tokenizer/session on every call
     _tokenizer: Optional[Tokenizer] = None
