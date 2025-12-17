@@ -313,7 +313,7 @@ resource "google_cloud_run_v2_service" "storyspark_service" {
     }
     
     volumes {
-      name = "model-bucket-volume"
+      name = var.model_export_bucket_volume_name
       gcs {
         bucket    = var.model_export_bucket
         read_only = true
