@@ -188,7 +188,7 @@ jobs:
   docker-push:
     runs-on: ubuntu-latest
     needs: [setup, docker-build]
-    #if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     outputs:
       image_ref: ${{ steps.get_digest.outputs.image_ref}}
     permissions:
@@ -247,7 +247,7 @@ jobs:
   terraform-plan: # This job will run on PRs and main branch pushes to generate the plan
     runs-on: ubuntu-latest
     needs: [setup, docker-push]
-    #if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     outputs:
       tf_prefix: ${{ steps.tf_prefixes.outputs.tf_prefix }}
     permissions:
