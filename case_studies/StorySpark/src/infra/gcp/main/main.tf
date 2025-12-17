@@ -306,19 +306,11 @@ resource "google_cloud_run_v2_service" "storyspark_service" {
         container_port = 8080
       }
       
-      # --- GCS VOLUME MOUNT CONFIGURATION (Currently Commented Out) ---
-      /*
       volume_mounts {
         name       = "model-bucket-volume"
-        mount_path = "/models_gcs"
+        # Refer to the docker file for the prod environment to see the WORKDIR
+        mount_path = "/src/models"
       }
-      
-      env {
-        name  = "STORYSPARK_IMAGE_MODEL_DIR"
-        value = "/models_gcs"
-      }
-      */
-      # --- END GCS VOLUME MOUNT CONFIGURATION ---
 
       # Existing Env Vars (Keep these as they point to your BigQuery setup)
       env {
@@ -343,17 +335,13 @@ resource "google_cloud_run_v2_service" "storyspark_service" {
       }
     }
     
-    # --- V2 VOLUME DEFINITION (Currently Commented Out) ---
-    /*
     volumes {
       name = "model-bucket-volume"
       gcs {
-        bucket    = "YOUR_MODEL_BUCKET_NAME" 
+        bucket    = var.model_export_bucket
         read_only = true
       }
     }
-    */
-    # --- END V2 VOLUME DEFINITION ---
   }
 
   # V2 Traffic definition
