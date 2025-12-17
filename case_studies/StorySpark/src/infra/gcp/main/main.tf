@@ -349,6 +349,11 @@ resource "google_cloud_run_v2_service" "storyspark_service" {
     type    = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
     percent = 100
   }
+
+  # Ensure the service is created after the IAM binding
+  depends_on = [
+    google_storage_bucket_iam_member.cloudrun_bucket_viewer
+  ]
 }
 
 # Allow unauthenticated access to Cloud Run (public endpoint)
@@ -360,4 +365,10 @@ resource "google_cloud_run_v2_service_iam_member" "allow_unauth" {
   member   = "allUsers"
 }
 
+# Grant read access to the service account at the bucket level
+resource "google_storage_bucket_iam_member" "cloudrun_bucket_viewer" {
+  bucket = var.model_export_bucket
+  role   = "roles/storage.objectViewer"
+  member = "serviceAccount:${local.sa_cloudrun}@${local.service_account_suffix}"
+}
 
