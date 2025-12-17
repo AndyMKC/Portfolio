@@ -313,7 +313,7 @@ jobs:
       working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
       env:
         GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
-        TF_LOG: DEBUG
+#        TF_LOG: DEBUG
       run: |
         terraform plan \
           -input=false \
