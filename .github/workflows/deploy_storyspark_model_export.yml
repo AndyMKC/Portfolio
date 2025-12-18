@@ -1,4 +1,4 @@
-name: Build/Push/Deploy image for StorySpark
+name: Build/Deploy model export for StorySpark
 
 on:
   workflow_dispatch:
