@@ -241,6 +241,14 @@ resource "google_project_iam_member" "run_sa_bq_jobuser" {
   member  = "serviceAccount:${local.sa_cloudrun}@${local.service_account_suffix}"
 }
 
+resource "google_bigquery_dataset_iam_member" "writer" {
+  project    = var.project_id
+  dataset_id = google_bigquery_dataset.embeddings_prod.dataset_id
+  role       = "roles/bigquery.dataEditor"
+  member  = "serviceAccount:${local.sa_cloudrun}@${local.service_account_suffix}"
+}
+
+
 # Grant Cloud Run service account permission to invoke Vertex models if needed
 resource "google_project_iam_member" "run_sa_vertex" {
   project = var.project_id

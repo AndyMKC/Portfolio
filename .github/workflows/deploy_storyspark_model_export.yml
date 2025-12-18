@@ -1,0 +1,59 @@
+name: Build/Push/Deploy image for StorySpark
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  MODEL_EXPORT_DIR: case_studies/StorySpark/src/model_export
+  PROJECT_ID: ${{vars.STORYSPARK_GCP_PROJECT_ID }}
+  MODELS_BUCKET: ${{ vars.STORYSPARK_GCP_MODELS_BUCKET }}
+
+jobs:  
+  build-deploy-models:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Authenticate to Google Cloud via SA Key
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
+
+    # This step will write to the models folder
+    - name: Create models
+      working-directory: ${{ github.workspace }}/${{ env.MODEL_EXPORT_DIR }}
+      run: |
+        pip install -r requirements.txt
+        python ./main.py
+
+    - name: Debug expanded values
+      run: |
+        echo "GITHUB_WORKSPACE=${GITHUB_WORKSPACE}"
+        echo "MODEL_EXPORT_DIR='${{ env.MODEL_EXPORT_DIR }}'"
+        echo "BUCKET_VAR='${{ vars.STORYSPARK_GCP_MODELS_BUCKET }}'"
+        echo "BUCKET_ENV='${{ env.MODELS_BUCKET }}'"
+        DEST="gs://${{ vars.STORYSPARK_GCP_MODELS_BUCKET }}/models/"
+        echo "DESTINATION='${DEST}'"
+        ls -la "${{ github.workspace }}/${{ env.MODEL_EXPORT_DIR }}/models" || true
+
+    - name: Setup gcloud and gsutil
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+
+    - name: Upload models with gsutil
+      run: |
+        DEST="gs://${{ vars.STORYSPARK_GCP_MODELS_BUCKET }}/models/"
+        echo "Uploading to ${DEST}"
+        gsutil -m cp -r "${{ github.workspace }}/${{ env.MODEL_EXPORT_DIR }}/models/"* "${DEST}"
+
+
+
+    

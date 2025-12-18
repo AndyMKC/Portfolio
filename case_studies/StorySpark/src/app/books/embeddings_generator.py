@@ -1,3 +1,4 @@
+from importlib.resources import files
 import os
 import re
 import gc
@@ -14,28 +15,25 @@ class EmbeddingsGenerator:
     MODEL_EXPORT_BUCKET_NAME: Final[str] = os.environ.get("STORYSPARK_MODEL_EXPORT_BUCKET_NAME")
     MODEL_PATH: Final[str] = f"{os.environ.get('STORYSPARK_MODEL_EXPORT_BUCKET_NAME')}/{os.environ.get('STORYSPARK_IMAGE_MODEL_DIR')}/{MODEL_FILE}"
     
-    # TODO:  TEMP
-    MODEL_DIR = os.path.dirname(MODEL_PATH)
-    TOKENIZER_JSON_PATH = os.path.join(MODEL_DIR, "tokenizer.json")
-
     def to_dict():
-        import json
-        from pathlib import Path
+        # If we want to know what is in our working directory
+        # import json
+        # from pathlib import Path
 
-        root = Path.cwd()
-        files = [ {"name": str(p.relative_to(root)), "is_dir": p.is_dir()} for p in root.rglob("*") ]
-        files_json = json.dumps({
-            "root": str(root),
-            "files": files
-        })
+        # root = Path.cwd()
+        # files = [ {"name": str(p.relative_to(root)), "is_dir": p.is_dir()} for p in root.rglob("*") ]
+        # files_json = json.dumps({
+        #     "root": str(root),
+        #     "files": files
+        # })
 
         return {
             "MODEL_FILE": EmbeddingsGenerator.MODEL_FILE,
             "MODEL_PATH": EmbeddingsGenerator.MODEL_PATH,
             "MODEL_EXPORT_BUCKET_NAME": EmbeddingsGenerator.MODEL_EXPORT_BUCKET_NAME,
-            "MODEL_DIR": EmbeddingsGenerator.MODEL_DIR,
-            "TOKENIZER_JSON_PATH": EmbeddingsGenerator.TOKENIZER_JSON_PATH,
-            "MODEL_DIRECTORY_FILES": files
+            # "MODEL_DIR": EmbeddingsGenerator.MODEL_DIR,
+            # "TOKENIZER_JSON_PATH": EmbeddingsGenerator.TOKENIZER_JSON_PATH,
+            # "MODEL_DIRECTORY_FILES": files
         }
 
     # class-level caches so we don't reload tokenizer/session on every call
