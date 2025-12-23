@@ -7,7 +7,7 @@ router = APIRouter()
 
 @router.get("/books", response_model=list[Book], operation_id="GetAllBooks")
 async def get_all_books(
-    owner_id: str = Query(..., example="user@gmail.com")
+    owner: str = Query(..., example="user@gmail.com")
     ) -> list[Book]:
     """
     Retrieves all the books owned by this user
@@ -22,11 +22,11 @@ async def get_all_books(
         FROM
             `{table_ref}`
         WHERE
-            owner = @id_param
+            owner = @owner
     """
     job_config = bigquery.QueryJobConfig(
         query_parameters=[
-            bigquery.ScalarQueryParameter("id_param", "STRING", owner_id)
+            bigquery.ScalarQueryParameter("owner", "STRING", owner)
         ]
     )
 
@@ -46,20 +46,7 @@ async def get_all_books(
         all_books.append(book)
 
     return all_books
-    # TODO:  Return all books from this specific owner
-    # from datetime import datetime, timezone
-    # utc_now = datetime.now(timezone.utc)
-    # book = Book(
-    #     id="internal_id",
-    #     title="req.title",
-    #     author="req.author",
-    #     owner_id="req.owner_id",
-    #     book_id="req.book_id",
-    #     relevant_text="req.relevant_text",
-    #     created_at=utc_now,
-    #     updated_at=utc_now,
-    # )
-    # return list([book])
+
 
 
 
