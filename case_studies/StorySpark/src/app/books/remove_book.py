@@ -1,15 +1,14 @@
-from fastapi import APIRouter, Query
-#from app.books.add_book import _BOOK_STORE
+from fastapi import APIRouter, Query, Path
 from app.models import Book
 from google.cloud import bigquery
 from app.books.bigquery_client_helper import get_bigquery_client, BigQueryClientHelper
 
 router = APIRouter()
 
-@router.delete("/books/{book_id}", response_model=None, operation_id="RemoveBook")
+@router.delete("/books/{isbn}", response_model=None, operation_id="RemoveBook")
 async def remove_book(
     owner: str = Query(..., example="user@gmail.com"),
-    isbn: str = Query(..., example="978-0448487311")
+    isbn: str = Path(..., example="978-0448487311")
     ):
     """
     Remove a book from the user's collection by its ISBN
@@ -36,9 +35,7 @@ async def remove_book(
     try:
         query_job = bigquery_client_helper.client.query(transaction_script, job_config=job_config)
         # Waiting on the result means we wait for the COMMIT to finish
-        rows = query_job.result()
-        for row in rows:
-            print(row)
+        query_job.result()
 
     except Exception as e:
         print(f"Transaction failed and was rolled back: {e}")

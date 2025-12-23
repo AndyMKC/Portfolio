@@ -13,6 +13,7 @@ from app.books import (
     mark_read_router,
     remove_book_router,
     get_all_books_router,
+    clear_database_router,
     clear_and_seed_db_router
 )
 
@@ -65,6 +66,7 @@ def create_app() -> FastAPI:
     app.include_router(mark_read_router)
     app.include_router(remove_book_router)
     app.include_router(get_all_books_router)
+    app.include_router(clear_database_router)
     app.include_router(clear_and_seed_db_router)
 
     @app.get("/healthz", tags=["health"])
