@@ -37,7 +37,7 @@ class Book(BaseModel):
     isbn: str                # ISBN
     title: str
     author: str
-    relevant_text: str
+    relevant_text: Optional[str] = None
     last_read: Optional[datetime] = None
     created_at: datetime
     
