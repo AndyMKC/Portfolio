@@ -1,31 +1,50 @@
-from fastapi import APIRouter, HTTPException
-from datetime import datetime
-#from app.books.add_book import _BOOK_STORE
+from fastapi import APIRouter, Query, Path
+from datetime import datetime, timezone
 from app.models import Book
+from app.books.bigquery_client_helper import get_bigquery_client, BigQueryClientHelper
+from google.cloud import bigquery
 
 router = APIRouter()
 
-@router.post("/books/{book_id}/mark-read", response_model=Book, operation_id="MarkBookRead")
-async def mark_book_read(owner_id: str,book_id: str):
-    # TODO:  Update and return book info from database
-    
-    from datetime import datetime, timezone
+@router.patch("/books/{isbn}/mark_read", response_model=None, operation_id="MarkBookRead")
+async def mark_book_read(
+    owner: str = Query(..., example="user@gmail.com"),
+    isbn: str = Path(..., example="978-0448487311")
+    ):
+    """
+    Marks a book as read at the current time
+    """
+    bigquery_client_helper = get_bigquery_client()
+
+    transaction_script = f"""
+    BEGIN TRANSACTION;
+
+    UPDATE `{bigquery_client_helper.dataset_id}.{bigquery_client_helper.source_table_id}`
+    SET last_read = @last_read
+    WHERE owner = @owner AND isbn = @isbn;
+
+    COMMIT TRANSACTION;
+    """
+
     utc_now = datetime.now(timezone.utc)
-    book = Book(
-        id="internal_id",
-        title="req.title",
-        author="req.author",
-        owner_id="req.owner_id",
-        book_id="req.book_id",
-        relevant_text="req.relevant_text",
-        created_at=utc_now,
-        updated_at=utc_now,
+
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            # Parameters for the source table (Scalar types)
+            bigquery.ScalarQueryParameter("owner", "STRING", owner),
+            bigquery.ScalarQueryParameter("isbn", "STRING", isbn),
+            bigquery.ScalarQueryParameter("last_read", "TIMESTAMP", utc_now)
+        ]
     )
-    return book
-    # book_id here is the internal UUID stored as key; if you prefer ISBN lookup, adapt logic.
-    # book = _BOOK_STORE.get(book_id)
-    # if not book:
-    #     raise HTTPException(status_code=404, detail="Book not found")
-    # book.last_read = datetime.utcnow()
-    # book.updated_at = datetime.utcnow()
-    # return {"status": "marked as read", "book_id": book_id}
+
+    try:
+        query_job = bigquery_client_helper.client.query(transaction_script, job_config=job_config)
+        # Waiting on the result means we wait for the COMMIT to finish
+        query_job.result()
+
+    except Exception as e:
+        print(f"Transaction failed and was rolled back: {e}")
+        # BigQuery automatically rolls back the entire transaction if an error occurs within the script
+        raise # Re-raise the error for upstream handling
+
+    return
