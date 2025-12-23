@@ -4,13 +4,16 @@ from google.cloud import bigquery
 import json
 
 from app.models import AddBookRequest
-from app.books.bigquery_client_helper import get_bigquery_client, BigQueryClientHelper
-from app.books.embeddings_generator import EmbeddingsGenerator
+from app.books.helpers.bigquery_client_helper import get_bigquery_client, BigQueryClientHelper
+from app.books.helpers.embeddings_generator import EmbeddingsGenerator
 
 router = APIRouter()
 
 @router.post("/books", response_model=None, status_code=201, operation_id="AddBook")
-async def add_book(request: Request, add_book_request: AddBookRequest):
+async def add_book(
+    request: Request,
+    add_book_request: AddBookRequest
+    ):
     """
     Inserts data into both tables atomically within a single BigQuery transaction.
     """

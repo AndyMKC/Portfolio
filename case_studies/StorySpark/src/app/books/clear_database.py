@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Query
-from app.books.bigquery_client_helper import get_bigquery_client
+from fastapi import APIRouter
+from app.books.helpers.bigquery_client_helper import get_bigquery_client
 
 router = APIRouter()
 
@@ -28,8 +28,7 @@ async def clear_database():
 
     except Exception as e:
         print(f"Transaction failed and was rolled back: {e}")
-        # BigQuery automatically rolls back the entire transaction if an error occurs within the script
-        raise # Re-raise the error for upstream handling
+        raise
 
     return
 

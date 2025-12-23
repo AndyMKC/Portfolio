@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Query, Path
-from app.models import Book
 from google.cloud import bigquery
-from app.books.bigquery_client_helper import get_bigquery_client, BigQueryClientHelper
+from app.books.helpers.bigquery_client_helper import get_bigquery_client, BigQueryClientHelper
 
 router = APIRouter()
 
@@ -39,8 +38,7 @@ async def remove_book(
 
     except Exception as e:
         print(f"Transaction failed and was rolled back: {e}")
-        # BigQuery automatically rolls back the entire transaction if an error occurs within the script
-        raise # Re-raise the error for upstream handling
+        raise
 
     return
 
