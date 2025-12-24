@@ -1,14 +1,14 @@
 from fastapi import APIRouter, Query, Path
-from app.models import Book
 from google.cloud import bigquery
-from app.books.bigquery_client_helper import get_bigquery_client, BigQueryClientHelper
+from app.books.helpers.bigquery_client_helper import get_bigquery_client
+from app.models import CleanedISBN
 
 router = APIRouter()
 
 @router.delete("/books/{isbn}", response_model=None, operation_id="RemoveBook")
 async def remove_book(
     owner: str = Query(..., example="user@gmail.com"),
-    isbn: str = Path(..., example="978-0448487311")
+    isbn: CleanedISBN = Path(..., example="978-0448487311")
     ):
     """
     Remove a book from the user's collection by its ISBN
@@ -39,8 +39,7 @@ async def remove_book(
 
     except Exception as e:
         print(f"Transaction failed and was rolled back: {e}")
-        # BigQuery automatically rolls back the entire transaction if an error occurs within the script
-        raise # Re-raise the error for upstream handling
+        raise
 
     return
 

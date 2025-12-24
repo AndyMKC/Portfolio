@@ -74,7 +74,7 @@ locals {
     { "name": "owner",         "type": "STRING",    "mode": "REQUIRED" },
     { "name": "isbn",          "type": "STRING",    "mode": "REQUIRED" },
     { "name": "title",         "type": "STRING",    "mode": "REQUIRED" },
-    { "name": "author",        "type": "STRING",    "mode": "NULLABLE" },
+    { "name": "author",        "type": "STRING",    "mode": "REPEATED" },
     { "name": "last_read",     "type": "TIMESTAMP", "mode": "NULLABLE" },
     { "name": "created_at",    "type": "TIMESTAMP", "mode": "REQUIRED" }
   ])
@@ -85,6 +85,7 @@ locals {
     { "name": "embeddings",            "type": "FLOAT64",   "mode": "REPEATED" },
     { "name": "model_name",             "type": "STRING",    "mode": "REQUIRED" },
     { "name": "created_at",         "type": "TIMESTAMP", "mode": "REQUIRED" },
+    { "name": "owner",              "type": "STRING",   "mode": "NULLABLE" }
   ])
 }
 

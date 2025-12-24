@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Query
 from app.models import Book
 from google.cloud import bigquery
-from app.books.bigquery_client_helper import get_bigquery_client, BigQueryClientHelper
+from app.books.helpers.bigquery_client_helper import get_bigquery_client
 
 router = APIRouter()
 
