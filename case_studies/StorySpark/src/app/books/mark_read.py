@@ -2,13 +2,14 @@ from fastapi import APIRouter, Query, Path
 from datetime import datetime, timezone
 from app.books.helpers.bigquery_client_helper import get_bigquery_client, BigQueryClientHelper
 from google.cloud import bigquery
+from app.models import CleanedISBN
 
 router = APIRouter()
 
 @router.patch("/books/{isbn}/mark_read", response_model=None, operation_id="MarkBookRead")
 async def mark_book_read(
     owner: str = Query(..., example="user@gmail.com"),
-    isbn: str = Path(..., example="978-0448487311")
+    isbn: CleanedISBN = Path(..., example="978-0448487311")
     ):
     """
     Marks a book as read at the current time
