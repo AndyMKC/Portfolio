@@ -19,7 +19,7 @@ class AddBookRequest(BaseModel):
         list[CleanedISBN],
         Field(
             description="ISBN-10 or ISBN-13",
-            example=["978-0448487311"]
+            example=["978-0448487311", "978-142311411-6"]
             )
     ]
     # tags: Optional[str] = Field(
