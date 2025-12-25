@@ -63,8 +63,9 @@ class OpenLibraryProvider:
                     if not work_key:
                         continue;
                     
+                    work_key_url = f"{OPENLIBRARY_URL}/{work_key}.json"
                     resp_work_key = requests.get(
-                        f"{OPENLIBRARY_URL}/{work_key}.json",
+                        work_key_url,
                         timeout=5.0,
                     )
                     resp_work_key.raise_for_status()
@@ -72,8 +73,16 @@ class OpenLibraryProvider:
                     # Gather the relevant strings from various parts of the JSON
                     relevant_strings.extend([subj for subj in resp_work_key_json.get("subjects", [])])
                     # Description and notes are whole sentences as opposed to 1-3 words in subjects.  We will eventually need to parse it better.
-                    if (value := resp_work_key_json.get("description")):
-                        relevant_strings.append(value)
+                    if (description_value := resp_work_key_json.get("description")):
+                        # Here, sometimes it the value is a string (https://openlibrary.org/works/OL20870854W.json) but other times, it is a dict and you have to look into "value" (https://openlibrary.org//works/OL14909344W.json)
+                        if isinstance(description_value, str):
+                            relevant_strings.append(description_value)
+                        elif isinstance(description_value, dict):
+                            if "value" not in description_value:
+                                raise Exception(f"ISBN {isbn} with work {work_key_url} has a dict for descrption but it does not contain the property value")
+                            relevant_strings.append(description_value.get("value"))
+                        else:
+                            raise Exception(f"ISBN {isbn} with work {work_key_url} has unknown type for description")
                     # if (value := resp_work_key_json.get("notes", {}).get("value")):
                     #     relevant_strings.append(value)
             
