@@ -1,6 +1,6 @@
 from importlib.resources import files
 import os
-import re
+import math
 import gc
 from typing import Final, Optional, List
 import numpy as np
@@ -45,11 +45,12 @@ class EmbeddingsGenerator:
     @dataclass
     class EmbeddingsInfo:
         text: str
-        embeddings: list[float]
+        embedding_raw: list[float]
+        embedding_normalized: list[float]
 
     # ---------- public API ----------
     @staticmethod
-    def generate_embeddings(tags: str, relevant_text: list[str]) -> list['EmbeddingsGenerator.EmbeddingsInfo']:
+    def generate_embeddings(tags: str, relevant_text: list[str]) -> list[EmbeddingsInfo]:
         """
         Returns a list of (text, embedding) pairs.
         - For tags: each parsed tag string -> its embedding.
@@ -79,11 +80,17 @@ class EmbeddingsGenerator:
                 input_ids = np.array([e.ids for e in toks_encodings], dtype=np.int64)
                 attention_mask = np.array([e.attention_mask for e in toks_encodings], dtype=np.int64)
 
-                tag_embs = EmbeddingsGenerator._run_onnx_batch(input_ids, attention_mask)  # (B, D)
-                tag_embs = EmbeddingsGenerator._l2_normalize(tag_embs)  # (B, D)
+                embedding_raw = EmbeddingsGenerator._run_onnx_batch(input_ids, attention_mask)  # (B, D)
+                embedding_normalized = EmbeddingsGenerator._l2_normalize(embedding)  # (B, D)
                 
-                for i, vec in enumerate(tag_embs):
-                    vectors.append(EmbeddingsGenerator.EmbeddingsInfo(batch_tags[i], vec.tolist()))
+                for i in range(embedding_raw.shape[0]):
+                    vectors.append(
+                        EmbeddingsGenerator.EmbeddingsInfo(
+                            text=batch_tags[i],
+                            embedding_raw=embedding_raw[i].tolist(),
+                            embedding_normalized=embedding_normalized[i].tolist()
+                        )
+                    )
 
         # ---------- 3) embed each freeform_text (chunk + aggregate) ----------
         default_chunk_size = min(256, EmbeddingsGenerator._model_max_length)
@@ -107,41 +114,73 @@ class EmbeddingsGenerator:
                 input_ids = np.array([tok_encoding.ids], dtype=np.int64)
                 attention_mask = np.array([tok_encoding.attention_mask], dtype=np.int64)
 
-                emb = EmbeddingsGenerator._run_onnx_batch(input_ids, attention_mask)[0]  # (D,)
-                emb = EmbeddingsGenerator._l2_normalize(emb)  # (D,)
-                vectors.append(EmbeddingsGenerator.EmbeddingsInfo(text, emb.tolist()))
+                embedding_raw = EmbeddingsGenerator._run_onnx_batch(input_ids, attention_mask)[0]  # (B, D)
+                embedding_normalized = EmbeddingsGenerator._l2_normalize(embedding)  # (B, D)
+                
+                for i in range(embedding_raw.shape[0]):
+                    vectors.append(
+                        EmbeddingsGenerator.EmbeddingsInfo(
+                            text=batch_tags[i],
+                            embedding_raw=embedding_raw[i].tolist(),
+                            embedding_normalized=embedding_normalized[i].tolist()
+                        )
+                    )
             else:
-                chunks = EmbeddingsGenerator._chunk_text_to_strings(text, chunk_size=default_chunk_size, stride=default_stride)
+                chunks = EmbeddingsGenerator._chunk_text_to_strings(
+                    text, chunk_size=default_chunk_size, stride=default_stride
+                )
                 chunk_embs_list: list[np.ndarray] = []
                 chunk_batch_size = 8
-                
+
                 for i in range(0, len(chunks), chunk_batch_size):
                     batch = chunks[i : i + chunk_batch_size]
-                    
-                    # NEW: Batch encode the text chunks
+
+                    # Batch encode the text chunks
                     toks_encodings: List[Encoding] = EmbeddingsGenerator._tokenizer.encode_batch(batch)
-                    
+
                     # Convert encodings to numpy arrays for ONNX
                     input_ids = np.array([e.ids for e in toks_encodings], dtype=np.int64)
                     attention_mask = np.array([e.attention_mask for e in toks_encodings], dtype=np.int64)
 
                     emb_batch = EmbeddingsGenerator._run_onnx_batch(input_ids, attention_mask)  # (b, D)
                     chunk_embs_list.append(emb_batch)
-                    
+
                 if chunk_embs_list:
-                    chunk_embs = np.vstack(chunk_embs_list)  # (total_chunks, D)
-                    doc_emb = np.mean(chunk_embs, axis=0)      # (D,)
-                    doc_emb = EmbeddingsGenerator._l2_normalize(doc_emb)
-                    vectors.append(EmbeddingsGenerator.EmbeddingsInfo(text, doc_emb.tolist()))
+                    chunk_embs = np.vstack(chunk_embs_list)           # (total_chunks, D)
+                    doc_emb_raw = np.mean(chunk_embs, axis=0)         # (D,) raw averaged embedding
+                    doc_emb_norm = EmbeddingsGenerator._l2_normalize(doc_emb_raw)  # (D,) normalized
+
+                    vectors.append(
+                        EmbeddingsGenerator.EmbeddingsInfo(
+                            text=text,
+                            embedding_raw=doc_emb_raw.tolist(),
+                            embedding_normalized=doc_emb_norm.tolist(),
+                        )
+                    )
                 else:
                     dim = EmbeddingsGenerator._sess.get_outputs()[0].shape[-1]
-                    vectors.append(EmbeddingsGenerator.EmbeddingsInfo(text, np.zeros((dim,), dtype=np.float32).tolist()))
+                    zero_vec = np.zeros((dim,), dtype=np.float32).tolist()
+                    vectors.append(
+                        EmbeddingsGenerator.EmbeddingsInfo(
+                            text=text,
+                            embedding_raw=zero_vec,
+                            embedding_normalized=zero_vec,
+                        )
+                    )
+
 
         # free memory if needed
         gc.collect()
         return vectors
 
     # ---------- helpers ----------
+    @staticmethod
+    def _normalize(vec):
+        norm = math.sqrt(sum(x*x for x in vec))
+        if norm == 0:
+            return vec
+        return [x / norm for x in vec]
+
     @staticmethod
     def _ensure_model_loaded(model_path: str, tokenizer_name: Optional[str] = None, provider: Optional[str] = None):
         """
