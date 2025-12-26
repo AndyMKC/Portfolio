@@ -1,15 +1,15 @@
-from fastapi import APIRouter, Query, Path
+from fastapi import APIRouter, Query, Path, Depends
 from datetime import datetime, timezone
 from app.books.helpers.bigquery_client_helper import get_bigquery_client, BigQueryClientHelper
 from google.cloud import bigquery
-from app.models import CleanedISBN
+from app.models import CleanedISBN, isbn_from_path
 
 router = APIRouter()
 
 @router.patch("/books/{isbn}/mark_read", response_model=None, operation_id="MarkBookRead")
 async def mark_book_read(
     owner: str = Query(..., example="user@gmail.com"),
-    isbn: CleanedISBN = Path(..., example="978-0448487311")
+    isbn: CleanedISBN = Depends(isbn_from_path)
     ):
     """
     Marks a book as read at the current time
@@ -32,7 +32,7 @@ async def mark_book_read(
         query_parameters=[
             # Parameters for the source table (Scalar types)
             bigquery.ScalarQueryParameter("owner", "STRING", owner),
-            bigquery.ScalarQueryParameter("isbn", "STRING", isbn),
+            bigquery.ScalarQueryParameter("isbn", "STRING", isbn.isbn),
             bigquery.ScalarQueryParameter("last_read", "TIMESTAMP", utc_now)
         ]
     )

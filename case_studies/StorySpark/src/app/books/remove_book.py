@@ -1,14 +1,14 @@
-from fastapi import APIRouter, Query, Path
+from fastapi import APIRouter, Query, Path, Depends
 from google.cloud import bigquery
 from app.books.helpers.bigquery_client_helper import get_bigquery_client
-from app.models import CleanedISBN
+from app.models import CleanedISBN, isbn_from_path
 
 router = APIRouter()
 
 @router.delete("/books/{isbn}", response_model=None, operation_id="RemoveBook")
 async def remove_book(
     owner: str = Query(..., example="user@gmail.com"),
-    isbn: CleanedISBN = Path(..., example="978-0448487311")
+    isbn: CleanedISBN = Depends(isbn_from_path)
     ):
     """
     Remove a book from the user's collection by its ISBN
@@ -28,7 +28,7 @@ async def remove_book(
         query_parameters=[
             # Parameters for the source table (Scalar types)
             bigquery.ScalarQueryParameter("owner", "STRING", owner),
-            bigquery.ScalarQueryParameter("isbn", "STRING", isbn)
+            bigquery.ScalarQueryParameter("isbn", "STRING", isbn.isbn)
         ]
     )
 

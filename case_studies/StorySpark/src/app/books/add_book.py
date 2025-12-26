@@ -34,7 +34,8 @@ async def add_book(
 
     # Uniquify the list of incoming ISBNs and only process the ones that have not been processed before
     # TODO:  This does not factor in any user-provided relevant text/tags and does not account for new providers needed to process
-    unique_isbns = [isbn for isbn in list(set(add_book_request.isbns)) if not id_exists(
+    isbns_to_process: list[str] = [cleaned_isbn.isbn for cleaned_isbn in add_book_request.isbns]
+    unique_isbns = [isbn for isbn in list(set(isbns_to_process)) if not id_exists(
         bigquery_client_helper=bigquery_client_helper,
         table_id=bigquery_client_helper.source_table_id,
         id_column="id",
@@ -57,6 +58,11 @@ async def add_book(
     for isbn, metadata in final_metadatas.items():
         # TODO:  Not every book has a title and author (978-1-78557-934-9 "10 Little Snowmen".  Figure out some strategy to handle this.  That one coincidentally has no embeddings generatable)
         title, authors = OpenLibraryProvider.get_title_and_authors(isbn)
+
+        # One last metadata add - the title.  This one bypasses all filters imposed by the providers
+        metadata.append(title.lower().strip())
+        metadata = list(set(metadata))
+
         source_table_data.append({
             "id": f"{add_book_request.owner}:{isbn}",
             "owner": add_book_request.owner,
