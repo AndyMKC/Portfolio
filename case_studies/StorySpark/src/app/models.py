@@ -48,7 +48,7 @@ class RecommendedBook(BaseModel):
     owner: str
     isbn: CleanedISBN
     title: str
-    authors: str
+    authors: list[str]
     relevant_text: str
     last_read: Optional[datetime] = None
     created_at: datetime
