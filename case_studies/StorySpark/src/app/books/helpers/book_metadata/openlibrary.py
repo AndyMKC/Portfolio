@@ -1,9 +1,23 @@
 import requests
 from .bookmetdataprovider import BookMetadataProvider
+from dataclasses import dataclass
+from typing import ClassVar
 
 OPENLIBRARY_URL = "https://openlibrary.org"
 
+@dataclass(frozen=True)
+class FilteredSubjects:
+    subjects: ClassVar[frozenset] = frozenset({
+        "fiction".strip(),
+        "juvenile fiction".strip()
+    })
+
+    characters: ClassVar[frozenset] = frozenset({
+        ":".strip()
+    })
+
 class OpenLibraryProvider:
+    @staticmethod
     def get_title_and_authors(isbn: str) -> tuple[str, list[str]]:
         resp = requests.get(
             f"{OPENLIBRARY_URL}/api/books",
@@ -71,7 +85,23 @@ class OpenLibraryProvider:
                     resp_work_key.raise_for_status()
                     resp_work_key_json = resp_work_key.json()
                     # Gather the relevant strings from various parts of the JSON
-                    relevant_strings.extend([subj for subj in resp_work_key_json.get("subjects", [])])
+                    subjects = [subj for subj in resp_work_key_json.get("subjects", [])]
+
+                    # Certain appear in the subjects area that does not really describe the story (some subjects are "Fiction" and that's not useful.  Others talk about what age somebody should be reading this).  Filter them out
+                    cleaned: list[str] = []
+                    for subject in subjects:
+                        if not subject:
+                            continue
+
+                        normalized = subject.lower().strip()
+                        if normalized in FilteredSubjects.subjects:
+                            continue
+                        if any(char in normalized for char in FilteredSubjects.characters):
+                            continue
+
+                        cleaned.append(normalized)
+
+                    relevant_strings.extend(cleaned)
                     # Description and notes are whole sentences as opposed to 1-3 words in subjects.  We will eventually need to parse it better.
                     if (description_value := resp_work_key_json.get("description")):
                         # Here, sometimes it the value is a string (https://openlibrary.org/works/OL20870854W.json) but other times, it is a dict and you have to look into "value" (https://openlibrary.org//works/OL14909344W.json)
@@ -89,3 +119,5 @@ class OpenLibraryProvider:
             isbn_metadata[isbn] = relevant_strings
 
         return isbn_metadata
+    
+    
