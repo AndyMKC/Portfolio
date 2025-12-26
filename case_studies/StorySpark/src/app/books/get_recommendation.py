@@ -9,7 +9,9 @@ router = APIRouter()
 @router.get("/books/recommendation", response_model=list[RecommendedBook], operation_id="GetBookRecommendation")
 async def get_recommendation(
     owner: str = Query(..., example="user@gmail.com"),
-    text: str = Query(..., example="canoe")
+    text: str = Query(..., example="canoe"),
+    limit: int = Query(10, gt=0, description="Maximum number of results; must be > 0", example=10),
+
     ) -> list[RecommendedBook]:
     embedding_info = EmbeddingsGenerator.generate_embeddings(tags=None, relevant_text=[text])[0]
 
@@ -17,7 +19,6 @@ async def get_recommendation(
     source_table_id = f"{bigquery_client_helper.project_id}.{bigquery_client_helper.dataset_id}.{bigquery_client_helper.source_table_id}"
     embeddings_table_id = f"{bigquery_client_helper.project_id}.{bigquery_client_helper.dataset_id}.{bigquery_client_helper.embeddings_table_id}"
 
-    top_k = 10
     # TODO:  Figure out the owner stuff
     query = f"""
     DECLARE owner_param STRING DEFAULT @owner;
@@ -40,8 +41,8 @@ async def get_recommendation(
             content,
             (
                 SELECT SUM(a * b)
-                FROM UNNEST(embedding_normalized) AS left WITH OFFSET row_pos
-                JOIN UNNEST(query_embedding) AS right WITH OFFSET query_pos
+                FROM UNNEST(s.embedding_normalized) AS a WITH OFFSET row_pos
+                JOIN UNNEST(query_embedding) AS b WITH OFFSET query_pos
                 ON row_pos = query_pos
             ) AS cosine_similarity
         FROM `{embeddings_table_id}` as s
@@ -52,41 +53,40 @@ async def get_recommendation(
         SELECT
             isbn,
             content,
-            cosine_similarity
+            cosine_similarity,
             ROW_NUMBER() OVER
             (
                 PARTITION by isbn
                 ORDER BY cosine_similarity DESC
             ) AS row_num
-    )
+        FROM scored
+    ),
     -- Pick the best one
     best_per_isbn AS (
         SELECT
             isbn,
             content,
-            cosine_sim AS best_cosine_similarity
+            cosine_similarity AS best_cosine_similarity
         FROM ranked
         WHERE row_num = 1
---        ORDER BY best_cosine_similarity DESC
---        LIMIT @top_k;
     )
     -- Join back with the original table to get more information
     SELECT
-        ANY_VALUE(source_table.id),
-        ANY_VALUE(source_table.owner),
-        best_per_isbn.isbn,
-        ANY_VALUE(source_table.title),
-        ANY_VALUE(source_table.authors),
-        best_per_isbn.content AS relevant_text,
-        ANY_VALUE(source_table.last_read),
-        ANY_VALUE(source_table.created_at),
-        best_per_isbn.best_cosine_similarity,
-    FROM best_per_isbn
-    LEFT JOIN owner_source
-        ON owner_source.isbn = best_per_isbn.isbn
-    GROUP BY best_per_isbn.isbn, best_per_isbn.content, best_per_isbn.best_cosine_similarity
+        ANY_VALUE(ob.id) AS id,
+        ANY_VALUE(ob.owner) AS owner,
+        best.isbn,
+        ANY_VALUE(ob.title) AS title,
+        ANY_VALUE(ob.authors) AS authors,
+        best.content AS relevant_text,
+        ANY_VALUE(ob.last_read) AS last_read,
+        ANY_VALUE(ob.created_at) AS created_at,
+        best.best_cosine_similarity
+    FROM best_per_isbn AS best
+    LEFT JOIN owner_books AS ob
+        ON ob.isbn = best.isbn
+    GROUP BY best.isbn, best.content, best.best_cosine_similarity
     ORDER BY best_cosine_similarity DESC
-    LIMIT @top_k
+    LIMIT @limit
     """
 
     job_config = bigquery.QueryJobConfig(
@@ -97,7 +97,7 @@ async def get_recommendation(
             bigquery.ArrayQueryParameter(
                 "query_embedding", "FLOAT64", embedding_info.embedding_normalized
             ),
-            bigquery.ScalarQueryParameter("top_k", "INT64", top_k)
+            bigquery.ScalarQueryParameter("limit", "INT64", limit)
         ]
     )
 
@@ -119,7 +119,7 @@ async def get_recommendation(
             )
             all_books.append(book)
             
-            return all_books
+        return all_books
     except Exception as e:
         print(f"Query failed:  {e}")
         raise
