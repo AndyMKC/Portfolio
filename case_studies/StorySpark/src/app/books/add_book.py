@@ -62,7 +62,7 @@ async def add_book(
             "owner": add_book_request.owner,
             "isbn": isbn,
             "title": title,
-            "author": authors,
+            "authors": authors,
             "last_read": None,
             "created_at": utc_now.isoformat()
         })
@@ -108,7 +108,7 @@ async def add_book(
 
     -- Insert multiple source rows
     INSERT INTO `{source_table_id}` (
-        id, owner, isbn, title, author, last_read, created_at
+        id, owner, isbn, title, authors, last_read, created_at
     )
     SELECT
         JSON_VALUE(elem, '$.id') AS id,
@@ -116,11 +116,10 @@ async def add_book(
         JSON_VALUE(elem, '$.isbn') AS isbn,
         JSON_VALUE(elem, '$.title') AS title,
 
-        -- author is now a REPEATED STRING field
         (
         SELECT ARRAY_AGG(JSON_VALUE(a, '$'))
-        FROM UNNEST(JSON_EXTRACT_ARRAY(elem, '$.author')) AS a
-        ) AS author,
+        FROM UNNEST(JSON_EXTRACT_ARRAY(elem, '$.authors')) AS a
+        ) AS authors,
 
         CAST(JSON_VALUE(elem, '$.last_read') AS TIMESTAMP) AS last_read,
         CAST(JSON_VALUE(elem, '$.created_at') AS TIMESTAMP) AS created_at

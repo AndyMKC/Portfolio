@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Query
 
 from app.books.add_book import add_book
 from app.books.clear_database import clear_database
@@ -7,7 +7,10 @@ from app.models import AddBookRequest
 router = APIRouter()
 
 @router.post("/reset", response_model=None, operation_id="ClearAndSeedDB")
-async def clear_and_seed_db(request: Request, owner: str):
+async def clear_and_seed_db(
+    request: Request,
+    owner: str = Query(..., example="user@gmail.com")
+    ):
     await clear_database()
     
     add_book_request = AddBookRequest(
