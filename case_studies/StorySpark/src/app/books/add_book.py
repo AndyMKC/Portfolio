@@ -84,15 +84,20 @@ async def add_book(
         # TODO:  Should we put the title of the book as well?
         embeddings_info: list[EmbeddingsGenerator.EmbeddingsInfo] = EmbeddingsGenerator.generate_embeddings(tags="", relevant_text=metadata)
         for info in embeddings_info:
-            emb_list = info.embeddings
-            if hasattr(emb_list, "tolist"):
-                emb_list = emb_list.tolist()
+            emb_raw_list = info.embedding_raw
+            emb_norm_list = info.embedding_normalized
+            if hasattr(emb_raw_list, "tolist"):
+                emb_raw_list = emb_raw_list.tolist()
+            if hasattr(emb_norm_list, "tolist"):
+                emb_norm_list = emb_norm_list.tolist()
             # if it's a numpy scalar or other, coerce to list
-            emb_list = list(map(float, emb_list))
+            emb_raw_list = list(map(float, emb_raw_list))
+            emb_norm_list = list(map(float, emb_norm_list))
             embeddings_table_data.append({
                 "isbn": isbn,
                 "content": info.text,
-                "embeddings": emb_list,
+                "embedding_raw": emb_raw_list,
+                "embedding_normalized": emb_norm_list,
                 "model_name": EmbeddingsGenerator.MODEL_FILE,
                 "created_at": utc_now.isoformat(),   # ISO string
                 # TODO:  Fill in owner if it is a user-provided text
@@ -124,7 +129,7 @@ async def add_book(
 
     -- Insert multiple embedding rows (each may have different ISBNs)
     INSERT INTO `{embeddings_table_id}` (
-        isbn, content, embeddings, model_name, created_at, owner
+        isbn, content, embedding_raw, embedding_normalized, model_name, created_at, owner
     )
     SELECT
         JSON_VALUE(elem, '$.isbn') AS isbn,
@@ -132,8 +137,13 @@ async def add_book(
 
         (
         SELECT ARRAY_AGG(CAST(JSON_VALUE(e, '$') AS FLOAT64))
-        FROM UNNEST(JSON_EXTRACT_ARRAY(elem, '$.embeddings')) AS e
-        ) AS embeddings,
+        FROM UNNEST(JSON_EXTRACT_ARRAY(elem, '$.embedding_raw')) AS e
+        ) AS embedding_raw,
+
+        (
+        SELECT ARRAY_AGG(CAST(JSON_VALUE(e, '$') AS FLOAT64))
+        FROM UNNEST(JSON_EXTRACT_ARRAY(elem, '$.embedding_normalized')) AS e
+        ) AS embedding_normalized,
 
         JSON_VALUE(elem, '$.model_name') AS model_name,
         CAST(JSON_VALUE(elem, '$.created_at') AS TIMESTAMP) AS created_at,
