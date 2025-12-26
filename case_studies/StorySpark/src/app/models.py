@@ -38,8 +38,19 @@ class Book(BaseModel):
     owner: str
     isbn: CleanedISBN
     title: str
-    author: str
+    authors: list[str]
     relevant_text: Optional[str] = None
     last_read: Optional[datetime] = None
     created_at: datetime
     
+class RecommendedBook(BaseModel):
+    id: str
+    owner: str
+    isbn: CleanedISBN
+    title: str
+    authors: str
+    relevant_text: str
+    last_read: Optional[datetime] = None
+    created_at: datetime
+    cosine_simularity: float
+

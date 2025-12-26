@@ -74,7 +74,7 @@ locals {
     { "name": "owner",         "type": "STRING",    "mode": "REQUIRED" },
     { "name": "isbn",          "type": "STRING",    "mode": "REQUIRED" },
     { "name": "title",         "type": "STRING",    "mode": "REQUIRED" },
-    { "name": "author",        "type": "STRING",    "mode": "REPEATED" },
+    { "name": "authors",       "type": "STRING",    "mode": "REPEATED" },
     { "name": "last_read",     "type": "TIMESTAMP", "mode": "NULLABLE" },
     { "name": "created_at",    "type": "TIMESTAMP", "mode": "REQUIRED" }
   ])

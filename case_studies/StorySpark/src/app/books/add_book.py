@@ -6,7 +6,6 @@ import json
 from app.models import AddBookRequest
 from app.books.helpers.bigquery_client_helper import get_bigquery_client, BigQueryClientHelper
 from app.books.helpers.embeddings_generator import EmbeddingsGenerator
-from app.books.helpers.book_metadata.bookmetdataprovider import BookMetadataProvider
 from app.books.helpers.book_metadata.openlibrary import OpenLibraryProvider
 from app.books.helpers.book_metadata.provider_factory import get_providers
 
@@ -166,7 +165,7 @@ async def add_book(
     try:
         query_job = bigquery_client_helper.client.query(transaction_script, job_config=job_config)
         # Waiting on the result means we wait for the COMMIT to finish
-        query_job.result() 
+        query_job.result()
         print(f"Full non-streaming transaction committed successfully for ISBN: {add_book_request.isbns}.")
         print(f"Inserted {len(source_table_data)} source table rows")
         print(f"Inserted {len(embeddings_table_data)} embedding rows.")
