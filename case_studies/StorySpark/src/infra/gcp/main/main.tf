@@ -82,8 +82,8 @@ locals {
   embeddings_schema = jsonencode([
     { "name": "isbn",                   "type": "STRING",    "mode": "REQUIRED" },
     { "name": "content",                "type": "STRING",    "mode": "REQUIRED" },
-    { "name": "embedding",              "type": "FLOAT64",   "mode": "REPEATED" },
-    { "name": "normalized_embedding",   "type": "FLOAT64",   "mode": "REPEATED" },
+    { "name": "embedding_raw",          "type": "FLOAT64",   "mode": "REPEATED" },
+    { "name": "embedding_normalized",   "type": "FLOAT64",   "mode": "REPEATED" },
     { "name": "model_name",             "type": "STRING",    "mode": "REQUIRED" },
     { "name": "created_at",             "type": "TIMESTAMP", "mode": "REQUIRED" },
     { "name": "owner",                  "type": "STRING",    "mode": "NULLABLE" }
