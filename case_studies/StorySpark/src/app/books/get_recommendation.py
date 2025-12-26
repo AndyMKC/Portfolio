@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Query
-from app.models import RecommendedBook
+from app.models import RecommendedBook, CleanedISBN
 from app.books.helpers.bigquery_client_helper import get_bigquery_client
 from app.books.helpers.embeddings_generator import EmbeddingsGenerator
 from google.cloud import bigquery
@@ -109,7 +109,7 @@ async def get_recommendation(
             book = RecommendedBook(
                 id=row['id'],
                 owner=row['owner'],
-                isbn=row['isbn'],
+                isbn=CleanedISBN(isbn=row['isbn']),
                 title=row['title'],
                 authors=row['authors'],
                 relevant_text=row['relevant_text'],

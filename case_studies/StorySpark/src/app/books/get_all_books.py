@@ -2,6 +2,7 @@ from fastapi import APIRouter, Query
 from app.models import Book
 from google.cloud import bigquery
 from app.books.helpers.bigquery_client_helper import get_bigquery_client
+from app.models import CleanedISBN
 
 router = APIRouter()
 
@@ -37,7 +38,7 @@ async def get_all_books(
         book = Book(
             id=row['id'],
             owner=row['owner'],
-            isbn=row['isbn'],
+            isbn=CleanedISBN(isbn=row['isbn']),
             title=row['title'],
             authors=row['authors'],
             last_read=row['last_read'],
