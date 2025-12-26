@@ -39,7 +39,7 @@ async def get_all_books(
             owner=row['owner'],
             isbn=row['isbn'],
             title=row['title'],
-            author=row['author'],
+            authors=row['authors'],
             last_read=row['last_read'],
             created_at=row['created_at']
         )
