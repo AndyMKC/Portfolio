@@ -81,7 +81,7 @@ class EmbeddingsGenerator:
                 attention_mask = np.array([e.attention_mask for e in toks_encodings], dtype=np.int64)
 
                 embedding_raw = EmbeddingsGenerator._run_onnx_batch(input_ids, attention_mask)  # (B, D)
-                embedding_normalized = EmbeddingsGenerator._l2_normalize(embedding)  # (B, D)
+                embedding_normalized = EmbeddingsGenerator._l2_normalize(embedding_raw)  # (B, D)
                 
                 for i in range(embedding_raw.shape[0]):
                     vectors.append(
@@ -99,7 +99,11 @@ class EmbeddingsGenerator:
         for text in relevant_text:
             if not text:
                 dim = EmbeddingsGenerator._sess.get_outputs()[0].shape[-1]
-                vectors.append(EmbeddingsGenerator.EmbeddingsInfo(text, np.zeros((dim,), dtype=np.float32).tolist()))
+                vectors.append(EmbeddingsGenerator.EmbeddingsInfo(
+                    text=text,
+                    embedding_raw=np.zeros((dim,), dtype=np.float32).tolist(),
+                    embedding_normalized=np.zeros((dim,), dtype=np.float32).tolist()
+                ))
                 continue
             
             # Use Tokenizer.encode for length check
@@ -115,16 +119,15 @@ class EmbeddingsGenerator:
                 attention_mask = np.array([tok_encoding.attention_mask], dtype=np.int64)
 
                 embedding_raw = EmbeddingsGenerator._run_onnx_batch(input_ids, attention_mask)[0]  # (B, D)
-                embedding_normalized = EmbeddingsGenerator._l2_normalize(embedding)  # (B, D)
+                embedding_normalized = EmbeddingsGenerator._l2_normalize(embedding_raw)  # (B, D)
                 
-                for i in range(embedding_raw.shape[0]):
-                    vectors.append(
-                        EmbeddingsGenerator.EmbeddingsInfo(
-                            text=batch_tags[i],
-                            embedding_raw=embedding_raw[i].tolist(),
-                            embedding_normalized=embedding_normalized[i].tolist()
-                        )
+                vectors.append(
+                    EmbeddingsGenerator.EmbeddingsInfo(
+                        text=text,
+                        embedding_raw=embedding_raw.tolist(),
+                        embedding_normalized=embedding_normalized.tolist()
                     )
+                )
             else:
                 chunks = EmbeddingsGenerator._chunk_text_to_strings(
                     text, chunk_size=default_chunk_size, stride=default_stride
@@ -174,13 +177,6 @@ class EmbeddingsGenerator:
         return vectors
 
     # ---------- helpers ----------
-    @staticmethod
-    def _normalize(vec):
-        norm = math.sqrt(sum(x*x for x in vec))
-        if norm == 0:
-            return vec
-        return [x / norm for x in vec]
-
     @staticmethod
     def _ensure_model_loaded(model_path: str, tokenizer_name: Optional[str] = None, provider: Optional[str] = None):
         """
