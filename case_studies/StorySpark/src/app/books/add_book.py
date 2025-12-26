@@ -38,7 +38,7 @@ async def add_book(
         bigquery_client_helper=bigquery_client_helper,
         table_id=bigquery_client_helper.source_table_id,
         id_column="id",
-        id=create_source_table_id(owner=add_book_request.owner, isbn=isbn)
+        id=f"{add_book_request.owner}:{isbn}"
     )]
     # Get all the metadata for each of the given ISBNs
     providers = get_providers()
