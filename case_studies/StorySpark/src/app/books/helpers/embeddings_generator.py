@@ -61,7 +61,10 @@ class EmbeddingsGenerator:
 
         # ---------- 1) lower-case and dedupe the tags ----------
         # NOTE: Assumes 'tags' is a single string that needs splitting (based on your old code)
-        parsed_tags: list[str] = list(set([tag.lower().strip() for tag in tags.split(';') if tag.strip()]))
+        parsed_tags: list[str] = list(
+            { tag.lower().strip() for tag in tags.split(';') if tag.strip() }
+        ) if tags is not None else []
+
         vectors: list[EmbeddingsGenerator.EmbeddingsInfo] = []
 
         # ---------- 2) embed tags (batch them together, preserve mapping) ----------

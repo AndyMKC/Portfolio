@@ -9,6 +9,8 @@ def strip_hyphens(v: str) -> str:
 
 CleanedISBN = Annotated[
     str,
+    # TODO:  Figure out how to remove duplicates with both ISBN-10 and ISBN-13
+    # TODO:  With different books using different amount of dashes, the max_length may be more than 17.  Watch out for this.
     StringConstraints(strip_whitespace=True, min_length=10, max_length=17),
     AfterValidator(strip_hyphens)
 ]
@@ -39,7 +41,6 @@ class Book(BaseModel):
     isbn: CleanedISBN
     title: str
     authors: list[str]
-    relevant_text: Optional[str] = None
     last_read: Optional[datetime] = None
     created_at: datetime
     
