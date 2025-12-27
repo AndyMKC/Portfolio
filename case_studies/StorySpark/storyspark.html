@@ -50,10 +50,11 @@
       Time is precious and parents want to spend as much quality time with their children as possible. Reading to one's
       children is an age-old tradition that serves as a primary mean of helping the parent bond with their children and
       teaching the children the language skills they need to succeed later in life.
-      <br/>
-      <br/>
-      <a href="https://github.com/AndyMKC/Portfolio/tree/main/case_studies/StorySpark/src" target="_blank">GitHub Code</a>
-      <br/>
+      <br />
+      <br />
+      <a href="https://github.com/AndyMKC/Portfolio/tree/main/case_studies/StorySpark/src" target="_blank">GitHub
+        Code</a>
+      <br />
       To learn more about the technical details, please see the Implementation section.
     </details>
     <details>
@@ -376,7 +377,8 @@
         that is available for borrowing.
 
         <h3>Different language support</h3>
-        Currently, we are looking only for English text when deciding what topics a book is associated with.  This means queries in another language may fail.  We should see how we can incorporate mixing multiple languages.
+        Currently, we are looking only for English text when deciding what topics a book is associated with. This means
+        queries in another language may fail. We should see how we can incorporate mixing multiple languages.
       </details>
     </details>
     <details>
@@ -384,67 +386,80 @@
       Here are the parts at play from both the developer side and the implementation side.
       <details>
         <summary class="collapsible-title">Visual Layout</summary>
-        <iframe style="border: 1px solid rgba(0, 0, 0, 0.1);"
-                width="800" height="450"
-                src="https://embed.figma.com/board/s7Sg1XjSu1eo5wxWGtlSYq/Untitled?node-id=0-1&embed-host=share"
-                allowfullscreen>
+        <iframe style="border: 1px solid rgba(0, 0, 0, 0.1);" width="800" height="450"
+          src="https://embed.figma.com/board/s7Sg1XjSu1eo5wxWGtlSYq/Untitled?node-id=0-1&embed-host=share"
+          allowfullscreen>
         </iframe>
       </details>
       <details>
         <summary class="collapsible-title">CI/CD</summary>
+        <h3>Main Pipeline</h3>
         <ul>
-            <li>
-              Main pipeline
-              <ul>
-                <li>
-                  <a href="https://github.com/AndyMKC/Portfolio/actions/workflows/deploy_storyspark.yml" target="_blank">Workflow Runs</a>
-                </li>
-                <li>
-                  <a href="https://github.com/AndyMKC/Portfolio/blob/main/.github/workflows/deploy_storyspark.yml" target="_blank">Backing yml file</a>
-                </li>
-                <li>
-                  <a href="https://github.com/AndyMKC/Portfolio/tree/main/case_studies/StorySpark/src/infra/gcp/main" target="_blank">Terraform files</a>
-                </li>
-                <li>
-                  <a href="https://github.com/AndyMKC/Portfolio/blob/main/case_studies/StorySpark/src/Dockerfile" target="_blank">Dockerfile</a>
-                </li>
-                <li>
-                  <a href="https://github.com/AndyMKC/Portfolio/tree/main/case_studies/StorySpark/src" target="_blank">Main application code</a>
-                </li>
-              </ul>
-              
-            </li>
-            <li>
-              Model Generation
-              <ul>
-                <li>
-                  <a href="https://github.com/AndyMKC/Portfolio/actions/workflows/deploy_storyspark_model_export.yml" target="_blank">Workflow Runs</a>
-                </li>
-                <li>
-                  <a href="https://github.com/AndyMKC/Portfolio/blob/main/.github/workflows/deploy_storyspark_model_export.yml" target="_blank">Backing yml file</a>
-                </li>
-                <li>
-                  <a href="https://github.com/AndyMKC/Portfolio/tree/main/case_studies/StorySpark/src/model_export" target="_blank">Model artifacts code</a>
-                </li>
-              </ul>
-              Normally, projects simply bundle a full ML runtime (PyTorch, transformers, tokenizers, etc) into the application container so the model can be loaded locally, but that inflates the image size and therefore the artifact registry cost.  My priority for this was to keep costs down while still maintaining performance.  Instead, I export the embedding model to ONNX and publish the artifacts into Google Cloud Storage.  To keep startup performance fast, I had to avoid downloading the model artifacts each time.  To solve this, I am using Google's Cloud Function (2nd gen)'s feature to mount a Cloud Storage bucket as a local file system via FUSE.  The result of this along with other space saving techniques managed to downsize my image from over 1 GB (at one point it got so big GitHub's CI/CD machines <a href="https://github.com/AndyMKC/Portfolio/actions/runs/19625426124" target="_blank">ran out of space</a>) to less than 90 MB.  This pipeline builds the model artifacts and pushes it up to Cloud Storage.
-            </li>
-            <li>
-              Bootstrap
-              <ul>
-                <li>
-                  <a href="https://github.com/AndyMKC/Portfolio/actions/workflows/deploy_gcp_bootstrap_backend.yml" target="_blank">Workflow Runs</a>
-                </li>
-                <li>
-                  <a href="https://github.com/AndyMKC/Portfolio/blob/main/.github/workflows/deploy_gcp_bootstrap_backend.yml" target="_blank">Backing yml file</a>
-                </li>
-                <li>
-                  <a href="https://github.com/AndyMKC/Portfolio/tree/main/case_studies/StorySpark/src/infra/gcp/bootstrap_backend" target="_blank">Bootstrap Terraform files</a>
-                </li>
-              </ul>
-              This CI/CD "pipeline" was ran from my local dev box instead from GitHub Actions.  It is meant to bootstrap a place to put the terraform.  I leave it here for others to learn from on what they need to do to get everything started.
-            </li>
-          </ul>
+          <li>
+            <a href="https://github.com/AndyMKC/Portfolio/actions/workflows/deploy_storyspark.yml"
+              target="_blank">Workflow Runs</a>
+          </li>
+          <li>
+            <a href="https://github.com/AndyMKC/Portfolio/blob/main/.github/workflows/deploy_storyspark.yml"
+              target="_blank">Backing yml file</a>
+          </li>
+          <li>
+            <a href="https://github.com/AndyMKC/Portfolio/tree/main/case_studies/StorySpark/src/infra/gcp/main"
+              target="_blank">Terraform files</a>
+          </li>
+          <li>
+            <a href="https://github.com/AndyMKC/Portfolio/blob/main/case_studies/StorySpark/src/Dockerfile"
+              target="_blank">Dockerfile</a>
+          </li>
+          <li>
+            <a href="https://github.com/AndyMKC/Portfolio/tree/main/case_studies/StorySpark/src" target="_blank">Main
+              application code</a>
+          </li>
+        </ul>
+        While this is the CI/CD pipeline that drives most of the action, it is actually quite straightforward.
+        <h3>Model Generation Pipeline</h3>
+        <ul>
+          <li>
+            <a href="https://github.com/AndyMKC/Portfolio/actions/workflows/deploy_storyspark_model_export.yml"
+              target="_blank">Workflow Runs</a>
+          </li>
+          <li>
+            <a href="https://github.com/AndyMKC/Portfolio/blob/main/.github/workflows/deploy_storyspark_model_export.yml"
+              target="_blank">Backing yml file</a>
+          </li>
+          <li>
+            <a href="https://github.com/AndyMKC/Portfolio/tree/main/case_studies/StorySpark/src/model_export"
+              target="_blank">Model artifacts code</a>
+          </li>
+        </ul>
+        Normally, projects simply bundle a full ML runtime (PyTorch, transformers, tokenizers, etc) into the application
+        container so the model can be loaded locally, but that inflates the image size and therefore the artifact
+        registry cost. My priority for this was to keep costs down while still maintaining performance. Instead, I
+        export the embedding model to ONNX and publish the artifacts into Google Cloud Storage. To keep startup
+        performance fast, I had to avoid downloading the model artifacts each time. To solve this, I am using Google's
+        Cloud Function (2nd gen)'s feature to mount a Cloud Storage bucket as a local file system via FUSE. The result
+        of this along with other space saving techniques managed to downsize my image from over 1 GB (at one point it
+        got so big GitHub's CI/CD machines <a href="https://github.com/AndyMKC/Portfolio/actions/runs/19625426124"
+          target="_blank">ran out of space</a>) to less than 90 MB. This pipeline builds the model artifacts and pushes
+        it up to Cloud Storage.
+        <h3>Terraform Bootstrap Pipeline</h3>
+        <ul>
+          <li>
+            <a href="https://github.com/AndyMKC/Portfolio/actions/workflows/deploy_gcp_bootstrap_backend.yml"
+              target="_blank">Workflow Runs</a>
+          </li>
+          <li>
+            <a href="https://github.com/AndyMKC/Portfolio/blob/main/.github/workflows/deploy_gcp_bootstrap_backend.yml"
+              target="_blank">Backing yml file</a>
+          </li>
+          <li>
+            <a href="https://github.com/AndyMKC/Portfolio/tree/main/case_studies/StorySpark/src/infra/gcp/bootstrap_backend"
+              target="_blank">Bootstrap Terraform files</a>
+          </li>
+        </ul>
+        This CI/CD "pipeline" was ran from my local dev box instead from GitHub Actions. It is meant to bootstrap a
+        place to put the terraform. I leave it here for others to learn from on what they need to do to get everything
+        started.
       </details>
       <!-- <ul>
         <li>
