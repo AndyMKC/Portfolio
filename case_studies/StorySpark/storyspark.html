@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Andy Cheng – Product Management Portfolio</title>
+  <title>Andy Cheng – Product Leader Portfolio</title>
 
   <!-- CSS Reset -->
   <link rel="stylesheet" href="../../css/reset.css" />
@@ -50,6 +50,12 @@
       Time is precious and parents want to spend as much quality time with their children as possible. Reading to one's
       children is an age-old tradition that serves as a primary mean of helping the parent bond with their children and
       teaching the children the language skills they need to succeed later in life.
+      <br />
+      <br />
+      <a href="https://github.com/AndyMKC/Portfolio/tree/main/case_studies/StorySpark/src" target="_blank">GitHub
+        Code</a>
+      <br />
+      To learn more about the technical details, please see the Implementation section.
     </details>
     <details>
       <summary class="collapsible-title">Planning</summary>
@@ -371,31 +377,160 @@
         that is available for borrowing.
 
         <h3>Different language support</h3>
-        Currently, we are looking only for English text when deciding what topics a book is associated with.  This means queries in another language may fail.  We should see how we can incorporate mixing multiple languages.
+        Currently, we are looking only for English text when deciding what topics a book is associated with. This means
+        queries in another language may fail. We should see how we can incorporate mixing multiple languages.
       </details>
     </details>
     <details>
-      <summary class="collapsible-title">System Design</summary>
-      In here, we list our three main scenarios
-      <ul>
-        <li>
-          The family getting a new book or getting rid of an old book.
-        </li>
-        <li>
-          The family has read a book and therefore want to update the last read date.
-        </li>
-        <li>
-          The family asking StorySpark for a suggestion of a book to read.
-        </li>
-      </ul>
-      <iframe style="border: 1px solid rgba(0, 0, 0, 0.1);" width="800" height="450"
-        src="https://embed.figma.com/board/s7Sg1XjSu1eo5wxWGtlSYq/Untitled?node-id=0-1&embed-host=share"
-        allowfullscreen></iframe>
+      <summary class="collapsible-title">Implementation</summary>
+      Here are the parts at play from both the developer side and the implementation side.
+      <details>
+        <summary class="collapsible-title">Visual Layout</summary>
+        <iframe style="border: 1px solid rgba(0, 0, 0, 0.1);" width="800" height="450"
+          src="https://embed.figma.com/board/s7Sg1XjSu1eo5wxWGtlSYq/Untitled?node-id=0-1&embed-host=share"
+          allowfullscreen>
+        </iframe>
+      </details>
+      <details>
+        <summary class="collapsible-title">CI/CD</summary>
+        <h3>Main Pipeline</h3>
+        <ul>
+          <li>
+            <a href="https://github.com/AndyMKC/Portfolio/actions/workflows/deploy_storyspark.yml"
+              target="_blank">Workflow Runs</a>
+          </li>
+          <li>
+            <a href="https://github.com/AndyMKC/Portfolio/blob/main/.github/workflows/deploy_storyspark.yml"
+              target="_blank">Backing yml file</a>
+          </li>
+          <li>
+            <a href="https://github.com/AndyMKC/Portfolio/tree/main/case_studies/StorySpark/src/infra/gcp/main"
+              target="_blank">Terraform files</a>
+          </li>
+          <li>
+            <a href="https://github.com/AndyMKC/Portfolio/blob/main/case_studies/StorySpark/src/Dockerfile"
+              target="_blank">Dockerfile</a>
+          </li>
+          <li>
+            <a href="https://github.com/AndyMKC/Portfolio/tree/main/case_studies/StorySpark/src" target="_blank">Main
+              application code</a>
+          </li>
+        </ul>
+        While this is the CI/CD pipeline that drives most of the action, it is actually quite straightforward.  It builds and uploads the docker image to Google's Artifact Registry.  Then it runs both Terraform's plan and apply actions.  The real work here is to make sure everything works within the cost budget.
+        <h3>Model Generation Pipeline</h3>
+        <ul>
+          <li>
+            <a href="https://github.com/AndyMKC/Portfolio/actions/workflows/deploy_storyspark_model_export.yml"
+              target="_blank">Workflow Runs</a>
+          </li>
+          <li>
+            <a href="https://github.com/AndyMKC/Portfolio/blob/main/.github/workflows/deploy_storyspark_model_export.yml"
+              target="_blank">Backing yml file</a>
+          </li>
+          <li>
+            <a href="https://github.com/AndyMKC/Portfolio/tree/main/case_studies/StorySpark/src/model_export"
+              target="_blank">Model artifacts code</a>
+          </li>
+        </ul>
+        Normally, projects simply bundle a full ML runtime (PyTorch, transformers, tokenizers, etc) into the application
+        container so the model can be loaded locally, but that inflates the image size and therefore the artifact
+        registry cost. My priority for this was to keep costs down while still maintaining performance. Instead, I
+        export the embedding model to ONNX and publish the artifacts into Google Cloud Storage. To keep startup
+        performance fast, I had to avoid downloading the model artifacts each time. To solve this, I am using Google's
+        Cloud Function (2nd gen)'s feature to mount a Cloud Storage bucket as a local file system via FUSE. The result
+        of this along with other space saving techniques managed to downsize my image from over 1 GB (at one point it
+        got so big GitHub's CI/CD machines <a href="https://github.com/AndyMKC/Portfolio/actions/runs/19625426124"
+          target="_blank">ran out of space</a>) to less than 90 MB. This pipeline builds the model artifacts and pushes
+        it up to Cloud Storage.
+        <h3>Terraform Bootstrap Pipeline</h3>
+        <ul>
+          <li>
+            <a href="https://github.com/AndyMKC/Portfolio/actions/workflows/deploy_gcp_bootstrap_backend.yml"
+              target="_blank">Workflow Runs</a>
+          </li>
+          <li>
+            <a href="https://github.com/AndyMKC/Portfolio/blob/main/.github/workflows/deploy_gcp_bootstrap_backend.yml"
+              target="_blank">Backing yml file</a>
+          </li>
+          <li>
+            <a href="https://github.com/AndyMKC/Portfolio/tree/main/case_studies/StorySpark/src/infra/gcp/bootstrap_backend"
+              target="_blank">Bootstrap Terraform files</a>
+          </li>
+        </ul>
+        This CI/CD "pipeline" was ran from my local dev box instead from GitHub Actions. It is meant to bootstrap a
+        place to put the terraform. I leave it here for others to learn from on what they need to do to get everything
+        started.
+      </details>
+      <details>
+        <summary class="collapsible-title">Operations Supported</summary>
+        <h3>GET operations</h3>
+        <ul>
+          <li>
+            <a href="https://github.com/AndyMKC/Portfolio/blob/main/case_studies/StorySpark/src/app/books/get_all_books.py" target="_blank">Get All Books</a>
+          </li>
+          Returns all books owned by a specific person.
+          <li>
+            <a href="https://github.com/AndyMKC/Portfolio/blob/main/case_studies/StorySpark/src/app/books/get_recommendation.py" target="_blank">Get Recommendation</a>
+          </li>
+          Given some query text and a person, it gives the top N books that has the highest similarity.
+        </ul>
+        <h3>POST operations</h3>
+        <ul>
+          <li>
+            <a href="https://github.com/AndyMKC/Portfolio/blob/main/case_studies/StorySpark/src/app/books/add_book.py" target="_blank">Add Book</a>
+          </li>
+          Adds a book to be owned by a specific person.
+          <li>
+            <a href="https://github.com/AndyMKC/Portfolio/blob/main/case_studies/StorySpark/src/app/books/clear_and_seed_db.py" target="_blank">Reset</a>
+          </li>
+          This clears the database and seeds a set amount of books.  Useful for testing.
+        </ul>
+        <h3>DELETE operations</h3>
+        <ul>
+          <li>
+            <a href="https://github.com/AndyMKC/Portfolio/blob/main/case_studies/StorySpark/src/app/books/remove_book.py" target="_blank">Remove Book</a>
+          </li>
+          This removes a book to no longer be owned by a specific person.
+          <li>
+            <a href="https://github.com/AndyMKC/Portfolio/blob/main/case_studies/StorySpark/src/app/books/clear_database.py" target="_blank">Clear Database</a>
+          </li>
+          This clears the entire database.  Useful for testing.
+        </ul>
+        <h3>PATCH operations</h3>
+        <ul>
+          <li>
+            <a href="https://github.com/AndyMKC/Portfolio/blob/main/case_studies/StorySpark/src/app/books/mark_read.py" target="_blank">Mark Read</a>
+          </li>
+          This marks a book has been read by a specific family.  This is useful to track "freshness" of a book.
+        </ul>
+      </details>
+      <details>
+        <summary class="collapsible-title">How things work</summary>
+        <h3>Offline</h3>
+        As part of the CI/CD pipeline in GitHub Actions, we run python code load the model from Hugging Face as a PyTorch model along with its tokenizer.  We use ONNX to serialize the ONNX model (graph and weights), the tokenizer files, and the supporting config files needed to run inference later without PyTorch.  This is in an effort to keep my container image small and avoid needed PyTorch during runtime.  The model artifacts are then uploaded to Gogole Cloud Storage.
+        <h3>Per Call</h3>
+        We are hosting our APIs in Google Cloud Functions as serverless compute.  Upon starting up, it mounts the Google Cloud Storage that contains the model artifacts via Cloud Storage Fuse.
+        
+        When new books are added, it retrieves metadata about the book from various locations such as <a>Open Library</a>.  Embeddings are then generated for each of the metadata strings that the book is associated with and stored into SQL tables inside Google BigQuery.
+        
+        When the user asks for a recommendation to a book similar to their query text, it generates embeddings from their query text, filters the results to the set of books that they own, and then calculates the cosine similarity between the metadata text and the query text.  For now, the highest similarity score of each metadata text per book is kept and returned (within the limit of a certain number of books).  The user (or in the future, the agent!) can decide which book to read based on the "freshness" (how long ago it was read) and the similarity score.
+      </details>
     </details>
-
+    <details>
+      <summary class="collapsible-title">Things I am learning</summary>
+      For this project, while delivering a working solution is important, the biggest value I want to deliver is delivering myself.  I intentionally stepped outside of my comfort zone doing something that I am not as familiar with to make sure I keep those brain muscles fit and working.  This includes:
+      <h3>Google Cloud Platform</h3>
+      <h3>ONNX and PyTorch</h3>
+      <h3>FastAPI</h3>
+      <h3>GitHub Actions</h3>
+      <h3>Terraform</h3>
+      <h3>Docker</h3>
+      <h3>Product-oriented thinking</h3>
+      <h3>Figma</h3>
+    </details>
     <section class="contact">
       <h2>Contact</h2>
-      <ul class="contact__list">
+      <ul class="contact_list">
         <li>Email: <a href="mailto:amcheng@umich.edu">amcheng@umich.edu</a></li>
         <li>LinkedIn: <a href="https://www.linkedin.com/in/andy-mkc/"
             target="_blank">https://www.linkedin.com/in/andy-mkc/</a></li>
