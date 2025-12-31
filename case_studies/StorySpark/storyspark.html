@@ -411,7 +411,7 @@
         registry cost. My priority for this was to keep costs down while still maintaining performance. Instead, I
         export the embedding model to ONNX and publish the artifacts into Google Cloud Storage. To keep startup
         performance fast, I had to avoid downloading the model artifacts each time. To solve this, I am using Google's
-        Cloud Function (2nd gen)'s feature to mount a Cloud Storage bucket as a local file system via FUSE. The result
+        Cloud Run's feature to mount a Cloud Storage bucket as a local file system via FUSE. The result
         of this along with other space saving techniques managed to downsize my image from over 1 GB (at one point it
         got so big GitHub's CI/CD machines <a href="https://github.com/AndyMKC/Portfolio/actions/runs/19625426124"
           target="_blank">ran out of space</a>) to less than 90 MB. This pipeline builds the model artifacts and pushes
@@ -483,7 +483,7 @@
         <h3>Offline</h3>
         As part of the CI/CD pipeline in GitHub Actions, we run python code load the model from Hugging Face as a PyTorch model along with its tokenizer.  We use ONNX to serialize the ONNX model (graph and weights), the tokenizer files, and the supporting config files needed to run inference later without PyTorch.  This is in an effort to keep my container image small and avoid needed PyTorch during runtime.  The model artifacts are then uploaded to Gogole Cloud Storage.
         <h3>Per Call</h3>
-        We are hosting our APIs in Google Cloud Functions as serverless compute.  Upon starting up, it mounts the Google Cloud Storage that contains the model artifacts via Cloud Storage Fuse.
+        We are hosting our APIs in Google Cloud Run as serverless compute.  Upon starting up, it mounts the Google Cloud Storage that contains the model artifacts via Cloud Storage Fuse.
         
         When new books are added, it retrieves metadata about the book from various locations such as <a>Open Library</a>.  Embeddings are then generated for each of the metadata strings that the book is associated with and stored into SQL tables inside Google BigQuery.
         
