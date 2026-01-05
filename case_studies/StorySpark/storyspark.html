@@ -499,6 +499,21 @@
         
         When the user asks for a recommendation to a book similar to their query text, it generates embeddings from their query text, filters the results to the set of books that they own, and then calculates the cosine similarity between the metadata text and the query text.  For now, the highest similarity score of each metadata text per book is kept and returned (within the limit of a certain number of books).  The user (or in the future, the agent!) can decide which book to read based on the "freshness" (how long ago it was read) and the similarity score.
       </details>
+      <details>
+        <summary class="collapsible-title">What's next?</summary>
+        <ul>
+          <h3>Implement authentication</h3>
+          Right now, I need to add authentication and throttling to control costs and also to understand who is calling the APIs.  
+          <h3>Expose Backlog to Website</h3>
+          There is a Jira backlog that I am using to track my workitems.  Since Jira does not allow exporting a backlog to anything besides Confluence, I need to write something that will automatically export it to a location readable to this website, or else I have to manually update this :)
+          <h3>Google Books</h3>
+          This is a data source that can primarily add to our ability to look up titles and authors and secondarily add to our list of providers to gather metadata text about a book.
+          <h3>Internet Archive</h3>
+          This will be an additional provider to gather metadata text about a book.
+          <h3>Using native vector search capabilities</h3>
+          Right now, we are calculating the similarity score manually.  We want to lessen our code and move over to using BigQuery's native vector search features which will allow us to improve our query performance and enhanced search capabilities.
+        </ul>
+      </details>
     </details>
     <details>
       <summary class="collapsible-title">Things I am learning</summary>
