@@ -211,26 +211,27 @@ jobs:
       run: |
         set -euo pipefail
         printf '%s' "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" > "$GITHUB_WORKSPACE/adc.json"
-        # Make file readable by everyone (USER nobody on dockerfile for target prod)
         chmod 644 "$GITHUB_WORKSPACE/adc.json"
-
-        # 1) Show a compact checksum so you can confirm the file changed after rewriting
         sha256sum "$GITHUB_WORKSPACE/adc.json"
 
-        # 2) Validate JSON using Python (exit code 0 = valid)
         python - <<'PY'
-        import json,sys
+        import json,os,sys
+        p = os.environ.get("GITHUB_WORKSPACE")
+        if not p:
+            print("GITHUB_WORKSPACE not set")
+            sys.exit(2)
+        path = os.path.join(p, "adc.json")
         try:
-          json.load(open("$GITHUB_WORKSPACE/adc.json"))
-          print("VALID_JSON")
-          sys.exit(0)
+            json.load(open(path))
+            print("VALID_JSON")
+            sys.exit(0)
         except Exception as e:
-          print("INVALID_JSON:", type(e).__name__, e)
-          sys.exit(2)
+            print("INVALID_JSON:", type(e).__name__, e)
+            sys.exit(2)
         PY
 
-        # 3) Show the first 2 lines safely (non-sensitive) to detect escaped newlines or quoting
-        head -n 2 "$GITHUB_WORKSPACE/adc.json" | sed -n '1,2p' | sed -n '1,2p' | sed -n '1,2p' >/dev/null || true
+            head -n 2 "$GITHUB_WORKSPACE/adc.json" >/dev/null || true
+
 
 
     - name: Run container for OpenAPI extraction
