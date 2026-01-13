@@ -101,11 +101,19 @@ jobs:
           IMAGE_TAG="${SHORT_SHA}"
         fi
 
-        IMAGE_PATH="${ARTIFACT_HOST}/${PROJECT_ID}/${ARTIFACT_DOCKER_REPO}/${REPO_NAME}/${ENV_SEG}/${BRANCH}"
-        IMAGE_NAME="${IMAGE_PATH}:${IMAGE_TAG}"
+        # Flatten the repo path (no branch here)
+        IMAGE_REPO="${ARTIFACT_HOST}/${PROJECT_ID}/${ARTIFACT_DOCKER_REPO}/${REPO_NAME}/${ENV_SEG}"
+
+        # Encode branch name into the tag instead of the path
+        IMAGE_TAG="${BRANCH}-${IMAGE_TAG}"
+
+        # Final image name
+        IMAGE_NAME="${IMAGE_REPO}:${IMAGE_TAG}"
+
+        IMAGE_REPO_PATH="${IMAGE_REPO}/main"
 
         echo "image_name=${IMAGE_NAME}" >> $GITHUB_OUTPUT
-        echo "image_repo_path=${IMAGE_PATH}" >> $GITHUB_OUTPUT
+        echo "image_repo_path=${IMAGE_REPO_PATH}" >> $GITHUB_OUTPUT
         echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
     
     - name: Output Variables
@@ -211,7 +219,7 @@ jobs:
     - name: Patch OpenAPI and convert to YAML
       id: create_opeapi_yaml
       env:
-        OAUTH_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }} TODODODOODODODOODODODOOOOOOOOOOOOOOOOOOOO
+        OAUTH_CLIENT_ID: ${{ vars.STORYSPARK_GCP_APP }}
         STORYSPARK_GCP_PROJECT_NAME: ${{ vars.STORYSPARK_GCP_PROJECT_NAME }}
         STORYSPARK_GCP_PROJECT_NUMBER: ${{ vars.STORYSPARK_GCP_PROJECT_NUMBER }}
         STORYSPARK_GCP_REGION: ${{ vars.STORYSPARK_GCP_REGION }}
