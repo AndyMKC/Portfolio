@@ -213,12 +213,11 @@ jobs:
         printf '%s' "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" > "$GITHUB_WORKSPACE/adc.json"
         chmod 600 "$GITHUB_WORKSPACE/adc.json"
 
-
     - name: Run container for OpenAPI extraction
       run: |
         docker run -d \
           -p 8080:8080 \
-          --name $TEMP_CONTAINER_NAME
+          --name $TEMP_CONTAINER_NAME \
           -v $GITHUB_WORKSPACE/adc.json:/app/adc.json:ro \
           -e GOOGLE_APPLICATION_CREDENTIALS="/app/adc.json" \
           ${{ needs.setup.outputs.image_name }}
