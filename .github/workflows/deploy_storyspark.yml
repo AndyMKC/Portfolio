@@ -211,8 +211,8 @@ jobs:
       run: |
         set -euo pipefail
         printf '%s' "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" > "$GITHUB_WORKSPACE/adc.json"
-        chown 65534:65534 "$GITHUB_WORKSPACE/adc.json"
-        chmod 600 "$GITHUB_WORKSPACE/adc.json"
+        # Make file readable by everyone (USER nobody on dockerfile for target prod)
+        chmod 644 "$GITHUB_WORKSPACE/adc.json"
 
     - name: Run container for OpenAPI extraction
       run: |
