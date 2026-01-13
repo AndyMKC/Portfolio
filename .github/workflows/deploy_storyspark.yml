@@ -269,7 +269,8 @@ jobs:
         STORYSPARK_GCP_REGION: ${{ vars.STORYSPARK_GCP_REGION }}
       run: |
         # infra/scripts/patch_openapi.py must be checked in and executable
-        python3 infra/scripts/patch_openapi.py openapi.json $OPENAPI_FILE --audience "${OAUTH_CLIENT_ID},${STORYSPARK_GCP_PROJECT_NAME}-service-prod-${STORYSPARK_GCP_PROJECT_NUMBER}.${STORYSPARK_GCP_REGION}.run.app"
+        SCRIPT="$SRC_DIR/infra/scripts/patch_openapi.py"
+        python3 "$SCRIPT" openapi.json "$OPENAPI_FILE" --audience "${OAUTH_CLIENT_ID},${STORYSPARK_GCP_PROJECT_NAME}-service-prod-${STORYSPARK_GCP_PROJECT_NUMBER}.${STORYSPARK_GCP_REGION}.run.app"
         echo "openapi_filename=${OPENAPI_FILE}" >> $GITHUB_OUTPUT
       
     - name: Upload openapi.yaml artifact
