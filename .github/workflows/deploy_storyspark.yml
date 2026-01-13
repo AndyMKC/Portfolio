@@ -254,7 +254,17 @@ jobs:
             sys.exit(1)
         PY
 
-        head -n 3 "$GITHUB_WORKSPACE/adc.json"
+        echo "                                             "
+        echo "                                             "
+        echo "                                             "
+        echo "                                             "
+        echo "                                             "
+        head -n 500 "$GITHUB_WORKSPACE/adc.json"
+        echo "                                             "
+        echo "                                             "
+        echo "                                             "
+        echo "                                             "
+        echo "                                             "
 
 
 
