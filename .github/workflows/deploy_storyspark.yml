@@ -254,34 +254,8 @@ jobs:
             sys.exit(1)
         PY
 
-        # show checksum for audit (does not reveal secret)
-        sha256sum "$OUT"
+        head -n 3 "$GITHUB_WORKSPACE/adc.json"
 
-        echo "************************************************"
-
-        python - <<'PY'
-        import json,os,hashlib
-        p = os.path.join(os.environ["GITHUB_WORKSPACE"], "adc.json")
-        d = json.load(open(p))
-        for k,v in d.items():
-            t = type(v).__name__
-            if isinstance(v, str):
-                lines = v.count("\n") + 1
-                has_begin = "BEGIN PRIVATE KEY" in v or "BEGIN RSA PRIVATE KEY" in v
-                has_end = "END PRIVATE KEY" in v or "END RSA PRIVATE KEY" in v
-                h = hashlib.sha256(v.encode('utf-8')).hexdigest()[:12]
-                print(f"{k}: type={t}, len={len(v)} chars, lines={lines}, has_begin={has_begin}, has_end={has_end}, sha256_prefix={h}")
-            else:
-                print(f"{k}: type={t}")
-        PY
-
-        echo "************************************************"
-
-        jq -r 'keys[]' "$GITHUB_WORKSPACE/adc.json"
-
-        echo "************************************************"
-
-        grep -n '\\n' "$GITHUB_WORKSPACE/adc.json" || echo "no literal \\n sequences found"
 
 
 
