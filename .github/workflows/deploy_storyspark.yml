@@ -146,7 +146,7 @@ jobs:
       name: 'Authenticate to Google Cloud via SA Key'
       uses: 'google-github-actions/auth@v2'
       with:
-        credentials_json: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY2 }}
+        credentials_json: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
 
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
