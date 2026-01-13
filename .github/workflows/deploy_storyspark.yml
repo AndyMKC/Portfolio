@@ -207,10 +207,12 @@ jobs:
       run: |
         docker inspect --format='ENTRYPOINT={{json .Config.Entrypoint}} CMD={{json .Config.Cmd}}' \${{ needs.setup.outputs.image_name }}
     
-    - name: Write GCP SA key
+    - name: Write GCP SA key (raw JSON)
       run: |
-        echo "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" | base64 --decode > $GITHUB_WORKSPACE/adc.json
-        chmod 600 $GITHUB_WORKSPACE/adc.json
+        set -euo pipefail
+        printf '%s' "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" > "$GITHUB_WORKSPACE/adc.json"
+        chmod 600 "$GITHUB_WORKSPACE/adc.json"
+
 
     - name: Run container for OpenAPI extraction
       run: |
