@@ -20,6 +20,7 @@ env:
   PROJECT_ID: ${{vars.STORYSPARK_GCP_PROJECT_ID }}
   GCS_BUCKET: ${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}
   MODELS_BUCKET: ${{ vars.STORYSPARK_GCP_MODELS_BUCKET }}
+  OPENAPI_FOLDER: ${{ vars.STORYSPARK_BUILD_OPENAPI_YAML_FOLDER }}
   TF_PLAN_FILE: storyspark.tfplan
   ARTIFACT_DOCKER_REPO: containers
   SOURCE_MODEL_DIR: models
@@ -121,10 +122,14 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       saved_image_filename: ${{ steps.save_image.outputs.saved_image_filename }}
+      openapi_filename: ${{ steps.create_opeapi_yaml.outputs.openapi_filename }}
     needs: [setup]
     permissions:
       contents: read # Need read permission for checkout
-    
+    env:
+      TEMP_CONTAINER_NAME: temp_container
+      OPENAPI_FILE: openapi.yaml
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -139,17 +144,6 @@ jobs:
       uses: google-github-actions/setup-gcloud@v2
       with:
         project_id: ${{ vars.STORYSPARK_GCP_PROJECT_ID }}
-
-    # - name: Download the model artifacts
-    #   working-directory: ${{ github.workspace }}/${{ env.SRC_DIR }}
-    #   run: |
-    #     gcloud artifacts generic download \
-    #       --project=${{ vars.STORYSPARK_GCP_PROJECT_ID }} \
-    #       --location=${{ vars.STORYSPARK_GCP_REGION }} \
-    #       --repository=${{ vars.STORYSPARK_MODELS_CONTAINER }} \
-    #       --package=${{ vars.STORYSPARK_MODELS_PACKAGE }} \
-    #       --version=${{ vars.STORYSPARK_MODELS_PACKAGE_VERSION }} \
-    #       --destination=.      
 
     - name: Build the Docker image
       working-directory: ${{ github.workspace }}/${{ env.SRC_DIR }}
@@ -168,7 +162,7 @@ jobs:
         --build-arg MODEL_EXPORT_BUCKET_NAME=${{ vars.STORYSPARK_GCP_MODEL_EXPORT_BUCKET_VOLUME_NAME }} \
         --build-arg PIP_CACHE=false \
         .
-    
+
     # We are separating the docker build and push into two different steps so we need to persist the image between runs
     - name: Save image to tar
       id: save_image
@@ -186,11 +180,64 @@ jobs:
         path: ${{ steps.save_image.outputs.saved_image_filename }}
         retention-days: 1
 
+    # We want to keep the API Gateway config automatically in sync so what we need to do is:
+    # start the container
+    # wait for the app to expose /openapi.json and then fetch the OpenAPI document
+    # run the script to inject Google OIDC security and mark public endpoints
+    # serialize back out to a YAML file
+    # upload it as an artifact to be used by terraform
+    # apply the gateway/IAM changes
+    # stop the temporary container.
+    # This makes it so that if we ever add or remove APIs, we don't need to manually adjust things.
+
+    - name: Run container for OpenAPI extraction
+      run: |
+        docker run -d --rm -p 8080:8080 --name $TEMP_CONTAINER_NAME ${{ needs.setup.outputs.image_name }}
+        # wait for app to be ready
+        for i in {1..30}; do
+          if curl -sSf http://localhost:8080/openapi.json -o /dev/null; then
+            echo "app ready"; break
+          fi
+          sleep 1
+        done
+      
+    - name: Fetch openapi.json
+      run: curl -sSf http://localhost:8080/openapi.json -o openapi.json
+
+    - name: Stop temporary container
+      if: always()
+      run: docker stop $TEMP_CONTAINER_NAME || true
+    
+    - name: Patch OpenAPI and convert to YAML
+      id: create_opeapi_yaml
+      env:
+        OAUTH_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }} TODODODOODODODOODODODOOOOOOOOOOOOOOOOOOOO
+        STORYSPARK_GCP_PROJECT_NAME: ${{ vars.STORYSPARK_GCP_PROJECT_NAME }}
+        STORYSPARK_GCP_PROJECT_NUMBER: ${{ vars.STORYSPARK_GCP_PROJECT_NUMBER }}
+        STORYSPARK_GCP_REGION: ${{ vars.STORYSPARK_GCP_REGION }}
+      run: |
+        # infra/scripts/patch_openapi.py must be checked in and executable
+        python3 infra/scripts/patch_openapi.py openapi.json $OPENAPI_FILE --audience "${OAUTH_CLIENT_ID},${STORYSPARK_GCP_PROJECT_NAME}-service-prod-${STORYSPARK_GCP_PROJECT_NUMBER}.${STORYSPARK_GCP_REGION}.run.app"
+        echo "openapi_filename=${OPENAPI_FILE}" >> $GITHUB_OUTPUT
+      
+    - name: Upload openapi.yaml artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.OPENAPI_FILE }}
+        path: ${{ env.OPENAPI_FILE }}
+        retention-days: 1
+
+    # - name: Copy openapi.yaml into Terraform module
+    #   run: |
+    #     mkdir -p case_studies/StorySpark/src/infra/gcp/main/apigateway
+    #     cp openapi.yaml case_studies/StorySpark/src/infra/gcp/main/apigateway/openapi.yaml
+
 #-------------------------------------------------------------------------------------------------------------------------
       
   docker-push:
     runs-on: ubuntu-latest
     needs: [setup, docker-build]
+    # To save on storage space, we only want to push our docker images on the main branch
     if: github.ref == 'refs/heads/main'
     outputs:
       image_ref: ${{ steps.get_digest.outputs.image_ref}}
@@ -249,7 +296,7 @@ jobs:
 
   terraform-plan: # This job will run on PRs and main branch pushes to generate the plan
     runs-on: ubuntu-latest
-    needs: [setup, docker-push]
+    needs: [setup, docker-push, docker-build]
     if: github.ref == 'refs/heads/main'
     outputs:
       tf_prefix: ${{ steps.tf_prefixes.outputs.tf_prefix }}
@@ -283,6 +330,12 @@ jobs:
             echo "tf_prefix=terraform/${BRANCH_NAME}/infra" >> $GITHUB_OUTPUT
         fi
       shell: bash
+    
+    - name: Download openapi artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ needs.docker-build.outputs.openapi_filename }}
+        path: .
 
     # # WARNING -- THIS DUMPS OUT THE ENTIRE SECRET SO BE CAREFUL AND DELETE THE LOGS AFTERWARDS
     # - name: Show ADC path
@@ -342,7 +395,7 @@ jobs:
 
   terraform-apply:
     runs-on: ubuntu-latest
-    needs: [terraform-plan, setup]
+    needs: [terraform-plan, setup, docker-build]
     if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
@@ -366,7 +419,21 @@ jobs:
       with:
         name: tfplan-artifact
         path: ${{ env.TF_GOOGLE_DIR }}
+    
+    - name: Download openapi artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ needs.docker-build.outputs.openapi_filename }}
+        path: ${{ env.OPENAPI_FOLDER }}
 
+    - name: Copy openapi into terraform module
+      working-directory: ${{ env.TF_GOOGLE_DIR }}
+      run: |
+        mkdir -p "$OPENAPI_FOLDER"
+        # Copy the downloaded artifact (from workspace) into the module path
+        cp "$GITHUB_WORKSPACE/$OPENAPI_FOLDER/openapi.yaml" "$OPENAPI_FOLDER/openapi.yaml"
+        echo "Copied $GITHUB_WORKSPACE/$OPENAPI_FOLDER/openapi.yaml -> ${PWD}/$OPENAPI_FOLDER/openapi.yaml"
+    
     - name: Output Branch Name
       run: |
         echo "Branch Name: ${{ needs.setup.outputs.branch_name }}"
