@@ -137,6 +137,8 @@ jobs:
     env:
       TEMP_CONTAINER_NAME: temp_container
       OPENAPI_FILE: openapi.yaml
+      CREDENTIALS_FILE: adc.json
+      PORT_NUMBER: 8080
 
     steps:
     - name: Checkout repository
@@ -188,7 +190,7 @@ jobs:
         path: ${{ steps.save_image.outputs.saved_image_filename }}
         retention-days: 1
 
-    # We want to keep the API Gateway config automatically in sync so what we need to do is:
+    # We want to keep the API Gateway config automatically in sync (with whatever API we have added/removed) so what we need to do is:
     # start the container
     # wait for the app to expose /openapi.json and then fetch the OpenAPI document
     # run the script to inject Google OIDC security and mark public endpoints
@@ -197,20 +199,19 @@ jobs:
     # apply the gateway/IAM changes
     # stop the temporary container.
     # This makes it so that if we ever add or remove APIs, we don't need to manually adjust things.
-    # docker run -d --rm -p 8080:8080 --name $TEMP_CONTAINER_NAME ${{ needs.setup.outputs.image_name }}
 
-    - name: Inspect existing images
-      run: |
-        docker image inspect ${{ needs.setup.outputs.image_name }} | grep -i created
+    # - name: Inspect existing images
+    #   run: |
+    #     docker image inspect ${{ needs.setup.outputs.image_name }} | grep -i created
 
-    - name: Check Entrypoint
-      run: |
-        docker inspect --format='ENTRYPOINT={{json .Config.Entrypoint}} CMD={{json .Config.Cmd}}' \${{ needs.setup.outputs.image_name }}
+    # - name: Check Entrypoint
+    #   run: |
+    #     docker inspect --format='ENTRYPOINT={{json .Config.Entrypoint}} CMD={{json .Config.Cmd}}' \${{ needs.setup.outputs.image_name }}
     
     - name: Decode GCP SA key and validate
       run: |
         set -euo pipefail
-        OUT="$GITHUB_WORKSPACE/adc.json"
+        OUT="$GITHUB_WORKSPACE/$CREDENTIALS_FILE"
 
         # Decode base64 secret to file (preserves exact JSON bytes)
         echo "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY_BASE64JSON }}" | base64 --decode > "$OUT"
@@ -227,17 +228,22 @@ jobs:
         # Show a compact checksum for audit (does not reveal secret)
         sha256sum "$OUT"
 
+    # Don't bother running docker with --rm flag since we are in a GitHub CI/CD machine and everything will be cleaned up anyways.
     - name: Run container for OpenAPI extraction
       run: |
+        set -euo pipefail
+        HOST_CRED="$GITHUB_WORKSPACE/$CREDENTIALS_FILE"
+        CONTAINER_CRED="/app/$CREDENTIALS_FILE"
+
         docker run -d \
-          -p 8080:8080 \
+          -p "$PORT_NUMBER":$PORT_NUMBER" \
           --name $TEMP_CONTAINER_NAME \
-          -v $GITHUB_WORKSPACE/adc.json:/app/adc.json:ro \
-          -e GOOGLE_APPLICATION_CREDENTIALS="/app/adc.json" \
+          -v "$HOST_CRED":"$CONTAINER_CRED":ro \
+          -e GOOGLE_APPLICATION_CREDENTIALS="$CONTAINER_CRED" \
           ${{ needs.setup.outputs.image_name }}
         # wait for app to be ready
         for i in {1..30}; do
-          if curl -sSf http://localhost:8080/openapi.json -o /dev/null; then
+          if curl -sSf http://localhost:$PORT_NUMBER/openapi.json -o /dev/null; then
             echo "app ready"; break
           fi
           sleep 1
@@ -245,16 +251,16 @@ jobs:
 
     - name: Cleanup credentials
       if: always()
-      run: rm -f "$GITHUB_WORKSPACE/adc.json"
+      run: rm -f "$GITHUB_WORKSPACE/$CREDENTIALS_FILE"
       
-    - name: Show running containers
-      run: docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}"
+    # - name: Show running containers
+    #   run: docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}"
 
-    - name: Show container logs
-      run: docker logs $TEMP_CONTAINER_NAME || echo "container already exited"
+    # - name: Show container logs
+    #   run: docker logs $TEMP_CONTAINER_NAME || echo "container already exited"
     
     - name: Fetch openapi.json
-      run: curl -sSf http://localhost:8080/openapi.json -o openapi.json
+      run: curl -sSf http://localhost:$PORT_NUMBER/openapi.json -o openapi.json
 
     - name: Stop temporary container
       if: always()
