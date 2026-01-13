@@ -207,47 +207,58 @@ jobs:
       run: |
         docker inspect --format='ENTRYPOINT={{json .Config.Entrypoint}} CMD={{json .Config.Cmd}}' \${{ needs.setup.outputs.image_name }}
     
-    - name: Write GCP SA key (raw JSON)
+    - name: Write and normalize GCP SA key
       run: |
         set -euo pipefail
-        printf '%s' "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" > "$GITHUB_WORKSPACE/adc.json"
-        chmod 644 "$GITHUB_WORKSPACE/adc.json"
-        sha256sum "$GITHUB_WORKSPACE/adc.json"
+        OUT="$GITHUB_WORKSPACE/adc.json"
+        # write secret exactly as provided (preserves newlines)
+        printf '%s' "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" > "$OUT"
+        # normalize CRLF -> LF
+        sed -i 's/\r$//' "$OUT"
+        # make readable by non-root container user
+        chmod 644 "$OUT"
 
-        # 1) Confirm file exists and size
-        ls -l "$GITHUB_WORKSPACE/adc.json"
-        stat -c '%n %s %y' "$GITHUB_WORKSPACE/adc.json"
+        # Try JSON validation; if it fails, try YAML -> JSON conversion
+        python - <<'PY'
+        import json,sys,os,subprocess
+        p = os.path.join(os.environ["GITHUB_WORKSPACE"], "adc.json")
 
-        # 2) Show a hex preview of the first 256 bytes (safe, non-readable)
-        xxd -g 1 -l 256 "$GITHUB_WORKSPACE/adc.json" | sed -n '1,20p'
+        def is_json(path):
+            try:
+                json.load(open(path))
+                return True
+            except Exception:
+                return False
 
-        # 3) Show visible characters for first 6 lines so you can spot literal \n or extra quotes
-        nl -ba "$GITHUB_WORKSPACE/adc.json" | sed -n '1,6p' | sed -E 's/"/\\"/g' >/dev/null || true
-
-        # 4) Run a JSON validator that prints the error location only
-        python - <<PY
-        import json,sys
-        p = "$GITHUB_WORKSPACE/adc.json"
-        try:
-            json.load(open(p))
-            print("VALID_JSON")
+        if is_json(p):
+            print("ADC JSON validated")
             sys.exit(0)
-        except json.JSONDecodeError as e:
-            # print only the error message and a masked context window
-            with open(p,'rb') as f:
-                data = f.read().decode('utf-8', errors='replace')
-            start = max(0, e.pos-20)
-            end = min(len(data), e.pos+20)
-            context = data[start:end]
-            # mask alphanumerics to avoid revealing secrets
-            masked = ''.join(c if not c.isalnum() else 'x' for c in context)
-            print("INVALID_JSON:", e.msg, "at line", e.lineno, "col", e.colno)
-            print("masked context:", repr(masked))
-            sys.exit(2)
-        except Exception as ex:
-            print("INVALID_JSON: other error", type(ex).__name__)
-            sys.exit(3)
+
+        # Try YAML fallback (handles YAML or Python-dict style)
+        try:
+            # ensure pyyaml is available in the runner environment
+            try:
+                import yaml
+            except Exception:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "--user", "pyyaml"])
+                import yaml
+
+            with open(p, 'r', encoding='utf-8') as f:
+                obj = yaml.safe_load(f)
+            with open(p, 'w', encoding='utf-8') as f:
+                json.dump(obj, f, separators=(',', ':'), ensure_ascii=False)
+            print("Converted to JSON and validated")
+            sys.exit(0)
+        except Exception as e:
+            print("ADC JSON invalid:", type(e).__name__, e)
+            sys.exit(1)
         PY
+
+        # show checksum for audit (does not reveal secret)
+        sha256sum "$OUT"
+
+
+
 
 
 
@@ -267,6 +278,10 @@ jobs:
           fi
           sleep 1
         done
+
+    - name: Cleanup credentials
+      if: always()
+      run: rm -f "$GITHUB_WORKSPACE/adc.json"
       
     - name: Show running containers
       run: docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}"
