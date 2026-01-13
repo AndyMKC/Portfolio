@@ -101,8 +101,8 @@ jobs:
           IMAGE_TAG="${SHORT_SHA}"
         fi
 
-        # Flatten the repo path (no branch here)
-        IMAGE_REPO="${ARTIFACT_HOST}/${PROJECT_ID}/${ARTIFACT_DOCKER_REPO}/${REPO_NAME}/${ENV_SEG}"
+        # Flatten the repo path
+        IMAGE_REPO="${ARTIFACT_HOST}/${PROJECT_ID}/${ARTIFACT_DOCKER_REPO}/${REPO_NAME}/${ENV_SEG}/${BRANCH}"
 
         # Encode branch name into the tag instead of the path
         IMAGE_TAG="${BRANCH}-${IMAGE_TAG}"
