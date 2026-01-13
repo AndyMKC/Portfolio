@@ -107,10 +107,8 @@ jobs:
         # Final image name
         IMAGE_NAME="${IMAGE_REPO}:${IMAGE_TAG}"
 
-        IMAGE_REPO_PATH="${IMAGE_REPO}/main"
-
         echo "image_name=${IMAGE_NAME}" >> $GITHUB_OUTPUT
-        echo "image_repo_path=${IMAGE_REPO_PATH}" >> $GITHUB_OUTPUT
+        echo "image_repo_path=${IMAGE_REPO}" >> $GITHUB_OUTPUT
         echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
     
     - name: Output Variables
