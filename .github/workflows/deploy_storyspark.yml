@@ -200,7 +200,7 @@ jobs:
     
     - name: Run container for OpenAPI extraction
       run: |
-        docker run -d --rm -p 8080:8080 --name $TEMP_CONTAINER_NAME ${{ needs.setup.outputs.image_name }}
+        docker run -d --rm -p 8080:8080 --name qqqqq ${{ needs.setup.outputs.image_name }}
         # wait for app to be ready
         for i in {1..30}; do
           if curl -sSf http://localhost:8080/openapi.json -o /dev/null; then
