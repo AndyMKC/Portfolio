@@ -207,9 +207,19 @@ jobs:
       run: |
         docker inspect --format='ENTRYPOINT={{json .Config.Entrypoint}} CMD={{json .Config.Cmd}}' \${{ needs.setup.outputs.image_name }}
     
+    - name: Write GCP SA key
+      run: |
+        echo "${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}" | base64 --decode > $GITHUB_WORKSPACE/adc.json
+        chmod 600 $GITHUB_WORKSPACE/adc.json
+
     - name: Run container for OpenAPI extraction
       run: |
-        docker run -d -p 8080:8080 --name $TEMP_CONTAINER_NAME ${{ needs.setup.outputs.image_name }}
+        docker run -d \
+          -p 8080:8080 \
+          --name $TEMP_CONTAINER_NAME
+          -v $GITHUB_WORKSPACE/adc.json:/app/adc.json:ro \
+          -e GOOGLE_APPLICATION_CREDENTIALS="/app/adc.json" \
+          ${{ needs.setup.outputs.image_name }}
         # wait for app to be ready
         for i in {1..30}; do
           if curl -sSf http://localhost:8080/openapi.json -o /dev/null; then
