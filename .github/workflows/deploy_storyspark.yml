@@ -202,6 +202,10 @@ jobs:
     - name: Inspect existing images
       run: |
         docker image inspect ${{ needs.setup.outputs.image_name }} | grep -i created
+
+    - name: Check Entrypoint
+      run: |
+        docker inspect --format='ENTRYPOINT={{json .Config.Entrypoint}} CMD={{json .Config.Cmd}}' \${{ needs.setup.outputs.image_name }}
     
     - name: Run container for OpenAPI extraction
       run: |
