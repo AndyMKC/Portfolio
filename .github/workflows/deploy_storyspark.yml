@@ -259,36 +259,48 @@ jobs:
         echo "                                             "
         echo "                                             "
         echo "                                             "
-        head -n 500 "$GITHUB_WORKSPACE/adc.json"
+        #head -n 500 "$GITHUB_WORKSPACE/adc.json"
         echo "                                             "
         echo "                                             "
         echo "                                             "
         echo "                                             "
         echo "                                             "
-        jq -e . "$GITHUB_WORKSPACE/adc.json"
+        #jq -e . "$GITHUB_WORKSPACE/adc.json"
         echo "                                             "
         echo "                                             "
         echo "                                             "
         echo "                                             "
         echo "                                             "
-        jq -r 'keys[]' "$GITHUB_WORKSPACE/adc.json"
+        #jq -r 'keys[]' "$GITHUB_WORKSPACE/adc.json"
         echo "                                             "
         echo "                                             "
         echo "                                             "
         echo "                                             "
         echo "                                             "
-        xxd -l 3 -p "$GITHUB_WORKSPACE/adc.json"
+        #xxd -l 3 -p "$GITHUB_WORKSPACE/adc.json"
         echo "                                             "
         echo "                                             "
         echo "                                             "
         echo "                                             "
         echo "                                             "
-        tail -c 3 "$GITHUB_WORKSPACE/adc.json" | xxd -p
+        #tail -c 3 "$GITHUB_WORKSPACE/adc.json" | xxd -p
         echo "                                             "
         echo "                                             "
         echo "                                             "
         echo "                                             "
         echo "                                             "
+        # show the header and footer lines with visible characters
+        python - <<PY
+        import json,os
+        p = os.path.join(os.environ["GITHUB_WORKSPACE"], "adc.json")
+        d = json.load(open(p))
+        pk = d.get("private_key","")
+        lines = pk.splitlines()
+        print("HEADER_RAW:", repr(lines[0]) if lines else "<missing>")
+        print("FOOTER_RAW:", repr(lines[-1]) if lines else "<missing>")
+        print("LAST_CHAR_REPR:", repr(pk[-5:]) if pk else "<empty>")
+        PY
+
 
 
 
