@@ -197,6 +197,7 @@ jobs:
     # apply the gateway/IAM changes
     # stop the temporary container.
     # This makes it so that if we ever add or remove APIs, we don't need to manually adjust things.
+    # TODO:  docker run -d --rm -p 8080:8080 --name $TEMP_CONTAINER_NAME ${{ needs.setup.outputs.image_name }}
     
     - name: Run container for OpenAPI extraction
       run: |
@@ -211,6 +212,9 @@ jobs:
       
     - name: Show running containers
       run: docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}"
+
+    - name: Show container logs
+      run: docker logs qqqqq || echo "container already exited"
     
     - name: Fetch openapi.json
       run: curl -sSf http://localhost:8080/openapi.json -o openapi.json
