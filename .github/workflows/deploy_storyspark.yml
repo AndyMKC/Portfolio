@@ -236,7 +236,7 @@ jobs:
         CONTAINER_CRED="/app/$CREDENTIALS_FILE"
 
         docker run -d \
-          -p "$PORT_NUMBER":$PORT_NUMBER" \
+          -p "$PORT_NUMBER:$PORT_NUMBER" \
           --name $TEMP_CONTAINER_NAME \
           -v "$HOST_CRED":"$CONTAINER_CRED":ro \
           -e GOOGLE_APPLICATION_CREDENTIALS="$CONTAINER_CRED" \
