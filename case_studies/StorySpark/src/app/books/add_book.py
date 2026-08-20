@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Request
+import logging
+from fastapi import APIRouter, Depends
 from datetime import datetime, timezone
 from google.cloud import bigquery
 import json
@@ -8,29 +9,44 @@ from app.books.helpers.bigquery_client_helper import get_bigquery_client, BigQue
 from app.books.helpers.embeddings_generator import EmbeddingsGenerator
 from app.books.helpers.book_metadata.openlibrary import OpenLibraryProvider
 from app.books.helpers.book_metadata.provider_factory import get_providers
+from app.auth import get_current_user
 
 router = APIRouter()
+logger = logging.getLogger("app-log")
+
 
 def create_source_table_id(owner: str, isbn: str) -> str:
     return f"{owner}:{isbn}"
 
+
 @router.post("/books", response_model=None, status_code=201, operation_id="AddBook")
 async def add_book(
-    request: Request,
-    add_book_request: AddBookRequest
+    add_book_request: AddBookRequest,
+    current_user: dict = Depends(get_current_user)
     ):
     """
     Inserts data into both tables atomically within a single BigQuery transaction.
+    The owner is always taken from the authenticated user - the ``owner`` field
+    on the request body is ignored for security.
     """
+    # Use authenticated user's email instead of request owner
+    owner = current_user["email"]
+
     bigquery_client_helper = get_bigquery_client()
 
-    log_payload = {
-        "add_book_request" : add_book_request.dict(),
-        "bigquery_client_helper": bigquery_client_helper.to_dict(),
-        "embeddings_generator": EmbeddingsGenerator.to_dict()
-    }
-    cloud_logger = request.app.state.cloud_logging_client.logger("app-log")
-    cloud_logger.log_struct(log_payload, severity="INFO")
+    # Log the API call with authenticated user and context details.
+    # Uses stdlib logging with structured extra fields - automatically
+    # routed to GCP Cloud Logging via setup_cloud_logging() which adds a
+    # handler to the root logger (no need for direct cloud-logging client).
+    logger.info(
+        f"AddBook called by user: {owner}",
+        extra={
+            "user_email": owner,
+            "add_book_request": add_book_request.model_dump(),
+            "bigquery_client_helper": bigquery_client_helper.to_dict(),
+            "embeddings_generator": EmbeddingsGenerator.to_dict(),
+        }
+    )
 
     # Uniquify the list of incoming ISBNs and only process the ones that have not been processed before
     # TODO:  This does not factor in any user-provided relevant text/tags and does not account for new providers needed to process
@@ -39,7 +55,7 @@ async def add_book(
         bigquery_client_helper=bigquery_client_helper,
         table_id=bigquery_client_helper.source_table_id,
         id_column="id",
-        id=f"{add_book_request.owner}:{isbn}"
+        id=f"{owner}:{isbn}"
     )]
     # Get all the metadata for each of the given ISBNs
     providers = get_providers()
@@ -64,15 +80,15 @@ async def add_book(
         metadata = list(set(metadata))
 
         source_table_data.append({
-            "id": f"{add_book_request.owner}:{isbn}",
-            "owner": add_book_request.owner,
+            "id": f"{owner}:{isbn}",
+            "owner": owner,
             "isbn": isbn,
             "title": title,
             "authors": authors,
             "last_read": None,
             "created_at": utc_now.isoformat()
         })
-    
+
     # Construct the objects needed to add to the embeddings table, if needed
     embeddings_table_data = []
     for isbn, metadata in final_metadatas.items():
@@ -84,7 +100,7 @@ async def add_book(
         )
         if not need_embeddings:
             continue
-        
+
         # TODO:  Bring back user-provided tags
         # TODO:  Should we put the title of the book as well?
         embeddings_info: list[EmbeddingsGenerator.EmbeddingsInfo] = EmbeddingsGenerator.generate_embeddings(tags="", relevant_text=metadata)
@@ -106,7 +122,7 @@ async def add_book(
                 "model_name": EmbeddingsGenerator.MODEL_FILE,
                 "created_at": utc_now.isoformat(),   # ISO string
                 # TODO:  Fill in owner if it is a user-provided text
-                "owner": None
+                "owner": owner
             })
 
     transaction_script = f"""
@@ -171,16 +187,19 @@ async def add_book(
         query_job = bigquery_client_helper.client.query(transaction_script, job_config=job_config)
         # Waiting on the result means we wait for the COMMIT to finish
         query_job.result()
-        print(f"Full non-streaming transaction committed successfully for ISBN: {add_book_request.isbns}.")
-        print(f"Inserted {len(source_table_data)} source table rows")
-        print(f"Inserted {len(embeddings_table_data)} embedding rows.")
+        logger.info(
+            f"AddBook committed successfully for ISBN: {add_book_request.isbns}. "
+            f"Inserted {len(source_table_data)} source table rows, "
+            f"{len(embeddings_table_data)} embedding rows."
+        )
 
     except Exception as e:
-        print(f"Transaction failed and was rolled back: {e}")
+        logger.error(f"AddBook transaction failed and was rolled back: {e}")
         # BigQuery automatically rolls back the entire transaction if an error occurs within the script
         raise
 
-def id_exists(bigquery_client_helper: BigQueryClientHelper, table_id:str, id_column:str, id: str) -> bool:
+
+def id_exists(bigquery_client_helper: BigQueryClientHelper, table_id: str, id_column: str, id: str) -> bool:
     table_ref = f"{bigquery_client_helper.project_id}.{bigquery_client_helper.dataset_id}.{table_id}"
     query = f"""
         SELECT
@@ -204,4 +223,3 @@ def id_exists(bigquery_client_helper: BigQueryClientHelper, table_id:str, id_col
     row_count = row["row_count"]
 
     return row_count > 0
-
