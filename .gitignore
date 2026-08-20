@@ -1,5 +1,5 @@
 # Ignore Claude Code local settings containing API keys
-.claude/settings.local.json
+.claude/
 
 # Ignore Windows executable files
 *.exe
