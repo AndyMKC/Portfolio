@@ -1,13 +1,14 @@
-.terraform/
-terraform.tfstate
-terraform.tfstate.backup
-plan.tfplan
-tfplan
-*.tfplan
-*.pyc
-service-account-*.json
-*.tfvars
-*.tfvars.*
-*.onnx
-*.onnx.*
+# Ignore Claude Code local settings containing API keys
+.claude/settings.local.json
+
+# Ignore Windows executable files
+*.exe
+
+# General system and build ignores
+.DS_Store
+*.log
+node_modules/
+dist/
+build/
+__pycache__/
 models/
