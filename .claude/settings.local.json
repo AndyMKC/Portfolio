@@ -1,0 +1,11 @@
+{
+    "_comment":  "Put the OpenRouter key inside ANTHROPIC_AUTH_TOKEN and leave ANTHROPIC_API_KEY intentionally an empty string.  Put the same model in all three default model entries."
+    "env": {
+	"ANTHROPIC_BASE_URL": "https://openrouter.ai/api",
+	"ANTHROPIC_AUTH_TOKEN": "",
+	"ANTHROPIC_API_KEY": "",
+	"ANTHROPIC_DEFAULT_SONNET_MODEL": "",
+	"ANTHROPIC_DEFAULT_OPUS_MODEL": "",
+	"ANTHROPIC_DEFAULT_HAIKU_MODEL": ""	
+    }
+}
