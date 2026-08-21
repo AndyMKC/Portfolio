@@ -1,24 +1,32 @@
-from fastapi import APIRouter, Query, Path, Depends
+import logging
+from fastapi import APIRouter, Depends
 from google.cloud import bigquery
 from app.books.helpers.bigquery_client_helper import get_bigquery_client
 from app.models import CleanedISBN, isbn_from_path
+from app.auth import get_current_user
 
 router = APIRouter()
+logger = logging.getLogger("app-log")
+
 
 @router.delete("/books/{isbn}", response_model=None, operation_id="RemoveBook")
 async def remove_book(
-    owner: str = Query(..., example="user@gmail.com"),
-    isbn: CleanedISBN = Depends(isbn_from_path)
+    isbn: CleanedISBN = Depends(isbn_from_path),
+    current_user: dict = Depends(get_current_user)
     ):
     """
-    Remove a book from the user's collection by its ISBN
+    Remove a book from the authenticated user's collection by its ISBN.
     """
+    owner = current_user["email"]
+    logger.info(f"RemoveBook called by user: {owner}, isbn: {isbn.isbn}")
+
     bigquery_client_helper = get_bigquery_client()
+    source_table_ref = f"{bigquery_client_helper.project_id}.{bigquery_client_helper.dataset_id}.{bigquery_client_helper.source_table_id}"
 
     transaction_script = f"""
     BEGIN TRANSACTION;
 
-    DELETE FROM `{bigquery_client_helper.dataset_id}.{bigquery_client_helper.source_table_id}`
+    DELETE FROM `{source_table_ref}`
     WHERE owner = @owner AND isbn = @isbn;
 
     COMMIT TRANSACTION;
@@ -26,7 +34,6 @@ async def remove_book(
 
     job_config = bigquery.QueryJobConfig(
         query_parameters=[
-            # Parameters for the source table (Scalar types)
             bigquery.ScalarQueryParameter("owner", "STRING", owner),
             bigquery.ScalarQueryParameter("isbn", "STRING", isbn.isbn)
         ]
@@ -38,8 +45,7 @@ async def remove_book(
         query_job.result()
 
     except Exception as e:
-        print(f"Transaction failed and was rolled back: {e}")
+        logger.error(f"RemoveBook transaction failed and was rolled back: {e}")
         raise
 
     return
-
