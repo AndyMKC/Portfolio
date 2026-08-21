@@ -22,15 +22,14 @@ MODEL_DATA_FILE   ?= all-MiniLM-L6-v2.onnx.data
 MODEL_EXPORT_BUCKET_NAME ?= model_export_bucket_volume
 IMAGE_TAG  ?= storyspark-dev
 PROD_TAG   ?= storyspark-prod
-# Detect default credentials location
-# Try to auto-detect but allow override: make dev ADC_PATH="/path/to/credentials.json"
+# Default credentials path - override with: make dev ADC_PATH="/path/to/credentials.json"
+# On Windows, gcloud stores credentials at /c/Users/[username]/AppData/Roaming/gcloud/application_default_credentials.json in Git Bash format
 ifeq ($(OS),Windows_NT)
-	# Windows - use PowerShell to get USERPROFILE
-	USER_HOME := $(shell powershell -Command "$$env:USERPROFILE")
+	USER_HOME ?= /c/Users/AndyM
 else
-	USER_HOME := $(HOME)
+	USER_HOME ?= $(HOME)
 endif
-ADC_PATH ?= $(USER_HOME)/.config/gcloud/application_default_credentials.json
+ADC_PATH ?= $(USER_HOME)/AppData/Roaming/gcloud/application_default_credentials.json
 HOST_PORT  ?= 8000
 CONT_PORT  ?= 8080
 DEBUG_PORT ?= 5678
@@ -65,11 +64,16 @@ dev-build: ## Build the dev (debugpy + hot-reload) image
 
 dev-run: ## Run the dev container (Swagger at http://localhost:$(HOST_PORT)/docs)
 	@echo "Starting dev container - server will wait for debugger on port 5678..."
-ifeq ($(OS),Windows_NT)
-	@powershell -Command "docker run --rm -p $(HOST_PORT):$(CONT_PORT) -p $(DEBUG_PORT):$(DEBUG_PORT) -v '$(ADC_PATH):/app/adc.json:ro' -e GOOGLE_APPLICATION_CREDENTIALS='/app/adc.json' $(IMAGE_TAG)"
-else
-	@docker run --rm -p $(HOST_PORT):$(CONT_PORT) -p $(DEBUG_PORT):$(DEBUG_PORT) -v $(ADC_PATH):/app/adc.json:ro -e GOOGLE_APPLICATION_CREDENTIALS=/app/adc.json $(IMAGE_TAG)
-endif
+	@if [ -f "$(ADC_PATH)" ]; then \
+		echo "Found credentials at $(ADC_PATH)"; \
+		powershell -Command "docker run --rm -p $(HOST_PORT):$(CONT_PORT) -p $(DEBUG_PORT):$(DEBUG_PORT) -v '$(ADC_PATH):/app/adc.json:ro' -e GOOGLE_APPLICATION_CREDENTIALS='/app/adc.json' $(IMAGE_TAG)"; \
+	else \
+		echo "Credentials not found at $(ADC_PATH), running without gcloud auth..."; \
+		docker run --rm \
+			-p $(HOST_PORT):$(CONT_PORT) \
+			-p $(DEBUG_PORT):$(DEBUG_PORT) \
+			$(IMAGE_TAG); \
+	fi
 
 prod: prod-build prod-run ## Build and run the prod (distroless) image
 
