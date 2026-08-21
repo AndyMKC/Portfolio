@@ -24,8 +24,9 @@ IMAGE_TAG  ?= storyspark-dev
 PROD_TAG   ?= storyspark-prod
 # Default credentials path - override with: make dev ADC_PATH="/path/to/credentials.json"
 # On Windows, gcloud stores credentials at /c/Users/[username]/AppData/Roaming/gcloud/application_default_credentials.json in Git Bash format
+
 ifeq ($(OS),Windows_NT)
-	USER_HOME ?= /c/Users/AndyM
+	USER_HOME ?= $(USERPROFILE)
 else
 	USER_HOME ?= $(HOME)
 endif
