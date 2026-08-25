@@ -16,16 +16,19 @@ class BigQueryClientHelper:
             "dataset_id": self.dataset_id,
             "source_table_id": self.source_table_id,
             "embeddings_table_id": self.embeddings_table_id,
-            # intentionally omit client or include only safe metadata "client_info": {"project": getattr(self.client, "project", None)}
+            # intentionally omit client or include only safe metadata
+            # "client_info": {"project": getattr(self.client, "project", None)}
         }
 
 def get_bigquery_client() -> BigQueryClientHelper:
     """Creates and returns a BigQuery client using default credentials from the Environment Variables"""
 
+    client = bigquery.Client(project=os.environ.get("STORYSPARK_GCP_BQ_PROJECT_ID"))
+    
     bigquery_client_helper = BigQueryClientHelper(project_id=os.environ.get("STORYSPARK_GCP_BQ_PROJECT_ID"),
                                                   dataset_id=os.environ.get("STORYSPARK_GCP_BQ_DATASET_ID"),
                                                   source_table_id=os.environ.get("STORYSPARK_GCP_BQ_SOURCE_TABLE_ID"),
                                                   embeddings_table_id=os.environ.get("STORYSPARK_GCP_BQ_EMBEDDINGS_TABLE_ID"),
-                                                  client=bigquery.Client(project=os.environ.get("STORYSPARK_GCP_BQ_PROJECT_ID")))
+                                                  client=client)
     
     return bigquery_client_helper

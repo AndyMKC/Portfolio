@@ -1,25 +1,34 @@
-from fastapi import APIRouter, Query
+import logging
+from fastapi import APIRouter, Query, Depends
 from app.models import RecommendedBook, CleanedISBN
 from app.books.helpers.bigquery_client_helper import get_bigquery_client
 from app.books.helpers.embeddings_generator import EmbeddingsGenerator
 from google.cloud import bigquery
+from app.auth import get_current_user
 
 router = APIRouter()
+logger = logging.getLogger("app-log")
+
 
 @router.get("/books/recommendation", response_model=list[RecommendedBook], operation_id="GetBookRecommendation")
 async def get_recommendation(
-    owner: str = Query(..., example="user@gmail.com"),
     text: str = Query(..., example="canoe"),
     limit: int = Query(10, gt=0, description="Maximum number of results; must be > 0", example=10),
-
+    current_user: dict = Depends(get_current_user)
     ) -> list[RecommendedBook]:
+    """
+    Returns book recommendations based on a search text, ranked by cosine
+    similarity of embeddings against the books owned by ``current_user``.
+    """
+    owner = current_user["email"]
+    logger.info(f"GetBookRecommendation called by user: {owner}")
+
     embedding_info = EmbeddingsGenerator.generate_embeddings(tags=None, relevant_text=[text])[0]
 
     bigquery_client_helper = get_bigquery_client()
     source_table_id = f"{bigquery_client_helper.project_id}.{bigquery_client_helper.dataset_id}.{bigquery_client_helper.source_table_id}"
     embeddings_table_id = f"{bigquery_client_helper.project_id}.{bigquery_client_helper.dataset_id}.{bigquery_client_helper.embeddings_table_id}"
 
-    # TODO:  Figure out the owner stuff
     query = f"""
     DECLARE owner_param STRING DEFAULT @owner;
     DECLARE query_embedding ARRAY<FLOAT64> DEFAULT @query_embedding;
@@ -85,7 +94,7 @@ async def get_recommendation(
     LEFT JOIN owner_books AS ob
         ON ob.isbn = best.isbn
     GROUP BY best.isbn, best.content, best.best_cosine_similarity
-    ORDER BY best_cosine_similarity DESC
+    ORDER BY best.best_cosine_similarity DESC
     LIMIT @limit
     """
 
@@ -118,9 +127,8 @@ async def get_recommendation(
                 cosine_simularity=row['best_cosine_similarity']
             )
             all_books.append(book)
-            
+
         return all_books
     except Exception as e:
-        print(f"Query failed:  {e}")
+        logger.error(f"GetBookRecommendation query failed: {e}")
         raise
-

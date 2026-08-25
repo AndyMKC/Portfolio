@@ -2,14 +2,17 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Python: Attach (docker debugpy)",
-      "type": "python",
+      "name": "Debug StorySpark Server",
+      "type": "debugpy",
       "request": "attach",
       "connect": {
         "host": "localhost",
         "port": 5678
       },
-      "justMyCode": true,
+      "justMyCode": false,
+      "debugOptions": [
+        "RedirectOutput"
+      ],
       "pathMappings": [
         {
           "localRoot": "${workspaceFolder}",

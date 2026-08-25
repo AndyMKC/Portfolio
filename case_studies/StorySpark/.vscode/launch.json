@@ -2,28 +2,23 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug pytest: test_api_functions",
-      "type": "python",
-      "request": "launch",
-      "module": "pytest",
-      "args": [
-        "${workspaceFolder}/src/api_gateway/tests/test_api_functions.py"
-      ],
-      "justMyCode": true,
-      "cwd": "${workspaceFolder}/src",
-      "env": {
-        "PYTHONPATH": "${workspaceFolder}/src"
-      }
-    },
-    {
-      "name": "Attach to Python Functions",
+      "name": "Debug StorySpark Server",
       "type": "debugpy",
       "request": "attach",
       "connect": {
         "host": "localhost",
-        "port": 9091
+        "port": 5678
       },
-      "preLaunchTask": "func: host start"
+      "justMyCode": false,
+      "debugOptions": [
+        "RedirectOutput"
+      ],
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}/src",
+          "remoteRoot": "/src"
+        }
+      ]
     }
   ]
 }
