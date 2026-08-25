@@ -29,7 +29,10 @@ MODEL_DATA_FILE="${MODEL_DATA_FILE:-all-MiniLM-L6-v2.onnx.data}"
 MODEL_EXPORT_BUCKET_NAME="${MODEL_EXPORT_BUCKET_NAME:-model_export_bucket_volume}"
 IMAGE_TAG="${IMAGE_TAG:-storyspark-dev}"
 PROD_TAG="${PROD_TAG:-storyspark-prod}"
-ADC_PATH="${ADC_PATH:-/c/Users/AndyM/AppData/Roaming/gcloud/application_default_credentials.json}"
+# On Windows (Git Bash), USERPROFILE is set; on Unix, fall back to HOME.
+# (Mirrors the Makefile logic that uses USERPROFILE on Windows_NT.)
+USER_HOME="${USERPROFILE:-$HOME}"
+ADC_PATH="${ADC_PATH:-$USER_HOME/AppData/Roaming/gcloud/application_default_credentials.json}"
 HOST_PORT="${HOST_PORT:-8000}"
 CONT_PORT="${CONT_PORT:-8080}"
 DEBUG_PORT="${DEBUG_PORT:-5678}"

@@ -5,9 +5,7 @@ All endpoint modules import ``get_current_user`` from here rather than from
 ``app.main`` to avoid a circular import (``main.py`` imports the routers,
 which import this module for the dependency).
 
-The Google ID token is verified with ``google.oauth2.id_token.verify_oauth2_token``
-and the resulting email is checked against ``ALLOWED_USERS``.  Only the two
-permitted Google accounts may call any API.
+The Google ID token is verified with ``google.oauth2.id_token.verify_oauth2_token``.
 
 Logging is done exclusively through Python's standard ``logging`` library.
 The ``app-log`` logger is wired to Google Cloud Logging at start-up by
@@ -33,12 +31,6 @@ logger = logging.getLogger("app-log")
 # which makes Swagger UI show lock icons on protected routes and an
 # "Authorize" button for pasting the token.
 bearer_scheme = HTTPBearer()
-
-# The only Google accounts allowed to call the APIs.
-ALLOWED_USERS = [
-    "andy.ming.kong.cheng@gmail.com",
-    "codingdolly@gmail.com",
-]
 
 
 async def get_current_user(
@@ -87,15 +79,7 @@ async def get_current_user(
         )
 
     # Store on request.state so the middleware can log "who called what"
-    # even if the user is later denied (403).
     request.state.current_user_email = user_email
-
-    if user_email not in ALLOWED_USERS:
-        logger.warning(f"Unauthorized access attempt by: {user_email}")
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User not authorized",
-        )
 
     logger.info(f"Authenticated user: {user_email}")
     return {"email": user_email, "idinfo": idinfo}

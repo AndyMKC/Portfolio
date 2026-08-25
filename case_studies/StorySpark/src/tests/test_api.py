@@ -2,7 +2,7 @@
 End-to-end API tests for StorySpark.
 
 Covers:
-  * Authentication (401 — no token, 401 — invalid token, 403 — non-allowed user, 200 — allowed user)
+  * Authentication (401 — no token, 401 — invalid token, 200 — authenticated user)
   * All 7 book endpoints with mocked BigQuery
   * The /healthz public endpoint
   * Structured logging (extra fields on log records)
@@ -14,10 +14,6 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 
-ALLOWED_EMAIL = "andy.ming.kong.cheng@gmail.com"
-OTHER_ALLOWED_EMAIL = "codingdolly@gmail.com"
-DENIED_EMAIL = "hacker@gmail.com"
-
 
 # --- Fixtures ----------------------------------------------------------
 
@@ -28,17 +24,7 @@ def client():
 
 @pytest.fixture
 def fake_idinfo_allowed():
-    return {"email": ALLOWED_EMAIL, "sub": "1"}
-
-
-@pytest.fixture
-def fake_idinfo_other():
-    return {"email": OTHER_ALLOWED_EMAIL, "sub": "2"}
-
-
-@pytest.fixture
-def fake_idinfo_denied():
-    return {"email": DENIED_EMAIL, "sub": "3"}
+    return {"email": "spoofed@gmail.com", "sub": "1"}
 
 
 @pytest.fixture
@@ -141,7 +127,7 @@ class TestAuth:
         assert r.status_code == 401
 
     def test_no_token_returns_401_post(self, client):
-        r = client.post("/books", json={"owner": ALLOWED_EMAIL, "isbns": []})
+        r = client.post("/books", json={"owner": "spoofed@gmail.com", "isbns": []})
         assert r.status_code == 401
 
     def test_invalid_token_returns_401(self, client):
@@ -149,11 +135,6 @@ class TestAuth:
                    side_effect=ValueError("invalid")):
             r = client.get("/books", headers={"Authorization": "Bearer bad-token"})
         assert r.status_code == 401
-
-    def test_non_allowed_user_returns_403(self, client, fake_idinfo_denied):
-        with patch("app.auth.id_token.verify_oauth2_token", return_value=fake_idinfo_denied):
-            r = client.get("/books", headers={"Authorization": "Bearer fake"})
-        assert r.status_code == 403
 
     def test_allowed_user_passes_auth(self, client, fake_idinfo_allowed, mock_bq_patcher):
         with patch("app.auth.id_token.verify_oauth2_token", return_value=fake_idinfo_allowed):
@@ -170,12 +151,6 @@ class TestGetAllBooks:
         assert r.status_code == 200
         assert r.json() == []
 
-    def test_non_allowed_user(self, client, fake_idinfo_denied, mock_bq_patcher):
-        with patch("app.auth.id_token.verify_oauth2_token", return_value=fake_idinfo_denied):
-            r = client.get("/books", headers={"Authorization": "Bearer fake"})
-        assert r.status_code == 403
-
-
 class TestAddBook:
     def test_allowed_user(self, client, fake_idinfo_allowed, mock_bq_patcher,
                           mock_embeddings, mock_metadata_helpers):
@@ -184,13 +159,6 @@ class TestAddBook:
                             json={"owner": "spoofed@gmail.com",
                                   "isbns": [{"isbn": "978-0448487311"}]})
         assert r.status_code == 201
-
-    def test_non_allowed_user(self, client, fake_idinfo_denied, mock_bq_patcher,
-                              mock_embeddings, mock_metadata_helpers):
-        with patch("app.auth.id_token.verify_oauth2_token", return_value=fake_idinfo_denied):
-            r = client.post("/books", headers={"Authorization": "Bearer fake"},
-                            json={"owner": DENIED_EMAIL, "isbns": [{"isbn": "978-0448487311"}]})
-        assert r.status_code == 403
 
     def test_payload_logging(self, client, fake_idinfo_allowed, mock_bq_patcher,
                              mock_embeddings, mock_metadata_helpers, log_capture):
@@ -202,7 +170,7 @@ class TestAddBook:
         # Find the AddBook log record and verify extra fields
         for rec in log_capture:
             if "AddBook called by user" in rec.getMessage():
-                assert getattr(rec, "user_email", None) == ALLOWED_EMAIL
+                assert getattr(rec, "user_email", None) == "spoofed@gmail.com"
                 assert getattr(rec, "add_book_request", None) is not None
                 assert "isbns" in getattr(rec, "add_book_request", {})
                 return
@@ -216,26 +184,12 @@ class TestGetRecommendation:
                            headers={"Authorization": "Bearer fake"})
         assert r.status_code == 200
 
-    def test_non_allowed_user(self, client, fake_idinfo_denied, mock_bq_patcher, mock_embeddings):
-        with patch("app.auth.id_token.verify_oauth2_token", return_value=fake_idinfo_denied):
-            r = client.get("/books/recommendation?text=canoe",
-                           headers={"Authorization": "Bearer fake"})
-        assert r.status_code == 403
-
-
 class TestRemoveBook:
     def test_allowed_user(self, client, fake_idinfo_allowed, mock_bq_patcher):
         with patch("app.auth.id_token.verify_oauth2_token", return_value=fake_idinfo_allowed):
             r = client.delete("/books/978-0448487311",
                               headers={"Authorization": "Bearer fake"})
         assert r.status_code == 200
-
-    def test_non_allowed_user(self, client, fake_idinfo_denied, mock_bq_patcher):
-        with patch("app.auth.id_token.verify_oauth2_token", return_value=fake_idinfo_denied):
-            r = client.delete("/books/978-0448487311",
-                              headers={"Authorization": "Bearer fake"})
-        assert r.status_code == 403
-
 
 class TestMarkRead:
     def test_allowed_user(self, client, fake_idinfo_allowed, mock_bq_patcher):
@@ -244,24 +198,11 @@ class TestMarkRead:
                              headers={"Authorization": "Bearer fake"})
         assert r.status_code == 200
 
-    def test_non_allowed_user(self, client, fake_idinfo_denied, mock_bq_patcher):
-        with patch("app.auth.id_token.verify_oauth2_token", return_value=fake_idinfo_denied):
-            r = client.patch("/books/978-0448487311/mark_read",
-                             headers={"Authorization": "Bearer fake"})
-        assert r.status_code == 403
-
-
 class TestClearDatabase:
     def test_allowed_user(self, client, fake_idinfo_allowed, mock_bq_patcher):
         with patch("app.auth.id_token.verify_oauth2_token", return_value=fake_idinfo_allowed):
             r = client.delete("/books", headers={"Authorization": "Bearer fake"})
         assert r.status_code == 200
-
-    def test_non_allowed_user(self, client, fake_idinfo_denied, mock_bq_patcher):
-        with patch("app.auth.id_token.verify_oauth2_token", return_value=fake_idinfo_denied):
-            r = client.delete("/books", headers={"Authorization": "Bearer fake"})
-        assert r.status_code == 403
-
 
 class TestClearAndSeedDb:
     def test_allowed_user(self, client, fake_idinfo_allowed, mock_bq_patcher,
@@ -269,11 +210,6 @@ class TestClearAndSeedDb:
         with patch("app.auth.id_token.verify_oauth2_token", return_value=fake_idinfo_allowed):
             r = client.post("/reset", headers={"Authorization": "Bearer fake"})
         assert r.status_code == 200
-
-    def test_non_allowed_user(self, client, fake_idinfo_denied, mock_bq_patcher):
-        with patch("app.auth.id_token.verify_oauth2_token", return_value=fake_idinfo_denied):
-            r = client.post("/reset", headers={"Authorization": "Bearer fake"})
-        assert r.status_code == 403
 
     def test_passes_current_user_to_internal_calls(self, client, fake_idinfo_allowed,
                                                     mock_bq_patcher, mock_embeddings,
@@ -304,7 +240,7 @@ class TestMiddlewareLogging:
         # Middleware should log the API call with the authenticated user
         messages = [rec.getMessage() for rec in log_capture]
         assert any(
-            "API call: POST /books by andy.ming.kong.cheng@gmail.com -> 201" in m
+            "API call: POST /books by spoofed@gmail.com -> 201" in m
             for m in messages
         )
 

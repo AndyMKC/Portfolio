@@ -15,7 +15,7 @@ gcloud auth login
 ```
 
 This will open a browser window where you can:
-- Select your Google account (e.g., `andy.ming.kong.cheng@gmail.com`)
+- Select your Google account (e.g., `<username>@gmail.com`)
 - Review the permissions and click "Allow"
 
 ### 3. Generate Application Default Credentials
@@ -118,7 +118,7 @@ gcloud auth application-default login --no-user-output-enabled
 ```
 
 ### "Permission denied" or authentication errors in BigQuery
-Make sure you have the correct permissions on your Google Cloud project and that your account is in the `ALLOWED_USERS` list in `app/auth.py`.
+Make sure you have the correct permissions on your Google Cloud project.
 
 ### Server doesn't start after debugger attaches
 Check that port 8000 on your host is not already in use:
@@ -143,15 +143,3 @@ ls ~/.config/gcloud/application_default_credentials.json
 Then restart the container:
 make dev
 ```
-
-## Development vs Production Notes
-
-- In **dev mode**, you can use mock data - simply call `/books` without a bearer token and the API will return mock book data
-- In **production**, all protected endpoints require a valid Google ID token
-- The allowed users list is defined in `src/app/auth.py`:
-  ```python
-  ALLOWED_USERS = [
-      "andy.ming.kong.cheng@gmail.com",
-      "codingdolly@gmail.com",
-  ]
-  ```
