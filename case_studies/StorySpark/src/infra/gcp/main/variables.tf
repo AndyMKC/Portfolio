@@ -107,3 +107,43 @@ variable "model_export_bucket_volume_name" {
   type        = string
   description = "Folder name that we use to denote this volume mount"
 }
+
+# ── Redis Cloud Variables (for distributed rate limiting) ──────────────
+
+variable "rediscloud_api_key" {
+  description = "Redis Cloud API Key (public key). Inject from GitHub secret REDIS_API_KEY."
+  type        = string
+  default     = ""
+}
+
+variable "rediscloud_api_secret" {
+  description = "Redis Cloud API Secret (private key). Inject from GitHub secret REDIS_API_SECRET."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "redis_database_name" {
+  description = "Name of the Redis database for rate limiting"
+  type        = string
+  default     = "storyspark-redis"
+}
+
+variable "redis_cloud_provider" {
+  description = "Cloud provider for the Redis database (AWS, GCP, or AZURE)"
+  type        = string
+  default     = "AWS"
+}
+
+variable "redis_region" {
+  description = "Region for the Redis database"
+  type        = string
+  default     = "us-east-1"
+}
+
+# Size in MB for the free tier plan (Redis Cloud free tier is 30MB)
+variable "redis_free_plan_size_mb" {
+  description = "Size of the free tier plan in MB. Redis Cloud free tier is 30MB."
+  type        = number
+  default     = 30
+}

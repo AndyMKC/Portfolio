@@ -266,6 +266,21 @@ resource "google_storage_bucket" "model_export_bucket" {
   uniform_bucket_level_access = true
 }
 
+# Redis Cloud Essentials subscription and database for distributed rate limiting
+resource "rediscloud_essentials_subscription" "storyspark_redis" {
+  name    = var.redis_database_name
+  plan_id = data.rediscloud_essentials_plan.free_plan.id
+}
+
+resource "rediscloud_essentials_database" "storyspark_redis_db" {
+  subscription_id     = rediscloud_essentials_subscription.storyspark_redis.id
+  name                = var.redis_database_name
+  data_persistence    = "none"
+  replication         = false
+  enable_default_user = true
+  password            = ""  # Auto-generated if empty string
+}
+
 # Cloud Run service
 resource "google_cloud_run_v2_service" "storyspark_service" {
   name     = local.service_name
@@ -320,8 +335,29 @@ resource "google_cloud_run_v2_service" "storyspark_service" {
         name  = "ENV"
         value = local.env_suffix
       }
+
+      # Redis connection env vars for distributed rate limiting
+      env {
+        name  = "REDIS_HOST"
+        value = rediscloud_essentials_database.storyspark_redis_db.public_endpoint
+      }
+      env {
+        name  = "REDIS_PORT"
+        value = "6380"
+      }
+      env {
+        name  = "REDIS_PASSWORD"
+        value = rediscloud_essentials_database.storyspark_redis_db.password
+      }
+      env {
+        name  = "REDIS_USERNAME"
+        value = "default"
+      }
+      env {
+        name  = "REDIS_SSL"
+        value = "true"
+      }
     }
-    
     volumes {
       name = var.model_export_bucket_volume_name
       gcs {
@@ -337,9 +373,10 @@ resource "google_cloud_run_v2_service" "storyspark_service" {
     percent = 100
   }
 
-  # Ensure the service is created after the IAM binding
+  # Ensure the service is created after the IAM binding and Redis database
   depends_on = [
     google_storage_bucket_iam_member.cloudrun_bucket_viewer
+    rediscloud_essentials_database.storyspark_redis_db
   ]
 }
 
