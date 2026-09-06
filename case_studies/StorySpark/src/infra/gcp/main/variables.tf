@@ -130,15 +130,15 @@ variable "redis_database_name" {
 }
 
 variable "redis_cloud_provider" {
-  description = "Cloud provider for the Redis database (AWS, GCP, or AZURE)"
+  description = "Cloud provider for the Redis database (default: GCP for same-cloud deployment)"
   type        = string
-  default     = "AWS"
+  default     = "GCP"
 }
 
 variable "redis_region" {
-  description = "Region for the Redis database"
+  description = "Region for the Redis database (GCP us-west1 supports free tier)"
   type        = string
-  default     = "us-east-1"
+  default     = "us-west1"
 }
 
 # Size in MB for the free tier plan (Redis Cloud free tier is 30MB)

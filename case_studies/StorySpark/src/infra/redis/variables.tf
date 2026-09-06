@@ -25,12 +25,12 @@ variable "database_name" {
   default     = "storyspark-redis"
 }
 
-# Cloud provider for the Redis database (AWS, GCP, or AZURE)
-# Free tier is available on all three providers
+# Cloud provider for the Redis database
+# Defaults to GCP for same-cloud deployment with Cloud Run (us-west1)
 variable "cloud_provider" {
   description = "Cloud provider for the Redis database (AWS, GCP, or AZURE)"
   type        = string
-  default     = "AWS"
+  default     = "GCP"
   validation {
     condition     = contains(["AWS", "GCP", "AZURE"], var.cloud_provider)
     error_message = "cloud_provider must be one of: AWS, GCP, AZURE"
@@ -38,14 +38,14 @@ variable "cloud_provider" {
 }
 
 # Region for the Redis database
-# Must be a region that supports the free tier for the selected cloud provider
-# AWS free tier regions: us-east-1, us-west-2, eu-west-1
-# GCP free tier regions: us-central1, europe-west1, asia-east1
-# Azure free tier regions: eastus, westeurope, southeastasia
+# Must be a region that supports the free tier (Essentials) for the selected cloud provider
+# GCP free tier regions include: us-west1, us-central1, us-east1, us-east4, europe-west1,
+#   europe-west2, europe-west3, europe-west4, asia-east1, asia-southeast1,
+#   asia-northeast1, asia-south1, australia-southeast1
 variable "region" {
   description = "Region for the Redis database (must support free tier for selected cloud provider)"
   type        = string
-  default     = "us-east-1"
+  default     = "us-west1"
 }
 
 # Memory limit in GB for the database

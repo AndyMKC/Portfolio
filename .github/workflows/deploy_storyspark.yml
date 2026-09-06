@@ -25,15 +25,23 @@ env:
   ARTIFACT_DOCKER_REPO: containers
   SOURCE_MODEL_DIR: models
 
-  # --- GitHub Variables (used via 'vars.') ---
+      # --- GitHub Variables (used via 'vars.') ---
   GCP_PROJECT_ID: ${{ vars.STORYSPARK_GCP_PROJECT_ID }}
   GCP_REGION: ${{ vars.STORYSPARK_GCP_REGION }}
   GCP_ZONE: ${{ vars.STORYSPARK_GCP_ZONE }}
   GCP_TF_STATE_BUCKET: ${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}
+  REDIS_DATABASE_NAME: ${{ vars.REDIS_DATABASE_NAME }}
+  REDIS_CLOUD_PROVIDER: ${{ vars.REDIS_CLOUD_PROVIDER }}
+  REDIS_REGION: ${{ vars.REDIS_REGION }}
+  REDIS_PLAN_SIZE_MB: ${{ vars.REDIS_PLAN_SIZE_MB }}
+
+  # --- Terraform Variables (TF_VAR_ prefix auto-maps to var.X) ---
+  TF_VAR_rediscloud_api_key: ${{ vars.REDIS_API_KEY }}
 
   # --- GitHub Secret (used via 'secrets.') ---
   # This variable holds the JSON content of the service account key for GCP
   GCP_TERRAFORM_SA_KEY_JSON: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
+  TF_VAR_rediscloud_api_secret: ${{ secrets.REDIS_API_SECRET }}
 
 jobs:
   setup:
@@ -423,7 +431,7 @@ jobs:
       working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
       env:
         GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
-#        TF_LOG: DEBUG
+        TF_LOG: TRACE
       run: |
         terraform plan \
           -input=false \
@@ -436,6 +444,10 @@ jobs:
           -var="artifact_docker_images_repo_id=${{ env.ARTIFACT_DOCKER_REPO }}" \
           -var="model_export_bucket=${{ vars.STORYSPARK_GCP_MODELS_BUCKET}}" \
           -var="model_export_bucket_volume_name=${{ vars.STORYSPARK_GCP_MODEL_EXPORT_BUCKET_VOLUME_NAME }}" \
+          -var="redis_database_name=${{ env.REDIS_DATABASE_NAME }}" \
+          -var="redis_cloud_provider=${{ env.REDIS_CLOUD_PROVIDER }}" \
+          -var="redis_region=${{ env.REDIS_REGION }}" \
+          -var="redis_free_plan_size_mb=${{ env.REDIS_PLAN_SIZE_MB }}" \
           -lock-timeout=5m \
           -out=tfplan
 
