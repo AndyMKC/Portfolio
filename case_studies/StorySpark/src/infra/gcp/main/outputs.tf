@@ -72,23 +72,24 @@ output "artifact_repository_path" {
   value = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.docker_repo.repository_id}"
 }
 
-# Redis Cloud outputs for distributed rate limiting
+# Redis outputs (delegated to redis/ module)
 output "redis_endpoint" {
   description = "Redis database endpoint (host)"
-  value       = rediscloud_essentials_database.storyspark_redis_db.public_endpoint
+  value       = module.redis.database_host
 }
 
 output "redis_port" {
   description = "Redis database port (6380 for TLS/SSL connections)"
-  value       = 6380
+  value       = module.redis.database_port
 }
 
 output "redis_database_name" {
   description = "Name of the Redis database"
-  value       = rediscloud_essentials_database.storyspark_redis_db.name
+  value       = module.redis.database_name
 }
 
 output "redis_database_status" {
   description = "Status of the Redis database"
-  value       = rediscloud_essentials_database.storyspark_redis_db.status
+  value       = module.redis.database_status
 }
+

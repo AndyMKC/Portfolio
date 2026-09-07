@@ -108,42 +108,10 @@ variable "model_export_bucket_volume_name" {
   description = "Folder name that we use to denote this volume mount"
 }
 
-# ── Redis Cloud Variables (for distributed rate limiting) ──────────────
+# ── Redis Cloud Variables (passed to redis module) ────────────
 
-variable "rediscloud_api_key" {
-  description = "Redis Cloud API Key (public key). Inject from GitHub secret REDIS_API_KEY."
-  type        = string
-  default     = ""
-}
+# Note: Detailed Redis variables (cloud_provider, region, free_plan_size_mb,
+# database_name, rediscloud_api_key, rediscloud_api_secret) are defined in
+# the redis/ module. This module passes them through via terraform.tfvars or
+# CI/CD -var flags.
 
-variable "rediscloud_api_secret" {
-  description = "Redis Cloud API Secret (private key). Inject from GitHub secret REDIS_API_SECRET."
-  type        = string
-  default     = ""
-  sensitive   = true
-}
-
-variable "redis_database_name" {
-  description = "Name of the Redis database for rate limiting"
-  type        = string
-  default     = "storyspark-redis"
-}
-
-variable "redis_cloud_provider" {
-  description = "Cloud provider for the Redis database (default: GCP for same-cloud deployment)"
-  type        = string
-  default     = "GCP"
-}
-
-variable "redis_region" {
-  description = "Region for the Redis database (GCP us-west1 supports free tier)"
-  type        = string
-  default     = "us-west1"
-}
-
-# Size in MB for the free tier plan (Redis Cloud free tier is 30MB)
-variable "redis_free_plan_size_mb" {
-  description = "Size of the free tier plan in MB. Redis Cloud free tier is 30MB."
-  type        = number
-  default     = 30
-}

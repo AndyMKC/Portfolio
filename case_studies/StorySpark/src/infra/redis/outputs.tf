@@ -33,17 +33,22 @@ output "redis_connection_string" {
 }
 
 # Also provide individual components for flexible configuration
-output "redis_host" {
+output "database_host" {
   description = "Redis host (endpoint)"
   value       = rediscloud_essentials_database.storyspark_redis_db.public_endpoint
 }
 
-output "redis_username" {
+output "database_port" {
+  description = "Redis port (6380 for TLS/SSL connections)"
+  value       = 6380
+}
+
+output "database_username" {
   description = "Redis username (default user for Redis Cloud Essentials)"
   value       = "default"
 }
 
-output "redis_password" {
+output "database_password" {
   description = "Redis password (sensitive)"
   value       = rediscloud_essentials_database.storyspark_redis_db.password
   sensitive   = true

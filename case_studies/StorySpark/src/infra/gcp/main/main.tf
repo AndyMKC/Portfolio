@@ -336,18 +336,18 @@ resource "google_cloud_run_v2_service" "storyspark_service" {
         value = local.env_suffix
       }
 
-      # Redis connection env vars for distributed rate limiting
+            # Redis connection env vars for distributed rate limiting
       env {
         name  = "REDIS_HOST"
-        value = rediscloud_essentials_database.storyspark_redis_db.public_endpoint
+        value = module.redis.database_host
       }
       env {
         name  = "REDIS_PORT"
-        value = "6380"
+        value = module.redis.database_port
       }
       env {
         name  = "REDIS_PASSWORD"
-        value = rediscloud_essentials_database.storyspark_redis_db.password
+        value = module.redis.database_password
       }
       env {
         name  = "REDIS_USERNAME"
@@ -373,14 +373,36 @@ resource "google_cloud_run_v2_service" "storyspark_service" {
     percent = 100
   }
 
-  # Ensure the service is created after the IAM binding and Redis database
+      # Ensure the service is created after the IAM binding and Redis database
   depends_on = [
     google_storage_bucket_iam_member.cloudrun_bucket_viewer
-    rediscloud_essentials_database.storyspark_redis_db
+    module.redis
   ]
 }
 
-# Allow unauthenticated access to Cloud Run (public endpoint)
+
+# ─── Redis Cloud Configuration (delegated to redis/ module) ───
+
+# Call the redis module to provision Redis Cloud free tier
+module "redis" {
+  source = "../../redis"
+
+  database_name         = var.redis_database_name
+  cloud_provider        = var.redis_cloud_provider
+  region                = var.redis_region
+  free_plan_size_mb     = var.redis_free_plan_size_mb
+  rediscloud_api_key    = var.rediscloud_api_key
+  rediscloud_api_secret = var.rediscloud_api_secret
+}
+
+# Reference the Redis database outputs for Cloud Run env vars
+locals {
+  redis_host     = module.redis.database_host
+  redis_port     = module.redis.database_port
+  redis_password = module.redis.database_password
+}
+
+
 resource "google_cloud_run_v2_service_iam_member" "allow_unauth" {
   location = google_cloud_run_v2_service.storyspark_service.location
   project  = var.project_id
