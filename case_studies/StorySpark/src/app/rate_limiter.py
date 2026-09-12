@@ -10,8 +10,8 @@ Configuration (environment variables):
 
     RATE_LIMIT_REQUESTS        – max requests per window (default: 100)
     RATE_LIMIT_WINDOW_SECONDS  – window size in seconds (default: 3600 = 1 h)
-    RATE_LIMIT_EXEMPT_PATHS    – comma-separated paths exempt from
-                                  rate limiting (default: /healthz)
+        RATE_LIMIT_EXEMPT_PATHS    – comma-separated paths exempt from
+                                  rate limiting
     REDIS_URL                  – Redis connection string (e.g. rediss://:password@host:port)
                                  If set, uses Redis-backed rate limiter instead of in-memory.
     REDIS_HOST                 - Redis host (alternative to REDIS_URL)
@@ -73,7 +73,7 @@ class RateLimitConfig:
     limit: int = 100
     window_seconds: int = 3600  # 1 hour
     exempt_paths: set[str] = field(
-        default_factory=lambda: {"/healthz"},
+        default_factory=set,
     )
 
     @classmethod
@@ -85,8 +85,8 @@ class RateLimitConfig:
             RATE_LIMIT_REQUESTS=50 RATE_LIMIT_WINDOW_SECONDS=1800 python ...
 
         """
-        raw_exempt = os.environ.get(
-            "RATE_LIMIT_EXEMPT_PATHS", "/healthz"
+                raw_exempt = os.environ.get(
+            "RATE_LIMIT_EXEMPT_PATHS", ""
         )
         return cls(
             limit=int(os.environ.get("RATE_LIMIT_REQUESTS", "100")),

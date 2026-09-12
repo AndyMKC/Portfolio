@@ -73,9 +73,8 @@ def create_app() -> FastAPI:
         version="0.1",
         description=(
             "Book recommendation and management API.\n\n"
-            "**Rate Limiting:** All API endpoints are rate-limited to "
-            "100 requests per hour per client.  The `/healthz` "
-            "endpoint is exempt.\n\n"
+                        "**Rate Limiting:** All API endpoints — including `/healthz` — are rate-limited to "
+            "100 requests per hour per client.\n\n"
             "A `429 Too Many Requests` response with a "
             "`Retry-After` header is returned when the limit is exceeded."
         ),
@@ -189,12 +188,11 @@ def create_app() -> FastAPI:
                 schema["info"]["description"] = (
                     "Book recommendation and management API."
                 )
-            desc = schema["info"]["description"]
+                        desc = schema["info"]["description"]
             if "Rate Limiting" not in desc:
                 schema["info"]["description"] = desc + (
-                    "\n\n**Rate Limiting:** All API endpoints are "
+                    "\n\n**Rate Limiting:** All API endpoints — including `/healthz` — are "
                     "rate-limited to 100 requests per hour per client. "
-                    "The `/healthz` endpoint is exempt. "
                     "A `429 Too Many Requests` response with a "
                     "`Retry-After` header is returned when the limit "
                     "is exceeded."
