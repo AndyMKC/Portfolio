@@ -17,7 +17,7 @@ env:
   SRC_DIR: case_studies/StorySpark/src
   TF_GOOGLE_DIR: case_studies/StorySpark/src/infra/gcp/main
   MODEL_EXPORT_DIR: case_studies/StorySpark/src/model_export
-  PROJECT_ID: ${{vars.STORYSPARK_GCP_PROJECT_ID }}
+  PROJECT_ID: ${{ vars.STORYSPARK_GCP_PROJECT_ID }}
   GCS_BUCKET: ${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}
   MODELS_BUCKET: ${{ vars.STORYSPARK_GCP_MODELS_BUCKET }}
   OPENAPI_FOLDER: ${{ vars.STORYSPARK_BUILD_OPENAPI_YAML_FOLDER }}
@@ -25,23 +25,26 @@ env:
   ARTIFACT_DOCKER_REPO: containers
   SOURCE_MODEL_DIR: models
 
-      # --- GitHub Variables (used via 'vars.') ---
+  # --- GitHub Variables (used via 'vars.') ---
   GCP_PROJECT_ID: ${{ vars.STORYSPARK_GCP_PROJECT_ID }}
   GCP_REGION: ${{ vars.STORYSPARK_GCP_REGION }}
   GCP_ZONE: ${{ vars.STORYSPARK_GCP_ZONE }}
   GCP_TF_STATE_BUCKET: ${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}
+
+  # --- Redis Cloud Provider Environment Variables ---
+  # These are auto-read by the Terraform Redis Cloud provider (not as input variables)
+  REDISCLOUD_API_KEY: ${{ vars.REDIS_API_KEY }}
+  REDISCLOUD_API_SECRET: ${{ secrets.REDIS_API_SECRET }}
+
+  # --- Redis Config Environment Variables (passed via -var flags) ---
   REDIS_DATABASE_NAME: ${{ vars.REDIS_DATABASE_NAME }}
   REDIS_CLOUD_PROVIDER: ${{ vars.REDIS_CLOUD_PROVIDER }}
   REDIS_REGION: ${{ vars.REDIS_REGION }}
   REDIS_PLAN_SIZE_MB: ${{ vars.REDIS_PLAN_SIZE_MB }}
 
-  # --- Terraform Variables (TF_VAR_ prefix auto-maps to var.X) ---
-  TF_VAR_rediscloud_api_key: ${{ vars.REDIS_API_KEY }}
-
   # --- GitHub Secret (used via 'secrets.') ---
   # This variable holds the JSON content of the service account key for GCP
   GCP_TERRAFORM_SA_KEY_JSON: ${{ secrets.STORYSPARK_GCP_TERRAFORM_SA_KEY }}
-  TF_VAR_rediscloud_api_secret: ${{ secrets.REDIS_API_SECRET }}
 
 jobs:
   setup:
