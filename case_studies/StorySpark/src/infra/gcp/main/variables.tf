@@ -107,3 +107,50 @@ variable "model_export_bucket_volume_name" {
   type        = string
   description = "Folder name that we use to denote this volume mount"
 }
+
+# ── Redis Cloud Variables (passed to redis module) ────────────
+
+variable "redis_database_name" {
+  description = "Name of the Redis database"
+  type        = string
+  default     = "storyspark-redis"
+}
+
+variable "redis_cloud_provider" {
+  description = "Cloud provider for Redis (AWS, GCP, AZURE)"
+  type        = string
+  default     = "GCP"
+  validation {
+    condition     = contains(["AWS", "GCP", "AZURE"], var.redis_cloud_provider)
+    error_message = "redis_cloud_provider must be one of: AWS, GCP, AZURE"
+  }
+}
+
+variable "redis_region" {
+  description = "Region for Redis deployment (must support free tier for selected provider)"
+  type        = string
+  default     = "us-west1"
+}
+
+variable "redis_free_plan_size_mb" {
+  description = "Free plan size in MB (Redis Cloud free tier is 30MB)"
+  type        = number
+  default     = 30
+}
+
+variable "rediscloud_api_key" {
+  description = "Redis Cloud API Key (public key). Set via TF_VAR_rediscloud_api_key env var or CI/CD -var flag."
+  type        = string
+  sensitive   = true
+}
+
+variable "rediscloud_api_secret" {
+  description = "Redis Cloud API Secret (private key). Set via TF_VAR_rediscloud_api_secret env var or CI/CD -var flag."
+  type        = string
+  sensitive   = true
+}
+
+# Note: Detailed Redis variables (cloud_provider, region, free_plan_size_mb,
+# database_name) are also defined in the redis/ module. This module passes them
+# through via the module call in main.tf.
+

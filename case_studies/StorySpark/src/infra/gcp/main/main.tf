@@ -266,6 +266,21 @@ resource "google_storage_bucket" "model_export_bucket" {
   uniform_bucket_level_access = true
 }
 
+# Redis Cloud Essentials subscription and database for distributed rate limiting
+resource "rediscloud_essentials_subscription" "storyspark_redis" {
+  name    = var.redis_database_name
+  plan_id = data.rediscloud_essentials_plan.free_plan.id
+}
+
+resource "rediscloud_essentials_database" "storyspark_redis_db" {
+  subscription_id     = rediscloud_essentials_subscription.storyspark_redis.id
+  name                = var.redis_database_name
+  data_persistence    = "none"
+  replication         = false
+  enable_default_user = true
+  password            = ""  # Auto-generated if empty string
+}
+
 # Cloud Run service
 resource "google_cloud_run_v2_service" "storyspark_service" {
   name     = local.service_name
@@ -320,8 +335,29 @@ resource "google_cloud_run_v2_service" "storyspark_service" {
         name  = "ENV"
         value = local.env_suffix
       }
+
+            # Redis connection env vars for distributed rate limiting
+      env {
+        name  = "REDIS_HOST"
+        value = module.redis.database_host
+      }
+      env {
+        name  = "REDIS_PORT"
+        value = module.redis.database_port
+      }
+      env {
+        name  = "REDIS_PASSWORD"
+        value = module.redis.database_password
+      }
+      env {
+        name  = "REDIS_USERNAME"
+        value = "default"
+      }
+      env {
+        name  = "REDIS_SSL"
+        value = "true"
+      }
     }
-    
     volumes {
       name = var.model_export_bucket_volume_name
       gcs {
@@ -337,13 +373,36 @@ resource "google_cloud_run_v2_service" "storyspark_service" {
     percent = 100
   }
 
-  # Ensure the service is created after the IAM binding
+      # Ensure the service is created after the IAM binding and Redis database
   depends_on = [
     google_storage_bucket_iam_member.cloudrun_bucket_viewer
+    module.redis
   ]
 }
 
-# Allow unauthenticated access to Cloud Run (public endpoint)
+
+# ─── Redis Cloud Configuration (delegated to redis/ module) ───
+
+# Call the redis module to provision Redis Cloud free tier
+module "redis" {
+  source = "../../redis"
+
+  database_name         = var.redis_database_name
+  cloud_provider        = var.redis_cloud_provider
+  region                = var.redis_region
+  free_plan_size_mb     = var.redis_free_plan_size_mb
+  rediscloud_api_key    = var.rediscloud_api_key
+  rediscloud_api_secret = var.rediscloud_api_secret
+}
+
+# Reference the Redis database outputs for Cloud Run env vars
+locals {
+  redis_host     = module.redis.database_host
+  redis_port     = module.redis.database_port
+  redis_password = module.redis.database_password
+}
+
+
 resource "google_cloud_run_v2_service_iam_member" "allow_unauth" {
   location = google_cloud_run_v2_service.storyspark_service.location
   project  = var.project_id
