@@ -31,11 +31,6 @@ env:
   GCP_ZONE: ${{ vars.STORYSPARK_GCP_ZONE }}
   GCP_TF_STATE_BUCKET: ${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}
 
-  # --- Redis Cloud Provider Environment Variables ---
-  # These are auto-read by the Terraform Redis Cloud provider (not as input variables)
-  REDISCLOUD_API_KEY: ${{ vars.REDIS_API_KEY }}
-  REDISCLOUD_API_SECRET: ${{ secrets.REDIS_API_SECRET }}
-
   # --- Redis Config Environment Variables (passed via -var flags) ---
   REDIS_DATABASE_NAME: ${{ vars.REDIS_DATABASE_NAME }}
   REDIS_CLOUD_PROVIDER: ${{ vars.REDIS_CLOUD_PROVIDER }}
@@ -447,10 +442,12 @@ jobs:
           -var="artifact_docker_images_repo_id=${{ env.ARTIFACT_DOCKER_REPO }}" \
           -var="model_export_bucket=${{ vars.STORYSPARK_GCP_MODELS_BUCKET}}" \
           -var="model_export_bucket_volume_name=${{ vars.STORYSPARK_GCP_MODEL_EXPORT_BUCKET_VOLUME_NAME }}" \
-          -var="redis_database_name=${{ env.REDIS_DATABASE_NAME }}" \
-          -var="redis_cloud_provider=${{ env.REDIS_CLOUD_PROVIDER }}" \
-          -var="redis_region=${{ env.REDIS_REGION }}" \
-          -var="redis_free_plan_size_mb=${{ env.REDIS_PLAN_SIZE_MB }}" \
+          -var="redis_database_name=${{ vars.REDIS_DATABASE_NAME }}" \
+          -var="redis_cloud_provider=${{ vars.REDIS_CLOUD_PROVIDER }}" \
+          -var="redis_region=${{ vars.REDIS_REGION }}" \
+          -var="redis_free_plan_size_mb=${{ vars.REDIS_PLAN_SIZE_MB }}" \
+          -var="rediscloud_api_key=${{ vars.REDIS_API_KEY }}" \
+          -var="rediscloud_api_secret=${{ secrets.REDIS_API_SECRET }}" \
           -lock-timeout=5m \
           -out=tfplan
 
