@@ -1,9 +1,6 @@
 # app/main.py
 import os
-import atexit
-import asyncio
 import logging
-from typing import AsyncGenerator
 
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
@@ -24,44 +21,13 @@ from app.books import (
 logger = logging.getLogger("app-log")
 
 
-async def create_db_pool():
-    class DB:
-        async def close(self):
-            pass
-    await asyncio.sleep(0)
-    return DB()
-
-
-async def close_db_pool(db):
-    await db.close()
-
-
-async def get_db(request: Request) -> AsyncGenerator:
-    app = request.app
-    if not hasattr(app.state, "db") or app.state.db is None:
-        app.state.db = await create_db_pool()
-
-        def _sync_close():
-            try:
-                loop = asyncio.get_event_loop()
-            except RuntimeError:
-                loop = None
-            if loop and loop.is_running():
-                loop.create_task(close_db_pool(app.state.db))
-            else:
-                asyncio.run(close_db_pool(app.state.db))
-        atexit.register(_sync_close)
-
-    yield app.state.db
-
-
 def create_app() -> FastAPI:
     app = FastAPI(
         title="StorySpark API",
         version="0.1",
         description=(
             "Book recommendation and management API.\n\n"
-                        "**Rate Limiting:** All API endpoints — including `/healthz` — are rate-limited to "
+                        "**Rate Limiting:** All API endpoints are rate-limited to "
             "100 requests per hour per client.\n\n"
             "A `429 Too Many Requests` response with a "
             "`Retry-After` header is returned when the limit is exceeded."
@@ -155,7 +121,7 @@ def create_app() -> FastAPI:
             desc = schema["info"]["description"]
             if "Rate Limiting" not in desc:
                 schema["info"]["description"] = desc + (
-                    "\n\n**Rate Limiting:** All API endpoints — including `/healthz` — are "
+                    "\n\n**Rate Limiting:** All API endpoints are "
                     "rate-limited to 100 requests per hour per client. "
                     "A `429 Too Many Requests` response with a "
                     "`Retry-After` header is returned when the limit "

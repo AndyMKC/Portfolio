@@ -495,7 +495,7 @@
         <h3>Per Call</h3>
         We are hosting our APIs in Google Cloud Run as serverless compute.  Upon starting up, it mounts the Google Cloud Storage that contains the model artifacts via Cloud Storage Fuse.
         
-        When new books are added, it retrieves metadata about the book from various locations such as <a>Open Library</a>.  Embeddings are then generated for each of the metadata strings that the book is associated with and stored into SQL tables inside Google BigQuery.
+        When new books are added, it retrieves metadata about the book from various locations such as <a>Open Library</a>.  Embeddings are then generated for each of the metadata strings that the book is associated with and stored inside Google BigQuery.
         
         When the user asks for a recommendation to a book similar to their query text, it generates embeddings from their query text, filters the results to the set of books that they own, and then calculates the cosine similarity between the metadata text and the query text.  For now, the highest similarity score of each metadata text per book is kept and returned (within the limit of a certain number of books).  The user (or in the future, the agent!) can decide which book to read based on the "freshness" (how long ago it was read) and the similarity score.
       </details>
