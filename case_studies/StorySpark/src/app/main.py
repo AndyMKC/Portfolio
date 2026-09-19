@@ -21,17 +21,57 @@ from app.books import (
 logger = logging.getLogger("app-log")
 
 
+# ─── Shared Rate Limit Constants ──────────────────────────────────────
+# Single source of truth for rate limit config used by both middleware and OpenAPI
+RATE_LIMIT_CONFIG = {
+    "limit": 100,
+    "window_seconds": 3600,
+    "exempt_paths": {"/healthz"},  # paths fully exempt from rate limiting
+}
+
+# Docs paths that are always exempt (auto-generated)
+DOCS_PATHS = {"/docs", "/openapi", "/redoc"}
+
+# 429 response headers returned by middleware and documented in OpenAPI
+RATE_LIMIT_HEADERS = {
+    "Retry-After": {"description": "Seconds to wait before retrying", "schema": {"type": "integer"}},
+    "X-RateLimit-Limit": {"description": "Maximum number of requests per window", "schema": {"type": "integer"}},
+    "X-RateLimit-Remaining": {"description": "Number of requests remaining in the window", "schema": {"type": "integer"}},
+}
+
+# 429 response body schema
+RATE_LIMIT_429_RESPONSE = {
+    "description": "Rate limit exceeded - too many requests",
+    "headers": RATE_LIMIT_HEADERS,
+}
+
+# Base API description (used in app and OpenAPI)
+BASE_DESCRIPTION = "Book recommendation and management API."
+
+# Rate limit description used in both app description and OpenAPI info
+RATE_LIMIT_DESCRIPTION = (
+    f"\n\n**Rate Limiting:** All API endpoints are rate-limited to "
+    f"{RATE_LIMIT_CONFIG['limit']} requests per "
+    f"{RATE_LIMIT_CONFIG['window_seconds'] // 60} minutes per client. "
+    "A `429 Too Many Requests` response with a "
+    "`Retry-After` header is returned when the limit is exceeded."
+)
+
+APP_DESCRIPTION = BASE_DESCRIPTION + RATE_LIMIT_DESCRIPTION
+
+
+def is_rate_limited_path(path: str) -> bool:
+    """Check if a path should be rate limited (matches middleware logic)."""
+    return path not in RATE_LIMIT_CONFIG["exempt_paths"] and not any(
+        path.startswith(p) for p in DOCS_PATHS
+    )
+
+
 def create_app() -> FastAPI:
     app = FastAPI(
         title="StorySpark API",
         version="0.1",
-        description=(
-            "Book recommendation and management API.\n\n"
-                        "**Rate Limiting:** All API endpoints are rate-limited to "
-            "100 requests per hour per client.\n\n"
-            "A `429 Too Many Requests` response with a "
-            "`Retry-After` header is returned when the limit is exceeded."
-        ),
+        description=APP_DESCRIPTION,
     )
     app.state.cloud_logging_client = setup_cloud_logging()
     app.state.rate_limiter = get_rate_limiter()
@@ -42,12 +82,7 @@ def create_app() -> FastAPI:
         config = rate_limiter.config
 
         path = request.url.path
-        if (
-            path in config.exempt_paths
-            or path.startswith("/docs")
-            or path.startswith("/openapi")
-            or path.startswith("/redoc")
-        ):
+        if not is_rate_limited_path(path):
             return await call_next(request)
 
         client_id = get_client_identifier(request)
@@ -117,28 +152,15 @@ def create_app() -> FastAPI:
 
         if "info" in schema:
             if "description" not in schema["info"]:
-                schema["info"]["description"] = "Book recommendation and management API."
+                schema["info"]["description"] = BASE_DESCRIPTION
             desc = schema["info"]["description"]
             if "Rate Limiting" not in desc:
-                schema["info"]["description"] = desc + (
-                    "\n\n**Rate Limiting:** All API endpoints are "
-                    "rate-limited to 100 requests per hour per client. "
-                    "A `429 Too Many Requests` response with a "
-                    "`Retry-After` header is returned when the limit "
-                    "is exceeded."
-                )
-
-        rate_limit_response = {
-            "description": "Rate limit exceeded - too many requests",
-            "headers": {
-                "Retry-After": {"description": "Seconds to wait before retrying", "schema": {"type": "integer"}},
-                "X-RateLimit-Limit": {"description": "Maximum number of requests per window", "schema": {"type": "integer"}},
-                "X-RateLimit-Remaining": {"description": "Number of requests remaining in the window", "schema": {"type": "integer"}},
-            },
-        }
+                schema["info"]["description"] = desc + RATE_LIMIT_DESCRIPTION
 
         paths = schema.get("paths", {})
-        for path_item in paths.values():
+        for path, path_item in paths.items():
+            if not is_rate_limited_path(path):
+                continue  # skip docs paths and exempt paths
             for method_name in list(path_item.keys()):
                 if not isinstance(method_name, str):
                     continue
@@ -146,7 +168,7 @@ def create_app() -> FastAPI:
                     continue
                 spec = path_item[method_name]
                 if isinstance(spec, dict):
-                    spec.setdefault("responses", {})["429"] = rate_limit_response
+                    spec.setdefault("responses", {})["429"] = RATE_LIMIT_429_RESPONSE
 
         app.openapi_schema = schema
         return schema
