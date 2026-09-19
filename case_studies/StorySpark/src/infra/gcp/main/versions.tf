@@ -2,7 +2,7 @@ terraform {
   required_version = ">= 1.2.0"
 
   # The GCS backend configuration is left empty here.
-  # The bucket name and prefix will be injected via the 
+  # The bucket name and prefix will be injected via the
   # 'init' command in GitHub Actions using -backend-config.
   backend "gcs" {}
 

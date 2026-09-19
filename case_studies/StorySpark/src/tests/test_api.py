@@ -13,6 +13,11 @@ from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.rate_limiter import (
+    get_rate_limiter,
+    init_rate_limiter,
+    RateLimitConfig,
+)
 
 
 # --- Fixtures ----------------------------------------------------------
@@ -109,6 +114,35 @@ def log_capture():
     logger.addHandler(handler)
     yield records
     logger.removeHandler(handler)
+
+
+# --- Rate-limiting fixtures ---------------------------------------------
+
+@pytest.fixture(autouse=True)
+def reset_rate_limiter():
+    """Reset the rate limiter before and after each test for isolation."""
+    limiter = get_rate_limiter()
+    limiter.reset()
+    yield
+    limiter.reset()
+
+
+@pytest.fixture
+def low_rate_limit():
+    """Set a low rate limit (3 requests) for testing rate-limit behavior."""
+    limiter = init_rate_limiter(
+        RateLimitConfig(
+            limit=3,
+            window_seconds=3600,
+            exempt_paths={"/healthz"},
+        )
+    )
+    app.state.rate_limiter = limiter
+    yield limiter
+    # Restore default config
+    init_rate_limiter(RateLimitConfig.from_env())
+    app.state.rate_limiter = get_rate_limiter()
+    get_rate_limiter().reset()
 
 
 # --- Auth tests ---------------------------------------------------------
@@ -252,3 +286,138 @@ class TestMiddlewareLogging:
             "API call: GET /books" in m and "unauthenticated" in m.lower()
             for m in messages
         )
+
+
+# --- Rate limiting -------------------------------------------------------
+
+class TestRateLimiting:
+    """Verify rate limiting on all API endpoints."""
+
+    def test_healthz_is_exempt(self, client, low_rate_limit):
+        """/healthz should not be affected by rate limiting."""
+        for i in range(10):
+            r = client.get("/healthz")
+            assert r.status_code == 200
+
+    def test_docs_not_rate_limited(self, client, low_rate_limit):
+        """Swagger UI and OpenAPI JSON should not be rate limited."""
+        for i in range(10):
+            r = client.get("/docs")
+            assert r.status_code == 200
+            r = client.get("/openapi.json")
+            assert r.status_code == 200
+
+    def test_requests_allowed_under_limit(self, client, low_rate_limit,
+                                          fake_idinfo_allowed, mock_bq_patcher):
+        """Requests within the limit (3) should succeed."""
+        with patch("app.auth.id_token.verify_oauth2_token",
+                   return_value=fake_idinfo_allowed):
+            for i in range(3):
+                r = client.get("/books",
+                               headers={"Authorization": "Bearer fake"})
+                assert r.status_code == 200
+
+    def test_rate_limit_returns_429(self, client, low_rate_limit,
+                                    fake_idinfo_allowed, mock_bq_patcher):
+        """The 4th request should return 429 Too Many Requests."""
+        with patch("app.auth.id_token.verify_oauth2_token",
+                   return_value=fake_idinfo_allowed):
+            # First 3 requests are allowed
+            for i in range(3):
+                r = client.get("/books",
+                               headers={"Authorization": "Bearer fake"})
+                assert r.status_code == 200
+            # 4th request should be rate limited
+            r = client.get("/books",
+                           headers={"Authorization": "Bearer fake"})
+            assert r.status_code == 429
+            assert "Retry-After" in r.headers
+
+    def test_rate_limit_headers_on_success(self, client, low_rate_limit,
+                                           fake_idinfo_allowed, mock_bq_patcher):
+        """Successful responses should include rate-limit headers."""
+        with patch("app.auth.id_token.verify_oauth2_token",
+                   return_value=fake_idinfo_allowed):
+            r = client.get("/books",
+                           headers={"Authorization": "Bearer fake"})
+        assert r.status_code == 200
+        assert r.headers["X-RateLimit-Limit"] == "3"
+        assert r.headers["X-RateLimit-Remaining"] == "2"
+
+    def test_rate_limit_headers_on_429(self, client, low_rate_limit,
+                                       fake_idinfo_allowed, mock_bq_patcher):
+        """429 responses should include rate-limit headers."""
+        with patch("app.auth.id_token.verify_oauth2_token",
+                   return_value=fake_idinfo_allowed):
+            for i in range(3):
+                client.get("/books",
+                           headers={"Authorization": "Bearer fake"})
+            r = client.get("/books",
+                           headers={"Authorization": "Bearer fake"})
+        assert r.status_code == 429
+        assert r.headers["X-RateLimit-Limit"] == "3"
+        assert r.headers["X-RateLimit-Remaining"] == "0"
+        assert "Retry-After" in r.headers
+
+    def test_rate_limit_429_response_body(self, client, low_rate_limit,
+                                         fake_idinfo_allowed, mock_bq_patcher):
+        """429 response body should include retry_after_seconds."""
+        with patch("app.auth.id_token.verify_oauth2_token",
+                   return_value=fake_idinfo_allowed):
+            for i in range(3):
+                client.get("/books",
+                           headers={"Authorization": "Bearer fake"})
+            r = client.get("/books",
+                           headers={"Authorization": "Bearer fake"})
+        assert r.status_code == 429
+        data = r.json()
+        assert "detail" in data
+        assert "Rate limit exceeded" in data["detail"]
+        assert "retry_after_seconds" in data
+        assert data["retry_after_seconds"] > 0
+
+    def test_per_client_rate_limits(self, client, low_rate_limit,
+                                    fake_idinfo_allowed, mock_bq_patcher):
+        """Different clients (by IP) have separate rate limit buckets."""
+        with patch("app.auth.id_token.verify_oauth2_token",
+                   return_value=fake_idinfo_allowed):
+            # Exhaust limit for client 1 (default IP, no X-Forwarded-For)
+            for i in range(3):
+                r = client.get("/books",
+                               headers={"Authorization": "Bearer fake"})
+                assert r.status_code == 200
+            # Client 1 is now rate limited
+            r = client.get("/books",
+                           headers={"Authorization": "Bearer fake"})
+            assert r.status_code == 429
+            # Client 2 (different IP via X-Forwarded-For) still allowed
+            r = client.get(
+                "/books",
+                headers={"Authorization": "Bearer fake",
+                         "X-Forwarded-For": "10.0.0.2"},
+            )
+            assert r.status_code == 200
+
+    def test_rate_limit_applies_to_all_endpoints(self, client, low_rate_limit,
+                                                  fake_idinfo_allowed,
+                                                  mock_bq_patcher, mock_embeddings,
+                                                  mock_metadata_helpers):
+        """Rate limiting applies to POST endpoints too (e.g. /books)."""
+        with patch("app.auth.id_token.verify_oauth2_token",
+                   return_value=fake_idinfo_allowed):
+            for i in range(3):
+                r = client.post(
+                    "/books",
+                    headers={"Authorization": "Bearer fake"},
+                    json={"owner": "spoofed",
+                          "isbns": [{"isbn": "978-0448487311"}]},
+                )
+                assert r.status_code == 201
+            # 4th request should be rate limited
+            r = client.post(
+                "/books",
+                headers={"Authorization": "Bearer fake"},
+                json={"owner": "spoofed",
+                      "isbns": [{"isbn": "978-0448487311"}]},
+            )
+            assert r.status_code == 429
