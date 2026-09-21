@@ -375,7 +375,7 @@ resource "google_cloud_run_v2_service" "storyspark_service" {
 
       # Ensure the service is created after the IAM binding and Redis database
   depends_on = [
-    google_storage_bucket_iam_member.cloudrun_bucket_viewer
+    google_storage_bucket_iam_member.cloudrun_bucket_viewer,
     module.redis
   ]
 }
