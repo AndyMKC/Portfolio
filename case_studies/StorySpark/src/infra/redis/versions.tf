@@ -24,8 +24,8 @@ provider "rediscloud" {
 # Data source to find the free Essentials plan
 # Uses size + cloud_provider + region to find the free tier plan (30MB)
 data "rediscloud_essentials_plan" "free_plan" {
-  cloud_provider          = var.cloud_provider
-  region                  = var.region
-  size                    = var.free_plan_size_mb
-  size_measurement_unit   = "MB"
+  cloud_provider        = var.cloud_provider
+  region                = var.region
+  size                  = var.free_plan_size_mb
+  size_measurement_unit = "MB"
 }

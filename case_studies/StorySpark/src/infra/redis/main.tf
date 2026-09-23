@@ -3,8 +3,8 @@
 
 # Create an Essentials subscription using the free plan
 resource "rediscloud_essentials_subscription" "storyspark_redis" {
-  name      = var.database_name
-  plan_id   = data.rediscloud_essentials_plan.free_plan.id
+  name    = var.database_name
+  plan_id = data.rediscloud_essentials_plan.free_plan.id
 }
 
 # Create a database within the Essentials subscription
@@ -14,7 +14,7 @@ resource "rediscloud_essentials_database" "storyspark_redis_db" {
   data_persistence    = "none"
   replication         = false
   enable_default_user = true
-  password            = ""  # Auto-generated if empty string
+  password            = "" # Auto-generated if empty string
 }
 
 # Outputs are defined in outputs.tf

@@ -1,13 +1,13 @@
 locals {
   # stable account_id prefixes must be 6-30 chars, lowercase, digits and hyphens; adjust if needed
-  sa_bq_prefix    = "storyspark-bq-vertex"
-  sa_run_prefix   = "storyspark-cloudrun"
+  sa_bq_prefix  = "storyspark-bq-vertex"
+  sa_run_prefix = "storyspark-cloudrun"
 }
 
 resource "google_storage_bucket" "tfstate_bucket" {
-  name          = var.tfstate_bucket_name
-  location      = var.region
-  force_destroy = false
+  name                        = var.tfstate_bucket_name
+  location                    = var.region
+  force_destroy               = false
   uniform_bucket_level_access = true
 
   versioning {
@@ -64,14 +64,14 @@ resource "google_storage_bucket" "tfstate_bucket" {
 # Dev service accounts (created only when create_dev = true)
 resource "google_service_account" "bq_vertex_dev" {
   count        = var.create_dev ? 1 : 0
-  account_id   = "${local.sa_bq_prefix}-${var.dev_suffix}"   # e.g. storyspark-bq-vertex-dev
+  account_id   = "${local.sa_bq_prefix}-${var.dev_suffix}" # e.g. storyspark-bq-vertex-dev
   display_name = "StorySpark BigQuery/Vertex Service Account (dev)"
   project      = var.project_id
 }
 
 resource "google_service_account" "cloudrun_dev" {
   count        = var.create_dev ? 1 : 0
-  account_id   = "${local.sa_run_prefix}-${var.dev_suffix}"  # e.g. storyspark-cloudrun-dev
+  account_id   = "${local.sa_run_prefix}-${var.dev_suffix}" # e.g. storyspark-cloudrun-dev
   display_name = "StorySpark Cloud Run Service Account (dev)"
   project      = var.project_id
 }
@@ -79,7 +79,7 @@ resource "google_service_account" "cloudrun_dev" {
 # Prod service accounts (created only when create_prod = true)
 resource "google_service_account" "bq_vertex_prod" {
   count        = var.create_prod ? 1 : 0
-  account_id   = "${local.sa_bq_prefix}-${var.prod_suffix}"  # e.g. storyspark-bq-vertex-prod
+  account_id   = "${local.sa_bq_prefix}-${var.prod_suffix}" # e.g. storyspark-bq-vertex-prod
   display_name = "StorySpark BigQuery/Vertex Service Account (prod)"
   project      = var.project_id
 }

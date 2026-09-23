@@ -2,11 +2,11 @@
 # locals {
 #   # Base name for the dataset structure
 #   dataset_base_id = "book_inventory_vectors"
-  
+
 #   # The full, environment-prefixed dataset IDs
 #   dataset_dev_id  = "dev_${local.dataset_base_id}"
 #   dataset_prod_id = "prod_${local.dataset_base_id}"
-  
+
 #   target_dataset_id = var.git_branch == "main" ? local.dataset_prod_id : local.dataset_dev_id
 
 #   model_base_id = "book_metadata_embedding_remote"
@@ -21,22 +21,22 @@
 
 locals {
   # 1) Original branch name converted to lowercase so uppercase letters map to lowercase
-  step_lower    = lower(var.git_branch)
+  step_lower = lower(var.git_branch)
 
   # 2) Replace any character that is not a lowercase letter, digit, or underscore with an underscore
-  step_clean    = replace(local.step_lower, "/[^a-z0-9_]/", "_")
+  step_clean = replace(local.step_lower, "/[^a-z0-9_]/", "_")
 
   # 3) Collapse runs of multiple underscore into a single underscore to avoid "_" sequences
   step_collapse = replace(local.step_clean, "/_{2,}/", "_")
 
   # 4) Trim leading and trailing underscore that may have been introduced by replacements
-  step_trim     = replace(local.step_collapse, "/^_+|_+$/", "")
+  step_trim = replace(local.step_collapse, "/^_+|_+$/", "")
 
   # 5) Provide a fallback when the result is empty and truncate to a safe max length (100 chars)
-  step_final    = length(local.step_trim) == 0 ? "unnamed" : substr(local.step_trim, 0, 100)
+  step_final = length(local.step_trim) == 0 ? "unnamed" : substr(local.step_trim, 0, 100)
 
   # 6) Ensure the first character is a lowercase letter; if not, prefix with "s" and keep length safe
-  branch_safe   = replace(local.step_final, "/^[^a-z]/", "s${substr(local.step_final, 0, 99)}")
+  branch_safe = replace(local.step_final, "/^[^a-z]/", "s${substr(local.step_final, 0, 99)}")
 
   # 7) Environment suffix: "prod" for main branch, otherwise "dev_<branch_safe>"
   # NOTE:  Originally it was:
@@ -47,46 +47,46 @@ locals {
   env_suffix  = var.git_branch == "main" ? "prod" : "dev"
 
   # 8) Dataset id combined with environment suffix
-  dataset_id_dev     = "${var.base_dataset_id}_${local.dev_suffix}"
-  dataset_id_prod    = "${var.base_dataset_id}_${local.prod_suffix}"
+  dataset_id_dev  = "${var.base_dataset_id}_${local.dev_suffix}"
+  dataset_id_prod = "${var.base_dataset_id}_${local.prod_suffix}"
 
   # 9) Source and embeddings table ids combined with environment suffix
-  source_table_dev   = "${var.base_source_table_id}_${local.dev_suffix}"
-  source_table_prod  = "${var.base_source_table_id}_${local.prod_suffix}"
-  embed_table_dev    = "${var.base_embeddings_table_id}_${local.dev_suffix}"
-  embed_table_prod   = "${var.base_embeddings_table_id}_${local.prod_suffix}"
+  source_table_dev  = "${var.base_source_table_id}_${local.dev_suffix}"
+  source_table_prod = "${var.base_source_table_id}_${local.prod_suffix}"
+  embed_table_dev   = "${var.base_embeddings_table_id}_${local.dev_suffix}"
+  embed_table_prod  = "${var.base_embeddings_table_id}_${local.prod_suffix}"
 
   # These accounts need to be provisioned by the bootstrap_backend
-  is_prod                  = var.git_branch == "main"
-  prod_dev_env_suffix      = local.is_prod ? "prod" : "dev"
-  sa_bq_vertex_dev         = "storyspark-bq-vertex-${local.dev_suffix}"
-  sa_bq_vertex_prod        = "storyspark-bq-vertex-${local.prod_suffix}"
+  is_prod             = var.git_branch == "main"
+  prod_dev_env_suffix = local.is_prod ? "prod" : "dev"
+  sa_bq_vertex_dev    = "storyspark-bq-vertex-${local.dev_suffix}"
+  sa_bq_vertex_prod   = "storyspark-bq-vertex-${local.prod_suffix}"
   # NOTE:  I don't think for now we need a dev Cloud Run account since we are only debugging locally.  If we ever need a preview branch, then us.
-  sa_cloudrun              = "storyspark-cloudrun-${local.prod_dev_env_suffix}"
-  service_account_suffix   = "${var.project_id}.iam.gserviceaccount.com"
-  
+  sa_cloudrun            = "storyspark-cloudrun-${local.prod_dev_env_suffix}"
+  service_account_suffix = "${var.project_id}.iam.gserviceaccount.com"
+
   # For now, have all dev branches share the same service for convenience
-  service_name             = "storyspark-service-${local.prod_dev_env_suffix}"
+  service_name = "storyspark-service-${local.prod_dev_env_suffix}"
 
   # Both dev and prod should share the same schema
   source_schema = jsonencode([
-    { "name": "id",            "type": "STRING",    "mode": "REQUIRED" },
-    { "name": "owner",         "type": "STRING",    "mode": "REQUIRED" },
-    { "name": "isbn",          "type": "STRING",    "mode": "REQUIRED" },
-    { "name": "title",         "type": "STRING",    "mode": "REQUIRED" },
-    { "name": "authors",       "type": "STRING",    "mode": "REPEATED" },
-    { "name": "last_read",     "type": "TIMESTAMP", "mode": "NULLABLE" },
-    { "name": "created_at",    "type": "TIMESTAMP", "mode": "REQUIRED" }
+    { "name" : "id", "type" : "STRING", "mode" : "REQUIRED" },
+    { "name" : "owner", "type" : "STRING", "mode" : "REQUIRED" },
+    { "name" : "isbn", "type" : "STRING", "mode" : "REQUIRED" },
+    { "name" : "title", "type" : "STRING", "mode" : "REQUIRED" },
+    { "name" : "authors", "type" : "STRING", "mode" : "REPEATED" },
+    { "name" : "last_read", "type" : "TIMESTAMP", "mode" : "NULLABLE" },
+    { "name" : "created_at", "type" : "TIMESTAMP", "mode" : "REQUIRED" }
   ])
 
   embeddings_schema = jsonencode([
-    { "name": "isbn",                   "type": "STRING",    "mode": "REQUIRED" },
-    { "name": "content",                "type": "STRING",    "mode": "REQUIRED" },
-    { "name": "embedding_raw",          "type": "FLOAT64",   "mode": "REPEATED" },
-    { "name": "embedding_normalized",   "type": "FLOAT64",   "mode": "REPEATED" },
-    { "name": "model_name",             "type": "STRING",    "mode": "REQUIRED" },
-    { "name": "created_at",             "type": "TIMESTAMP", "mode": "REQUIRED" },
-    { "name": "owner",                  "type": "STRING",    "mode": "NULLABLE" }
+    { "name" : "isbn", "type" : "STRING", "mode" : "REQUIRED" },
+    { "name" : "content", "type" : "STRING", "mode" : "REQUIRED" },
+    { "name" : "embedding_raw", "type" : "FLOAT64", "mode" : "REPEATED" },
+    { "name" : "embedding_normalized", "type" : "FLOAT64", "mode" : "REPEATED" },
+    { "name" : "model_name", "type" : "STRING", "mode" : "REQUIRED" },
+    { "name" : "created_at", "type" : "TIMESTAMP", "mode" : "REQUIRED" },
+    { "name" : "owner", "type" : "STRING", "mode" : "NULLABLE" }
   ])
 }
 
@@ -130,15 +130,15 @@ resource "google_artifact_registry_repository" "docker_repo" {
       package_name_prefixes = ["andymkc/portfolio/prod/"]
     }
   }
-  
+
   # Policy 2: Delete everything else very quickly to save storage space
   cleanup_policies {
     id     = "delete-everything-quickly"
     action = "DELETE"
     condition {
-      older_than   = "1s"
+      older_than = "1s"
     }
-  }  
+  }
 }
 
 resource "google_project_service" "iam" {
@@ -247,7 +247,7 @@ resource "google_bigquery_dataset_iam_member" "writer" {
   project    = var.project_id
   dataset_id = google_bigquery_dataset.embeddings_prod.dataset_id
   role       = "roles/bigquery.dataEditor"
-  member  = "serviceAccount:${local.sa_cloudrun}@${local.service_account_suffix}"
+  member     = "serviceAccount:${local.sa_cloudrun}@${local.service_account_suffix}"
 }
 
 
@@ -278,7 +278,7 @@ resource "rediscloud_essentials_database" "storyspark_redis_db" {
   data_persistence    = "none"
   replication         = false
   enable_default_user = true
-  password            = ""  # Auto-generated if empty string
+  password            = "" # Auto-generated if empty string
 }
 
 # Cloud Run service
@@ -293,23 +293,23 @@ resource "google_cloud_run_v2_service" "storyspark_service" {
 
     # Service account is now directly under 'template' in V2
     service_account = "${local.sa_cloudrun}@${local.service_account_suffix}"
-    
+
     containers {
       image = var.cloud_run_image
-      
+
       resources {
         # Using the simplified V2 resource limits block
         limits = {
           memory = "1Gi"
         }
       }
-      
+
       ports {
         container_port = 8080
       }
-      
+
       volume_mounts {
-        name       = var.model_export_bucket_volume_name
+        name = var.model_export_bucket_volume_name
         # Refer to the docker file for the prod environment to see the WORKDIR
         mount_path = "/src/${var.model_export_bucket_volume_name}"
       }
@@ -336,7 +336,7 @@ resource "google_cloud_run_v2_service" "storyspark_service" {
         value = local.env_suffix
       }
 
-            # Redis connection env vars for distributed rate limiting
+      # Redis connection env vars for distributed rate limiting
       env {
         name  = "REDIS_HOST"
         value = module.redis.database_host
@@ -373,9 +373,9 @@ resource "google_cloud_run_v2_service" "storyspark_service" {
     percent = 100
   }
 
-      # Ensure the service is created after the IAM binding and Redis database
+  # Ensure the service is created after the IAM binding and Redis database
   depends_on = [
-    google_storage_bucket_iam_member.cloudrun_bucket_viewer
+    google_storage_bucket_iam_member.cloudrun_bucket_viewer,
     module.redis
   ]
 }
