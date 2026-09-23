@@ -17,6 +17,12 @@ terraform {
       source  = "hashicorp/google-beta"
       version = "~> 7.13.0"
     }
+
+    # Required for redis module
+    rediscloud = {
+      source  = "RedisLabs/rediscloud"
+      version = "~> 1.0"
+    }
   }
 }
 
