@@ -446,7 +446,7 @@ jobs:
           -var="redis_cloud_provider=${{ vars.REDIS_CLOUD_PROVIDER }}" \
           -var="redis_region=${{ vars.REDIS_REGION }}" \
           -var="redis_free_plan_size_mb=${{ vars.REDIS_PLAN_SIZE_MB }}" \
-          -var="rediscloud_api_key=${{ vars.REDIS_API_KEY }}" \
+          -var="rediscloud_api_key=${{ secrets.REDIS_API_ACCOUNT_KEY }}" \
           -var="rediscloud_api_secret=${{ secrets.REDIS_API_SECRET }}" \
           -lock-timeout=5m \
           -out=tfplan
