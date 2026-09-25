@@ -266,21 +266,6 @@ resource "google_storage_bucket" "model_export_bucket" {
   uniform_bucket_level_access = true
 }
 
-# Redis Cloud Essentials subscription and database for distributed rate limiting
-resource "rediscloud_essentials_subscription" "storyspark_redis" {
-  name    = var.redis_database_name
-  plan_id = data.rediscloud_essentials_plan.free_plan.id
-}
-
-resource "rediscloud_essentials_database" "storyspark_redis_db" {
-  subscription_id     = rediscloud_essentials_subscription.storyspark_redis.id
-  name                = var.redis_database_name
-  data_persistence    = "none"
-  replication         = false
-  enable_default_user = true
-  password            = "" # Auto-generated if empty string
-}
-
 # Cloud Run service
 resource "google_cloud_run_v2_service" "storyspark_service" {
   name     = local.service_name
