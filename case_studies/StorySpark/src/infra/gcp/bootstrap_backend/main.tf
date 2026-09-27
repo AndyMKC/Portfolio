@@ -44,16 +44,15 @@ resource "google_storage_bucket" "tfstate_bucket" {
     }
   }
 
-  # Rule to clean up ABANDONED CURRENT (LIVE) STATE FILES
-  # This targets the current (live) version of *any* state file (main or feature) 
-  # that hasn't been updated (creating a new version) in [age] days.
+  # Rule to clean up OLD NON-CURRENT VERSIONS only
+  # Keeps the current (live) version forever, only deletes superseded versions
   lifecycle_rule {
     action {
       type = "Delete"
     }
     condition {
-      # Deletes the current version if its age exceeds 90 days.
-      age = 90
+      # Delete non-current versions older than 90 days
+      days_since_noncurrent_time = 90
     }
   }
 }
