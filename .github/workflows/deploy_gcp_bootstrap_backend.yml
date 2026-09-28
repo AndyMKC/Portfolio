@@ -3,14 +3,19 @@ name: 'GCP Terraform Backend Bootstrap'
 on:
   # Allows you to run this workflow manually from the GitHub Actions tab
   workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "YES" to confirm bootstrap deployment'
+        required: true
+        type: string
 
 # The job will use the Service Account key to authenticate and provision the GCS bucket.
 jobs:
   bootstrap_gcs:
     name: 'GCS State Bucket Setup'
     runs-on: ubuntu-latest
-    # This file should only be run once and you better have a good reason to run it again
-    if: github.ref == 'refs/heads/this_branch_should_not_exist'
+    # Only run on main branch AND when confirm input is exactly "YES"
+    if: github.ref == 'refs/heads/main' && github.event.inputs.confirm == 'YES'
     environment: production # Recommended practice for apply steps
 
     # Define the repository variables as environment variables for Terraform
