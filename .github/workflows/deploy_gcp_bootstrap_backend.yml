@@ -55,7 +55,7 @@ jobs:
       - name: Terraform Plan
         id: plan
         # Combined the run command into a single line to avoid issues with shell line continuation (\)
-        run: terraform plan -var="project_id=${{ env.GCP_PROJECT_ID }}" -var="region=${{ env.GCP_REGION }}" -var="bucket_name=${{ env.GCP_BUCKET_NAME }}" -out=tfplan
+        run: terraform plan -var="project_id=${{ env.GCP_PROJECT_ID }}" -var="region=${{ env.GCP_REGION }}" -var="zone=${{ env.GCP_REGION }}" -var="tfstate_bucket_name=${{ env.GCP_BUCKET_NAME }}" -out=tfplan
         working-directory: ${{ env.TF_WORKING_DIR }}
 
       - name: Terraform Apply
