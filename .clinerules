@@ -1,0 +1,6 @@
+# General Environment & Response Guidelines
+
+- **Environment:** Windows with WSL. All commands run in cmd.exe by default — prefix with `wsl` (e.g., `wsl ls -la /mnt/d/...`) or use `bash -c '...'` for Bash-compatible commands. Use Linux paths (`/mnt/d/...`) not Windows paths (`D:\...`).
+- **Tone & Length:** Be extremely brief. Omit filler words, pleasantries, and unnecessary preamble. Use just enough words to get the point across and the necessary explanations.
+- **Git Restrictions:** You can only execute git commands that allow you to examine history and understand historical changes.  Never execute any git commands which may change the state of the files on this machine nor change the branch it is on unless explicitly directed to.
+- **Formatting:** When presenting structured information, comparisons, or multi-item data, always prefer using a Markdown table format.
