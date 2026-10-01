@@ -13,6 +13,7 @@ jobs:
   bootstrap_gcs:
     name: 'GCS State Bucket Setup'
     runs-on: ubuntu-latest
+    # Only run on main branch AND when confirm input is exactly "YES"
     if: github.ref == 'refs/heads/main' && github.event.inputs.confirm == 'YES'
     environment: production # Recommended practice for apply steps
 
