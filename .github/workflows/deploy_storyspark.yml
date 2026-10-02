@@ -376,7 +376,9 @@ jobs:
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
       with:
-        terraform_version: 1.4.6
+        # 1.5.0+ is required for `import` blocks, which this stack uses to
+        # adopt pre-existing BigQuery tables.
+        terraform_version: 1.8.0
 
     - name: Calculate Branch info
       id: tf_prefixes
@@ -478,7 +480,8 @@ jobs:
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
       with:
-        terraform_version: 1.4.6
+        # Must match the version used to create the plan artifact.
+        terraform_version: 1.8.0
 
     - name: Download Terraform Plan Artifact
       uses: actions/download-artifact@v4
