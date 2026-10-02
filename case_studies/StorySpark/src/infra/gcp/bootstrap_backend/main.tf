@@ -4,6 +4,32 @@ locals {
   sa_run_prefix = "storyspark-cloudrun"
 }
 
+# Import existing resources on first run (idempotent)
+import {
+  to = google_storage_bucket.tfstate_bucket
+  id = var.tfstate_bucket_name
+}
+
+import {
+  to = google_service_account.bq_vertex_dev[0]
+  id = "projects/${var.project_id}/serviceAccounts/${local.sa_bq_prefix}-${var.dev_suffix}@${var.project_id}.iam.gserviceaccount.com"
+}
+
+import {
+  to = google_service_account.cloudrun_dev[0]
+  id = "projects/${var.project_id}/serviceAccounts/${local.sa_run_prefix}-${var.dev_suffix}@${var.project_id}.iam.gserviceaccount.com"
+}
+
+import {
+  to = google_service_account.bq_vertex_prod[0]
+  id = "projects/${var.project_id}/serviceAccounts/${local.sa_bq_prefix}-${var.prod_suffix}@${var.project_id}.iam.gserviceaccount.com"
+}
+
+import {
+  to = google_service_account.cloudrun_prod[0]
+  id = "projects/${var.project_id}/serviceAccounts/${local.sa_run_prefix}-${var.prod_suffix}@${var.project_id}.iam.gserviceaccount.com"
+}
+
 resource "google_storage_bucket" "tfstate_bucket" {
   name                        = var.tfstate_bucket_name
   location                    = var.region
