@@ -4,12 +4,20 @@ locals {
   sa_run_prefix = "storyspark-cloudrun"
 }
 
-# Import existing resources on first run (idempotent)
+# This stack has no backend block: it creates the very bucket that every other
+# stack uses for remote state, so its own state cannot live there. State is
+# therefore local and discarded when the CI runner is torn down, which means
+# every run starts empty and would otherwise attempt to create resources that
+# already exist. These import blocks re-adopt them on each run, making the
+# apply idempotent without persisting state.
+
 import {
   to = google_storage_bucket.tfstate_bucket
   id = var.tfstate_bucket_name
 }
 
+# NOTE: import blocks do not support count/for_each, so these are unconditional.
+# That means create_dev / create_prod must stay true for this stack to apply.
 import {
   to = google_service_account.bq_vertex_dev[0]
   id = "projects/${var.project_id}/serviceAccounts/${local.sa_bq_prefix}-${var.dev_suffix}@${var.project_id}.iam.gserviceaccount.com"
@@ -40,15 +48,16 @@ resource "google_storage_bucket" "tfstate_bucket" {
     enabled = true
   }
 
-  # 2. Rule for MAIN/PROD BRANCH (High Safety Buffer)
-  # This targets only objects with the "main/" prefix.
+  # Rule for MAIN/PROD PREFIX (High Safety Buffer)
+  # This targets only objects under the production state prefix, which is set
+  # by deploy_storyspark.yml as prefix=terraform/main/infra.
   lifecycle_rule {
     action {
       type = "Delete"
     }
     condition {
-      # Target only the main branch state file path
-      matches_prefix = ["main/"]
+      # Target only the production state prefix
+      matches_prefix = ["terraform/main/"]
       # Delete superseded versions older than [days_since_noncurrent_time] days...
       days_since_noncurrent_time = 30
       # ...BUT always keep the 3 newest non-current versions as a safety buffer.
@@ -56,9 +65,9 @@ resource "google_storage_bucket" "tfstate_bucket" {
     }
   }
 
-  # Rule for ALL OTHER BRANCHES (Strict Cleanup)
-  # This applies to all non-current objects, ensuring strict cleanup for feature branches.
-  # For 'main/', this rule is superseded by the num_newer_versions setting
+  # Rule for ALL OTHER PREFIXES (Strict Cleanup)
+  # Applies to all other non-current objects, e.g. feature branch states under
+  # terraform/<branch>/infra, ensuring strict cleanup for them.
   lifecycle_rule {
     action {
       type = "Delete"
@@ -67,18 +76,6 @@ resource "google_storage_bucket" "tfstate_bucket" {
       # Days since the object version was superseded (became non-current)
       # Any superseded version older than [days_since_noncurrent_time] days will be deleted.
       days_since_noncurrent_time = 30
-    }
-  }
-
-  # Rule to clean up OLD NON-CURRENT VERSIONS only
-  # Keeps the current (live) version forever, only deletes superseded versions
-  lifecycle_rule {
-    action {
-      type = "Delete"
-    }
-    condition {
-      # Delete non-current versions older than 90 days
-      days_since_noncurrent_time = 90
     }
   }
 }
