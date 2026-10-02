@@ -4,6 +4,40 @@ locals {
   sa_run_prefix = "storyspark-cloudrun"
 }
 
+# This stack has no backend block: it creates the very bucket that every other
+# stack uses for remote state, so its own state cannot live there. State is
+# therefore local and discarded when the CI runner is torn down, which means
+# every run starts empty and would otherwise attempt to create resources that
+# already exist. These import blocks re-adopt them on each run, making the
+# apply idempotent without persisting state.
+
+import {
+  to = google_storage_bucket.tfstate_bucket
+  id = var.tfstate_bucket_name
+}
+
+# NOTE: import blocks do not support count/for_each, so these are unconditional.
+# That means create_dev / create_prod must stay true for this stack to apply.
+import {
+  to = google_service_account.bq_vertex_dev[0]
+  id = "projects/${var.project_id}/serviceAccounts/${local.sa_bq_prefix}-${var.dev_suffix}@${var.project_id}.iam.gserviceaccount.com"
+}
+
+import {
+  to = google_service_account.cloudrun_dev[0]
+  id = "projects/${var.project_id}/serviceAccounts/${local.sa_run_prefix}-${var.dev_suffix}@${var.project_id}.iam.gserviceaccount.com"
+}
+
+import {
+  to = google_service_account.bq_vertex_prod[0]
+  id = "projects/${var.project_id}/serviceAccounts/${local.sa_bq_prefix}-${var.prod_suffix}@${var.project_id}.iam.gserviceaccount.com"
+}
+
+import {
+  to = google_service_account.cloudrun_prod[0]
+  id = "projects/${var.project_id}/serviceAccounts/${local.sa_run_prefix}-${var.prod_suffix}@${var.project_id}.iam.gserviceaccount.com"
+}
+
 resource "google_storage_bucket" "tfstate_bucket" {
   name                        = var.tfstate_bucket_name
   location                    = var.region
@@ -14,45 +48,29 @@ resource "google_storage_bucket" "tfstate_bucket" {
     enabled = true
   }
 
-  # 2. Rule for MAIN/PROD BRANCH (High Safety Buffer)
-  # This targets only objects with the "main/" prefix.
+  # Single rule covering every object in the bucket, across all prefixes
+  # (production state at terraform/main/infra, feature branch states at
+  # terraform/<branch>/infra, and any orphaned .tflock files).
+  #
+  # GCS applies the earliest matching rule, so an unscoped rule plus a
+  # prefix-scoped rule would let the unscoped one win and defeat the buffer.
+  # A single rule keeps the behavior consistent everywhere.
+  #
+  # NOTE: This replaces an `age = 90` rule that was still live on the bucket.
+  # `age` targets the CURRENT object, so it would have deleted live state
+  # files after 90 days without an update. PR #202 intended this fix but was
+  # never applied, so it is being applied here.
   lifecycle_rule {
     action {
       type = "Delete"
     }
     condition {
-      # Target only the main branch state file path
-      matches_prefix = ["main/"]
-      # Delete superseded versions older than [days_since_noncurrent_time] days...
+      # Only superseded (non-current) versions are eligible. The live version
+      # of every object is never touched.
       days_since_noncurrent_time = 30
-      # ...BUT always keep the 3 newest non-current versions as a safety buffer.
+      # Always keep the 3 newest non-current versions as a rollback buffer,
+      # even once they pass the 30 day window.
       num_newer_versions = 3
-    }
-  }
-
-  # Rule for ALL OTHER BRANCHES (Strict Cleanup)
-  # This applies to all non-current objects, ensuring strict cleanup for feature branches.
-  # For 'main/', this rule is superseded by the num_newer_versions setting
-  lifecycle_rule {
-    action {
-      type = "Delete"
-    }
-    condition {
-      # Days since the object version was superseded (became non-current)
-      # Any superseded version older than [days_since_noncurrent_time] days will be deleted.
-      days_since_noncurrent_time = 30
-    }
-  }
-
-  # Rule to clean up OLD NON-CURRENT VERSIONS only
-  # Keeps the current (live) version forever, only deletes superseded versions
-  lifecycle_rule {
-    action {
-      type = "Delete"
-    }
-    condition {
-      # Delete non-current versions older than 90 days
-      days_since_noncurrent_time = 90
     }
   }
 }

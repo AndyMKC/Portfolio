@@ -12,3 +12,12 @@ dist/
 build/
 __pycache__/
 models/
+
+# Terraform: never commit state, plans, or provider binaries.
+# .terraform.lock.hcl IS committed on purpose (pins provider versions).
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log

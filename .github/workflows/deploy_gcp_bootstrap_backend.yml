@@ -44,11 +44,12 @@ jobs:
         with:
           terraform_version: 1.8.0 # Specify a recommended version
 
-      - name: Terraform Init (with -upgrade)
+      - name: Terraform Init
         id: init
-        # Added '-upgrade' flag to force Terraform to re-evaluate provider versions
-        # and ignore any existing lock file that conflicts with versions.tf.
-        run: terraform init -upgrade
+        # Honor the committed .terraform.lock.hcl so provider versions are
+        # pinned and reproducible. Any drift fails the job instead of silently
+        # changing the plan.
+        run: terraform init -lockfile=readonly
         working-directory: ${{ env.TF_WORKING_DIR }}
 
       - name: Terraform Plan
