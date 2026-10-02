@@ -48,34 +48,29 @@ resource "google_storage_bucket" "tfstate_bucket" {
     enabled = true
   }
 
-  # Rule for MAIN/PROD PREFIX (High Safety Buffer)
-  # This targets only objects under the production state prefix, which is set
-  # by deploy_storyspark.yml as prefix=terraform/main/infra.
+  # Single rule covering every object in the bucket, across all prefixes
+  # (production state at terraform/main/infra, feature branch states at
+  # terraform/<branch>/infra, and any orphaned .tflock files).
+  #
+  # GCS applies the earliest matching rule, so an unscoped rule plus a
+  # prefix-scoped rule would let the unscoped one win and defeat the buffer.
+  # A single rule keeps the behavior consistent everywhere.
+  #
+  # NOTE: This replaces an `age = 90` rule that was still live on the bucket.
+  # `age` targets the CURRENT object, so it would have deleted live state
+  # files after 90 days without an update. PR #202 intended this fix but was
+  # never applied, so it is being applied here.
   lifecycle_rule {
     action {
       type = "Delete"
     }
     condition {
-      # Target only the production state prefix
-      matches_prefix = ["terraform/main/"]
-      # Delete superseded versions older than [days_since_noncurrent_time] days...
+      # Only superseded (non-current) versions are eligible. The live version
+      # of every object is never touched.
       days_since_noncurrent_time = 30
-      # ...BUT always keep the 3 newest non-current versions as a safety buffer.
+      # Always keep the 3 newest non-current versions as a rollback buffer,
+      # even once they pass the 30 day window.
       num_newer_versions = 3
-    }
-  }
-
-  # Rule for ALL OTHER PREFIXES (Strict Cleanup)
-  # Applies to all other non-current objects, e.g. feature branch states under
-  # terraform/<branch>/infra, ensuring strict cleanup for them.
-  lifecycle_rule {
-    action {
-      type = "Delete"
-    }
-    condition {
-      # Days since the object version was superseded (became non-current)
-      # Any superseded version older than [days_since_noncurrent_time] days will be deleted.
-      days_since_noncurrent_time = 30
     }
   }
 }
