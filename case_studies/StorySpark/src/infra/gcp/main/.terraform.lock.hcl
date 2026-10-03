@@ -5,7 +5,10 @@ provider "registry.terraform.io/hashicorp/google" {
   version     = "7.13.0"
   constraints = "~> 7.13.0"
   hashes = [
+    "h1:66xli1/pwUeGalo6ZvXqFfTta8KKK8ee4Ku7Cmrs8HI=",
+    "h1:Rk8yDR/q75Da4OX2TULweHa6ky0isD1hLi6XAEi9xds=",
     "h1:b6SwI27s+SxY2+YBwYsc4ufKymznA7KjxouNMRX49nc=",
+    "h1:eRJQtcNDWeQl6EkO4KmaYFAH+lvkNzPHmaFgm61FUrA=",
     "zh:01d22b268d44f885add27ba87b3c0a1e3c9efa35131831ce4275b2a1bfd7e0df",
     "zh:104efd3d66a818d9311c7ebd5d1886a7e17ef79562869aa39df9a5b57ec6c630",
     "zh:116f0a1cf4db399c4ac2173f0b1fa9f08518bd20cade8d4370a0c5e1b99177be",
@@ -25,7 +28,10 @@ provider "registry.terraform.io/hashicorp/google-beta" {
   version     = "7.13.0"
   constraints = "~> 7.13.0"
   hashes = [
+    "h1:2bVIUgs+G9yNk8yHzDW2zUtms6Ppo3XGiQafxhkw7n4=",
+    "h1:9BAG4MyUw1fXZcg0wzlTBIWRyZGLhmY0e8h3gkaGGr0=",
     "h1:KAlvzbISPhKDHLfKta9npzqxgt8rtXJjtv7wMhIF0FQ=",
+    "h1:YWpc+7Py8cftpAxaVngLUTvJlsio6rXw2tXYUzlaDbo=",
     "zh:051e4a78df562893b2ac2b1cee9521215eb0ef2779871301843a364d2d1283de",
     "zh:12a001c8bf54071c49dcb396a0fd2a5c4125eeb55b0a5bb06b54ee11a77971c6",
     "zh:31eee53ec303b3649d56ee071d3b08cd71da1f776c2b943526ff30e2854b776d",
@@ -45,6 +51,9 @@ provider "registry.terraform.io/redislabs/rediscloud" {
   version     = "1.9.0"
   constraints = "~> 1.0"
   hashes = [
+    "h1:Um9sQc7eTK+4fq/QSVEqRCETMRg+gt0STaEqUhBmMU8=",
+    "h1:elqXVpBF5k2i+G5htcNehrSbzDS8uZR3f9UtLntIl1Q=",
+    "h1:iitQ92zpkhei4gicmoFQVPw5OR1X/iQS5jQQojDMS88=",
     "h1:orPCBb2sxJo/JqIrGqP11XRPVYG5Y37qsDbgn+ap9xQ=",
     "zh:02e5f1c8ca4dee44fd50a6194287234c9c949cac1ec9930f41f8d405b6097d42",
     "zh:0af368d1ca1f4be4f2ab79d8e92573875e093959ef41c355887135ac0e5ef9f6",

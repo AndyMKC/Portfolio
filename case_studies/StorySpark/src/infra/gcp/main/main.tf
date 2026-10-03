@@ -162,6 +162,33 @@ resource "google_bigquery_dataset" "embeddings_prod" {
   description   = "Holds canonical book records and embeddings for ${local.prod_suffix}"
 }
 
+# Adopt the BigQuery tables that already exist in the project.
+#
+# These four tables were created by an earlier apply but are missing from the
+# remote state, so Terraform tries to create them again and fails with
+# "Error 409: Already Exists ... duplicate". Import blocks re-adopt them.
+#
+# Import blocks do not support count/for_each, so these are unconditional.
+import {
+  to = google_bigquery_table.source_table_dev
+  id = "projects/${var.project_id}/datasets/${google_bigquery_dataset.embeddings_dev.dataset_id}/${local.source_table_dev}"
+}
+
+import {
+  to = google_bigquery_table.source_table_prod
+  id = "projects/${var.project_id}/datasets/${google_bigquery_dataset.embeddings_prod.dataset_id}/${local.source_table_prod}"
+}
+
+import {
+  to = google_bigquery_table.embeddings_table_dev
+  id = "projects/${var.project_id}/datasets/${google_bigquery_dataset.embeddings_dev.dataset_id}/${local.embed_table_dev}"
+}
+
+import {
+  to = google_bigquery_table.embeddings_table_prod
+  id = "projects/${var.project_id}/datasets/${google_bigquery_dataset.embeddings_prod.dataset_id}/${local.embed_table_prod}"
+}
+
 # BigQuery source table (canonical book records)
 resource "google_bigquery_table" "source_table_dev" {
   project    = var.project_id

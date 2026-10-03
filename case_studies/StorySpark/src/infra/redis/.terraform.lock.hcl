@@ -5,6 +5,9 @@ provider "registry.terraform.io/redislabs/rediscloud" {
   version     = "1.9.0"
   constraints = "~> 1.0"
   hashes = [
+    "h1:Um9sQc7eTK+4fq/QSVEqRCETMRg+gt0STaEqUhBmMU8=",
+    "h1:elqXVpBF5k2i+G5htcNehrSbzDS8uZR3f9UtLntIl1Q=",
+    "h1:iitQ92zpkhei4gicmoFQVPw5OR1X/iQS5jQQojDMS88=",
     "h1:orPCBb2sxJo/JqIrGqP11XRPVYG5Y37qsDbgn+ap9xQ=",
     "zh:02e5f1c8ca4dee44fd50a6194287234c9c949cac1ec9930f41f8d405b6097d42",
     "zh:0af368d1ca1f4be4f2ab79d8e92573875e093959ef41c355887135ac0e5ef9f6",
