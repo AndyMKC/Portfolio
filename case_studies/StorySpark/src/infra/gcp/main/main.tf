@@ -293,6 +293,15 @@ resource "google_storage_bucket" "model_export_bucket" {
   uniform_bucket_level_access = true
 }
 
+# Adopt the Cloud Run service that already exists in the project.
+# It was dropped from the remote state between serial 8 and serial 9,
+# so Terraform tries to create it again and fails with
+# "Error 409: Resource 'storyspark-service-prod' already exists".
+import {
+  to = google_cloud_run_v2_service.storyspark_service
+  id = "projects/${var.project_id}/locations/${var.region}/services/${local.service_name}"
+}
+
 # Cloud Run service
 resource "google_cloud_run_v2_service" "storyspark_service" {
   name     = local.service_name
@@ -414,6 +423,12 @@ locals {
   redis_password = module.redis.database_password
 }
 
+
+# Adopt the existing allUsers invoker binding.
+import {
+  to = google_cloud_run_v2_service_iam_member.allow_unauth
+  id = "projects/${var.project_id}/locations/${var.region}/services/${local.service_name} roles/run.invoker allUsers"
+}
 
 resource "google_cloud_run_v2_service_iam_member" "allow_unauth" {
   location = google_cloud_run_v2_service.storyspark_service.location
