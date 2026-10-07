@@ -5,7 +5,7 @@ import logging
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 
-from app.logging_setup import setup_cloud_logging
+from app.logging_setup import setup_cloud_logging, trace_id_var, request_id_var
 from app.rate_limiter import get_rate_limiter, get_client_identifier
 
 from app.books import (
@@ -57,7 +57,17 @@ RATE_LIMIT_DESCRIPTION = (
     "`Retry-After` header is returned when the limit is exceeded."
 )
 
-APP_DESCRIPTION = BASE_DESCRIPTION + RATE_LIMIT_DESCRIPTION
+AUTH_DESCRIPTION = (
+    "\n\n**Authentication:** All API endpoints require a Google ID token. "
+    "To obtain one, run:\n"
+    "```\n"
+    "gcloud auth print-identity-token\n"
+    "```\n"
+    "Then paste the token into the Swagger UI 'Authorize' dialog (top right, "
+    "click the lock icon). The token is valid for 1 hour."
+)
+
+APP_DESCRIPTION = BASE_DESCRIPTION + RATE_LIMIT_DESCRIPTION + AUTH_DESCRIPTION
 
 
 def is_rate_limited_path(path: str) -> bool:
@@ -118,6 +128,18 @@ def create_app() -> FastAPI:
 
     @app.middleware("http")
     async def log_requests(request: Request, call_next):
+        body = await request.body()
+        trace_id = request.headers.get("X-Cloud-Trace-Context", "unknown").split("/")[0]
+        request_id = request.headers.get("X-Request-ID", "unknown")
+        trace_id_var.set(trace_id)
+        request_id_var.set(request_id)
+        logger.info(
+            f"API request: {request.method} {request.url.path} "
+            f"body={body.decode('utf-8', errors='replace')}"
+        )
+        async def _receive():
+            return {"type": "http.request", "body": body}
+        request = Request(request.scope, _receive)
         response = await call_next(request)
         user_email = getattr(request.state, "current_user_email", None)
         endpoint = request.url.path

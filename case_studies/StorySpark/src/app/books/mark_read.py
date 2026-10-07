@@ -49,8 +49,8 @@ async def mark_book_read(
         # Waiting on the result means we wait for the COMMIT to finish
         query_job.result()
 
-    except Exception as e:
-        logger.error(f"MarkBookRead transaction failed and was rolled back: {e}")
+    except Exception:
+        logger.exception("MarkBookRead transaction failed and was rolled back")
         raise
 
     return

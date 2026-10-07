@@ -44,8 +44,8 @@ async def remove_book(
         # Waiting on the result means we wait for the COMMIT to finish
         query_job.result()
 
-    except Exception as e:
-        logger.error(f"RemoveBook transaction failed and was rolled back: {e}")
+    except Exception:
+        logger.exception("RemoveBook transaction failed and was rolled back")
         raise
 
     return

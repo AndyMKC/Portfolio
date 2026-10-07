@@ -193,9 +193,8 @@ async def add_book(
             f"{len(embeddings_table_data)} embedding rows."
         )
 
-    except Exception as e:
-        logger.error(f"AddBook transaction failed and was rolled back: {e}")
-        # BigQuery automatically rolls back the entire transaction if an error occurs within the script
+    except Exception:
+        logger.exception("AddBook transaction failed and was rolled back")
         raise
 
 

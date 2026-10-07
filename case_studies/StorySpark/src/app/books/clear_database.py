@@ -35,8 +35,8 @@ async def clear_database(
         # Waiting on the result means we wait for the COMMIT to finish
         query_job.result()
 
-    except Exception as e:
-        logger.error(f"ClearDatabase transaction failed and was rolled back: {e}")
+    except Exception:
+        logger.exception("ClearDatabase transaction failed and was rolled back")
         raise
 
     return
