@@ -77,6 +77,6 @@ async def get_all_books(
             all_books.append(book)
 
         return all_books
-    except Exception as e:
-        logger.error(f"GetAllBooks failed: {e}")
+    except Exception:
+        logger.exception("GetAllBooks failed")
         raise

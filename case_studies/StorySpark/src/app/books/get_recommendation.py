@@ -129,6 +129,6 @@ async def get_recommendation(
             all_books.append(book)
 
         return all_books
-    except Exception as e:
-        logger.error(f"GetBookRecommendation query failed: {e}")
+    except Exception:
+        logger.exception("GetBookRecommendation query failed")
         raise
