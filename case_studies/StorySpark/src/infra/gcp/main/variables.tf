@@ -74,12 +74,6 @@ variable "cloud_run_image" {
   }
 }
 
-variable "api_key" {
-  type        = string
-  description = "Shared API key required by the service (Option A: single secret). Set via CI or terraform var injection."
-  default     = "replace-with-real-key"
-}
-
 variable "artifact_docker_images_repo_id" {
   type        = string
   description = "For Docker Images"

@@ -349,10 +349,6 @@ resource "google_cloud_run_v2_service" "storyspark_service" {
         value = google_bigquery_table.embeddings_table_prod.table_id
       }
       env {
-        name  = "API_KEY"
-        value = var.api_key
-      }
-      env {
         name  = "ENV"
         value = local.env_suffix
       }
