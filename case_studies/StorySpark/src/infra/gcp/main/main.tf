@@ -453,12 +453,10 @@ resource "google_cloud_run_v2_service_iam_member" "allow_unauth" {
 }
 
 # Allows browser users via IAP (OAuth flow) — protects /docs and frontend
-resource "google_iap_web_service_iam_member" "iap_all_users" {
+resource "google_iap_web_iam_member" "iap_all_users" {
   project = var.project_id
-  location = var.region
-  service  = google_cloud_run_v2_service.storyspark_service.name
-  role     = "roles/iap.httpsResourceAccessor"
-  member   = var.allowed_members[0]
+  role    = "roles/iap.httpsResourceAccessor"
+  member  = var.allowed_members[0]
 }
 
 # Grant read access to the service account at the bucket level
