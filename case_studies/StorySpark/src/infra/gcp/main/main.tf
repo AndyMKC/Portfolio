@@ -441,6 +441,9 @@ import {
   id = "projects/${var.project_id}/locations/${var.region}/services/${local.service_name} roles/run.invoker ${var.allowed_members[0]}"
 }
 
+# Allows direct API invocation (scripts, CI, service-to-service) — bypasses IAP
+# NOTE: This only permits network-level access. Application-layer auth (Bearer token)
+# is enforced by auth.py — unauthenticated requests receive 401.
 resource "google_cloud_run_v2_service_iam_member" "allow_unauth" {
   location = google_cloud_run_v2_service.storyspark_service.location
   project  = var.project_id
