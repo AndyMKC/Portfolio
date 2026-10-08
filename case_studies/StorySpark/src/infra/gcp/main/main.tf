@@ -90,6 +90,11 @@ locals {
   ])
 }
 
+# Get project number for IAP audience
+data "google_project" "project" {
+  project_id = var.project_id
+}
+
 # Enable required APIs
 resource "google_project_service" "bigquery" {
   project = var.project_id
@@ -109,6 +114,11 @@ resource "google_project_service" "run" {
 resource "google_project_service" "artifactregistry" {
   project = var.project_id
   service = "artifactregistry.googleapis.com"
+}
+
+resource "google_project_service" "iap" {
+  project = var.project_id
+  service = "iap.googleapis.com"
 }
 
 # Artifact Registry Docker repository
@@ -374,6 +384,11 @@ resource "google_cloud_run_v2_service" "storyspark_service" {
         name  = "REDIS_SSL"
         value = "true"
       }
+      # IAP audience for JWT validation
+      env {
+        name  = "IAP_AUDIENCE"
+        value = "/projects/${data.google_project.project.number}/locations/${var.region}/services/${local.service_name}"
+      }
     }
     volumes {
       name = var.model_export_bucket_volume_name
@@ -420,10 +435,10 @@ locals {
 }
 
 
-# Adopt the existing allUsers invoker binding.
+# Adopt the existing invoker binding.
 import {
   to = google_cloud_run_v2_service_iam_member.allow_unauth
-  id = "projects/${var.project_id}/locations/${var.region}/services/${local.service_name} roles/run.invoker allUsers"
+  id = "projects/${var.project_id}/locations/${var.region}/services/${local.service_name} roles/run.invoker ${var.allowed_members[0]}"
 }
 
 resource "google_cloud_run_v2_service_iam_member" "allow_unauth" {
@@ -431,7 +446,14 @@ resource "google_cloud_run_v2_service_iam_member" "allow_unauth" {
   project  = var.project_id
   name     = google_cloud_run_v2_service.storyspark_service.name
   role     = "roles/run.invoker"
-  member   = "allUsers"
+  member   = var.allowed_members[0]
+}
+
+# Allows browser users via IAP (OAuth flow) — protects /docs and frontend
+resource "google_iap_web_iam_member" "iap_all_users" {
+  project = var.project_id
+  role    = "roles/iap.httpsResourceAccessor"
+  member  = var.allowed_members[0]
 }
 
 # Grant read access to the service account at the bucket level

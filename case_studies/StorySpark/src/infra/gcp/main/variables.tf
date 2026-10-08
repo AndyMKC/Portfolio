@@ -144,6 +144,12 @@ variable "rediscloud_api_secret" {
   sensitive   = true
 }
 
+variable "allowed_members" {
+  description = "Identities allowed to access the service via IAP and direct invoke. Use ['user:me@example.com'] or ['group:team@example.com'] for restriction."
+  type        = list(string)
+  default     = ["allUsers"]
+}
+
 # Note: Detailed Redis variables (cloud_provider, region, free_plan_size_mb,
 # database_name) are also defined in the redis/ module. This module passes them
 # through via the module call in main.tf.
