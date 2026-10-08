@@ -6,6 +6,8 @@ All endpoint modules import ``get_current_user`` from here rather than from
 which import this module for the dependency).
 
 The Google ID token is verified with ``google.oauth2.id_token.verify_oauth2_token``.
+Supports both Bearer tokens (manual/API clients) and IAP JWT assertions
+(injected by Identity-Aware Proxy for browser users).
 
 Logging is done exclusively through Python's standard ``logging`` library.
 The ``app-log`` logger is wired to Google Cloud Logging at start-up by
@@ -16,6 +18,7 @@ cloud-logging client is needed.
 """
 
 import logging
+import os
 
 from google.oauth2 import id_token
 from google.auth.transport import requests
@@ -32,14 +35,43 @@ logger = logging.getLogger("app-log")
 # "Authorize" button for pasting the token.
 bearer_scheme = HTTPBearer()
 
+# IAP audience format: /projects/{project_number}/global/backendServices/{service_id}
+# Set via environment variable in Cloud Run
+IAP_AUDIENCE = os.environ.get("IAP_AUDIENCE")
+
 
 async def get_current_user(
     request: Request,
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
 ) -> dict:
-    """Validates Google ID token and returns user information."""
+    """Validates Google ID token (Bearer or IAP) and returns user information."""
 
-    # Production mode: require Google ID token
+    # 1. Try IAP header first (for browser users via IAP)
+    iap_jwt = request.headers.get("X-Goog-IAP-JWT-Assertion")
+    if iap_jwt:
+        if not IAP_AUDIENCE:
+            logger.error("IAP_AUDIENCE not configured")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Authentication configuration error",
+            )
+        try:
+            idinfo = id_token.verify_oauth2_token(
+                iap_jwt,
+                requests.Request(),
+                audience=IAP_AUDIENCE,
+                clock_skew_in_seconds=10,
+            )
+            user_email = idinfo.get("email")
+            if user_email:
+                request.state.current_user_email = user_email
+                logger.info(f"Authenticated user via IAP: {user_email}")
+                return {"email": user_email, "idinfo": idinfo}
+        except ValueError as e:
+            logger.warning(f"IAP JWT verification failed: {e}")
+            # Fall through to Bearer token validation
+
+    # 2. Fallback: Bearer token (for Swagger manual paste, API clients)
     if credentials is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
