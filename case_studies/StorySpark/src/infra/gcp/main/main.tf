@@ -435,27 +435,30 @@ locals {
 }
 
 
-# Adopt the existing allUsers invoker binding.
+# Adopt the existing invoker binding.
 import {
   to = google_cloud_run_v2_service_iam_member.allow_unauth
-  id = "projects/${var.project_id}/locations/${var.region}/services/${local.service_name} roles/run.invoker allUsers"
+  id = "projects/${var.project_id}/locations/${var.region}/services/${local.service_name} roles/run.invoker ${var.allowed_members[0]}"
 }
 
+# Allows direct API invocation (scripts, CI, service-to-service) — bypasses IAP
+# NOTE: This only permits network-level access. Application-layer auth (Bearer token)
+# is enforced by auth.py — unauthenticated requests receive 401.
 resource "google_cloud_run_v2_service_iam_member" "allow_unauth" {
   location = google_cloud_run_v2_service.storyspark_service.location
   project  = var.project_id
   name     = google_cloud_run_v2_service.storyspark_service.name
   role     = "roles/run.invoker"
-  member   = "allUsers"
+  member   = var.allowed_members[0]
 }
 
-# IAP binding - allow allUsers to access via IAP
+# Allows browser users via IAP (OAuth flow) — protects /docs and frontend
 resource "google_iap_web_service_iam_member" "iap_all_users" {
   project = var.project_id
   location = var.region
   service  = google_cloud_run_v2_service.storyspark_service.name
   role     = "roles/iap.httpsResourceAccessor"
-  member   = "allUsers"
+  member   = var.allowed_members[0]
 }
 
 # Grant read access to the service account at the bucket level
