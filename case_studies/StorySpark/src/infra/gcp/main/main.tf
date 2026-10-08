@@ -457,6 +457,8 @@ resource "google_iap_web_iam_member" "iap_all_users" {
   project = var.project_id
   role    = "roles/iap.httpsResourceAccessor"
   member  = var.allowed_members[0]
+
+  depends_on = [google_project_service.iap]
 }
 
 # Grant read access to the service account at the bucket level
