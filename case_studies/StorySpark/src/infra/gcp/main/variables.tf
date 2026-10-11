@@ -153,7 +153,7 @@ variable "allowed_members" {
 variable "iap_support_email" {
   description = "Email for IAP OAuth brand support contact"
   type        = string
-  default     = "your@email.com"
+  default     = "codingdolly@gmail.com"
 }
 
 # Note: Detailed Redis variables (cloud_provider, region, free_plan_size_mb,
