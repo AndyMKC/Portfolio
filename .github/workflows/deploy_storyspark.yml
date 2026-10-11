@@ -450,6 +450,7 @@ jobs:
           -var="redis_free_plan_size_mb=${{ vars.REDIS_PLAN_SIZE_MB }}" \
           -var="rediscloud_api_key=${{ secrets.REDIS_API_ACCOUNT_KEY }}" \
           -var="rediscloud_api_secret=${{ secrets.REDIS_API_SECRET }}" \
+          -var="iap_support_email=${{ vars.STORYSPARK_IAP_SUPPORT_EMAIL }}" \
           -lock-timeout=5m \
           -out=tfplan
 

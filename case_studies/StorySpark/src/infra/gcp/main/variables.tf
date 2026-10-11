@@ -150,6 +150,12 @@ variable "allowed_members" {
   default     = ["allUsers"]
 }
 
+variable "iap_support_email" {
+  description = "Email for IAP OAuth brand support contact"
+  type        = string
+  default     = "codingdolly@gmail.com"
+}
+
 # Note: Detailed Redis variables (cloud_provider, region, free_plan_size_mb,
 # database_name) are also defined in the redis/ module. This module passes them
 # through via the module call in main.tf.
