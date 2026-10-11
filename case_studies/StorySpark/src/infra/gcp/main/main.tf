@@ -121,6 +121,11 @@ resource "google_project_service" "iap" {
   service = "iap.googleapis.com"
 }
 
+resource "google_project_service" "compute" {
+  project = var.project_id
+  service = "compute.googleapis.com"
+}
+
 # Artifact Registry Docker repository
 resource "google_artifact_registry_repository" "docker_repo" {
   project       = var.project_id
@@ -459,6 +464,34 @@ resource "google_iap_web_iam_member" "iap_all_users" {
   member  = var.allowed_members[0]
 
   depends_on = [google_project_service.iap]
+}
+
+# Explicitly enable IAP on Cloud Run service and create OAuth brand
+# google_iap_web_iam_member only adds IAM binding; IAP enablement on the service requires gcloud
+resource "null_resource" "iap_enable" {
+  provisioner "local-exec" {
+    command = <<EOT
+      set -e
+      # Enable IAP on the Cloud Run service (via backend service)
+      gcloud iap web enable --resource-type=backend-services --service=${google_cloud_run_v2_service.storyspark_service.name} --project=${var.project_id}
+      # Create OAuth brand if not exists
+      gcloud iap oauth-brands create --application_title="StorySpark" --support_email=${var.iap_support_email} --project=${var.project_id}
+    EOT
+    interpreter = ["bash", "-c"]
+  }
+
+  depends_on = [
+    google_cloud_run_v2_service.storyspark_service,
+    google_project_service.iap,
+    google_project_service.compute,
+    google_iap_web_iam_member.iap_all_users
+  ]
+
+  triggers = {
+    # Re-run if service name or project changes
+    service_name = google_cloud_run_v2_service.storyspark_service.name
+    project_id   = var.project_id
+  }
 }
 
 # Grant read access to the service account at the bucket level

@@ -23,6 +23,12 @@ terraform {
       source  = "RedisLabs/rediscloud"
       version = "~> 1.0"
     }
+
+    # Required for null_resource local-exec provisioner
+    null = {
+      source  = "hashicorp/null"
+      version = "~> 3.2"
+    }
   }
 }
 
