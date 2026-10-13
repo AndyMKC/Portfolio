@@ -435,6 +435,7 @@ jobs:
       run: |
         terraform plan \
           -input=false \
+          -lockfile=readonly \
           -var="project_id=${{ vars.STORYSPARK_GCP_PROJECT_ID }}" \
           -var="location=${{ vars.STORYSPARK_GCP_LOCATION }}" \
           -var="region=${{ vars.STORYSPARK_GCP_REGION }}" \
@@ -450,7 +451,6 @@ jobs:
           -var="redis_free_plan_size_mb=${{ vars.REDIS_PLAN_SIZE_MB }}" \
           -var="rediscloud_api_key=${{ secrets.REDIS_API_ACCOUNT_KEY }}" \
           -var="rediscloud_api_secret=${{ secrets.REDIS_API_SECRET }}" \
-          -var="iap_support_email=${{ vars.STORYSPARK_IAP_SUPPORT_EMAIL }}" \
           -lock-timeout=5m \
           -out=tfplan
 
@@ -525,6 +525,7 @@ jobs:
       run: |
         terraform apply \
           -input=false \
+          -lockfile=readonly \
           -auto-approve \
           -lock-timeout=5m \
           tfplan
