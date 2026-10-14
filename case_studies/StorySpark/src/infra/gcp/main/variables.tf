@@ -145,7 +145,7 @@ variable "rediscloud_api_secret" {
 }
 
 variable "allowed_members" {
-  description = "Identities allowed to access the service via IAP and direct invoke. Use ['user:me@example.com'] or ['group:team@example.com'] for restriction."
+  description = "Identities allowed to directly invoke the service (bypassing IAP). Use ['user:me@example.com'] or ['allUsers'] for public API access."
   type        = list(string)
   default     = ["allUsers"]
 }
@@ -154,6 +154,12 @@ variable "iap_support_email" {
   description = "Email for IAP OAuth brand support contact"
   type        = string
   default     = "codingdolly@gmail.com"
+}
+
+variable "iap_audience" {
+  description = "OAuth client ID for IAP JWT validation. Created when IAP is enabled on Cloud Run. Get it with: gcloud iap oauth-clients list --project=PROJECT_ID --format='value(name)'"
+  type        = string
+  default     = "PLACEHOLDER_OAUTH_CLIENT_ID_AFTER_IAP_ENABLED"
 }
 
 # Note: Detailed Redis variables (cloud_provider, region, free_plan_size_mb,

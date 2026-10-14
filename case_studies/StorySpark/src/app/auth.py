@@ -35,9 +35,13 @@ logger = logging.getLogger("app-log")
 # "Authorize" button for pasting the token.
 bearer_scheme = HTTPBearer()
 
-# IAP audience format: /projects/{project_number}/global/backendServices/{service_id}
+# IAP audience format: OAuth client ID created when IAP is enabled on Cloud Run
 # Set via environment variable in Cloud Run
+# Example: "123456789012-abcdef.apps.googleusercontent.com"
 IAP_AUDIENCE = os.environ.get("IAP_AUDIENCE")
+
+# Placeholder value used during initial Terraform apply before IAP is enabled
+IAP_AUDIENCE_PLACEHOLDER = "PLACEHOLDER_OAUTH_CLIENT_ID_AFTER_IAP_ENABLED"
 
 
 async def get_current_user(
@@ -49,27 +53,25 @@ async def get_current_user(
     # 1. Try IAP header first (for browser users via IAP)
     iap_jwt = request.headers.get("X-Goog-IAP-JWT-Assertion")
     if iap_jwt:
-        if not IAP_AUDIENCE:
-            logger.error("IAP_AUDIENCE not configured")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Authentication configuration error",
-            )
-        try:
-            idinfo = id_token.verify_oauth2_token(
-                iap_jwt,
-                requests.Request(),
-                audience=IAP_AUDIENCE,
-                clock_skew_in_seconds=10,
-            )
-            user_email = idinfo.get("email")
-            if user_email:
-                request.state.current_user_email = user_email
-                logger.info(f"Authenticated user via IAP: {user_email}")
-                return {"email": user_email, "idinfo": idinfo}
-        except ValueError as e:
-            logger.warning(f"IAP JWT verification failed: {e}")
+        if not IAP_AUDIENCE or IAP_AUDIENCE == IAP_AUDIENCE_PLACEHOLDER:
+            logger.warning("IAP_AUDIENCE not configured (placeholder value); skipping IAP validation")
             # Fall through to Bearer token validation
+        else:
+            try:
+                idinfo = id_token.verify_oauth2_token(
+                    iap_jwt,
+                    requests.Request(),
+                    audience=IAP_AUDIENCE,
+                    clock_skew_in_seconds=10,
+                )
+                user_email = idinfo.get("email")
+                if user_email:
+                    request.state.current_user_email = user_email
+                    logger.info(f"Authenticated user via IAP: {user_email}")
+                    return {"email": user_email, "idinfo": idinfo}
+            except ValueError as e:
+                logger.warning(f"IAP JWT verification failed: {e}")
+                # Fall through to Bearer token validation
 
     # 2. Fallback: Bearer token (for Swagger manual paste, API clients)
     if credentials is None:
