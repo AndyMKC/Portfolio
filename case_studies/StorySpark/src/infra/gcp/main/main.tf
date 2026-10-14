@@ -390,9 +390,13 @@ resource "google_cloud_run_v2_service" "storyspark_service" {
         value = "true"
       }
       # IAP audience for JWT validation
+      # NOTE: This must be the OAuth client ID created when IAP is enabled on Cloud Run.
+      # After first apply (which enables IAP), run:
+      #   gcloud iap oauth-clients list --project=${var.project_id} --format="value(name)"
+      # Then update the 'iap_audience' variable and re-apply.
       env {
         name  = "IAP_AUDIENCE"
-        value = "/projects/${data.google_project.project.number}/locations/${var.region}/services/${local.service_name}"
+        value = var.iap_audience
       }
     }
     volumes {
@@ -457,25 +461,27 @@ resource "google_cloud_run_v2_service_iam_member" "allow_unauth" {
   member   = var.allowed_members[0]
 }
 
-# Allows browser users via IAP (OAuth flow) — protects /docs and frontend
+# Allow ANY Google account to access via IAP (OAuth flow)
+# This binds to the IAP Web backend service that Cloud Run creates when IAP is enabled
 resource "google_iap_web_iam_member" "iap_all_users" {
   project = var.project_id
   role    = "roles/iap.httpsResourceAccessor"
-  member  = var.allowed_members[0]
+  member  = "allUsers"
 
   depends_on = [google_project_service.iap]
 }
 
-# Explicitly enable IAP on Cloud Run service and create OAuth brand
-# google_iap_web_iam_member only adds IAM binding; IAP enablement on the service requires gcloud
+# Enable IAP on Cloud Run service and create OAuth brand
+# Cloud Run IAP is enabled via 'gcloud run services update --iap', not 'gcloud iap web enable'
+# The OAuth client ID (used as IAP_AUDIENCE) is created automatically when IAP is enabled.
 resource "null_resource" "iap_enable" {
   provisioner "local-exec" {
     command = <<EOT
       set -e
-      # Enable IAP on the Cloud Run service (via backend service)
-      gcloud iap web enable --resource-type=backend-services --service=${google_cloud_run_v2_service.storyspark_service.name} --project=${var.project_id}
-      # Create OAuth brand if not exists
-      gcloud iap oauth-brands create --application_title="StorySpark" --support_email=${var.iap_support_email} --project=${var.project_id}
+      # Enable IAP on the Cloud Run service
+      gcloud run services update ${google_cloud_run_v2_service.storyspark_service.name} --iap --region=${var.region} --project=${var.project_id}
+      # Create OAuth brand if not exists (required for IAP)
+      gcloud iap oauth-brands create --application_title="StorySpark" --support_email=${var.iap_support_email} --project=${var.project_id} 2>/dev/null || true
     EOT
     interpreter = ["bash", "-c"]
   }
