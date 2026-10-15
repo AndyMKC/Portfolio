@@ -380,6 +380,11 @@ jobs:
         # adopt pre-existing BigQuery tables.
         terraform_version: 1.8.0
 
+    - name: Clean Terraform provider cache
+      working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
+      run: |
+        rm -rf .terraform
+
     - name: Calculate Branch info
       id: tf_prefixes
       run: |
@@ -484,6 +489,11 @@ jobs:
       with:
         # Must match the version used to create the plan artifact.
         terraform_version: 1.8.0
+
+    - name: Clean Terraform provider cache
+      working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
+      run: |
+        rm -rf .terraform
 
     - name: Download Terraform Plan Artifact
       uses: actions/download-artifact@v4
