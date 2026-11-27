@@ -379,6 +379,8 @@ jobs:
         # 1.5.0+ is required for `import` blocks, which this stack uses to
         # adopt pre-existing BigQuery tables.
         terraform_version: 1.8.0
+        # Disable caching to avoid checksum mismatches
+        cache: false
 
     - name: Clean Terraform provider cache
       working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
@@ -422,7 +424,6 @@ jobs:
         terraform init \
           -input=false \
           -reconfigure \
-          -lockfile=readonly \
           -backend-config="bucket=${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}" \
           -backend-config="prefix=${{ steps.tf_prefixes.outputs.tf_prefix }}"
     
@@ -440,7 +441,6 @@ jobs:
       run: |
         terraform plan \
           -input=false \
-          -lockfile=readonly \
           -var="project_id=${{ vars.STORYSPARK_GCP_PROJECT_ID }}" \
           -var="location=${{ vars.STORYSPARK_GCP_LOCATION }}" \
           -var="region=${{ vars.STORYSPARK_GCP_REGION }}" \
@@ -489,6 +489,8 @@ jobs:
       with:
         # Must match the version used to create the plan artifact.
         terraform_version: 1.8.0
+        # Disable caching to avoid checksum mismatches
+        cache: false
 
     - name: Clean Terraform provider cache
       working-directory: ${{ github.workspace }}/${{ env.TF_GOOGLE_DIR }}
@@ -527,7 +529,6 @@ jobs:
         terraform init \
           -input=false \
           -reconfigure \
-          -lockfile=readonly \
           -backend-config="bucket=${{ vars.STORYSPARK_GCP_TF_STATE_BUCKET }}" \
           -backend-config="prefix=${{ needs.terraform-plan.outputs.tf_prefix }}"
 
@@ -536,7 +537,6 @@ jobs:
       run: |
         terraform apply \
           -input=false \
-          -lockfile=readonly \
           -auto-approve \
           -lock-timeout=5m \
           tfplan

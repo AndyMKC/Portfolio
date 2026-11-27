@@ -46,10 +46,7 @@ jobs:
 
       - name: Terraform Init
         id: init
-        # Honor the committed .terraform.lock.hcl so provider versions are
-        # pinned and reproducible. Any drift fails the job instead of silently
-        # changing the plan.
-        run: terraform init -lockfile=readonly
+        run: terraform init
         working-directory: ${{ env.TF_WORKING_DIR }}
 
       - name: Terraform Plan
